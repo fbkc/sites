@@ -1,8 +1,9 @@
-﻿using Data;
+﻿using HRMSys.DAL;
 using Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 
@@ -26,28 +27,19 @@ namespace BLL
         /// <param name="sqlstr"></param>
         public void AddUser(cmUserInfo cmUser)
         {
-            int a = SqlHelper.ExecuteNoQuery(@"INSERT INTO [AutouSend].[dbo].[userInfo]
-           ([username]
-           ,[password]
-           ,[accountGrade]
-           ,[canPubCount]
-           ,[realmNameInfo]
-           ,[expirationTime]
-           ,[endPubCount]
-           ,[endTodayPubCount]
-           ,[registerTime]
-           ,[registerIP])
-     VALUES
-           (<username, nvarchar(50),>
-           ,<password, nvarchar(50),>
-           ,<accountGrade, int,>
-           ,<canPubCount, int,>
-           ,<realmNameInfo, nvarchar(50),>
-           ,<expirationTime, nvarchar(50),>
-           ,<endPubCount, int,>
-           ,<endTodayPubCount, int,>
-           ,<registerTime, nvarchar(50),>
-           ,<registerIP, nvarchar(50),>)");
+            int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[userInfo]
+           (username,password,accountGrade,canPubCount,realmNameInfo,expirationTime,endPubCount,endTodayPubCount,registerTime,registerIP) VALUES
+           (@username,@password,@accountGrade,@canPubCount,@realmNameInfo,@expirationTime,@endPubCount,@endTodayPubCount,@registerTime,@registerIP)",
+           new SqlParameter("@username", SqlHelper.ToDBNull(cmUser.username)),
+           new SqlParameter("@password", SqlHelper.ToDBNull(cmUser.password)),
+           new SqlParameter("@accountGrade", SqlHelper.ToDBNull(cmUser.accountGrade)),
+           new SqlParameter("@canPubCount", SqlHelper.ToDBNull(cmUser.canPubCount)),
+           new SqlParameter("@realmNameInfo", SqlHelper.ToDBNull(cmUser.realmNameInfo)),
+           new SqlParameter("@expirationTime", SqlHelper.ToDBNull(cmUser.expirationTime)),
+           new SqlParameter("@endPubCount", SqlHelper.ToDBNull(cmUser.endPubCount)),
+           new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(cmUser.endTodayPubCount)),
+           new SqlParameter("@registerTime", SqlHelper.ToDBNull(cmUser.registerTime)),
+           new SqlParameter("@registerIP", SqlHelper.ToDBNull(cmUser.registerIP)));
         }
         /// <summary>
         /// 更新会员信息
@@ -55,17 +47,17 @@ namespace BLL
         /// <param name="sqlstr"></param>
         public void UpdateUser(cmUserInfo cmUser,string sqlstr)
         {
-            int a = SqlHelper.ExecuteNoQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
-   SET[username] = < username, nvarchar(50),>
-      ,[password] = < password, nvarchar(50),>
-      ,[accountGrade] = < accountGrade, int,>
-      ,[canPubCount] = < canPubCount, int,>
-      ,[realmNameInfo] = < realmNameInfo, nvarchar(50),>
-      ,[expirationTime] = < expirationTime, nvarchar(50),>
-      ,[endPubCount] = < endPubCount, int,>
-      ,[endTodayPubCount] = < endTodayPubCount, int,>
-      ,[registerTime] = < registerTime, nvarchar(50),>
-      ,[registerIP] = < registerIP, nvarchar(50),>  " + sqlstr);
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
+   SET[username] = @username
+      ,[password] = @password
+      ,[accountGrade] = @accountGrade
+      ,[canPubCount] = @canPubCount
+      ,[realmNameInfo] = @realmNameInfo
+      ,[expirationTime] = @expirationTime
+      ,[endPubCount] = @endPubCount
+      ,[endTodayPubCount] = @endTodayPubCount
+      ,[registerTime] = @registerTime
+      ,[registerIP] = @registerIP" + sqlstr);
         }
         /// <summary>
         /// 删除用户
@@ -74,7 +66,7 @@ namespace BLL
         /// <returns></returns>
         public void DelUser(string sqlstr)
         {
-            int a = SqlHelper.ExecuteNoQuery("delete * from userInfo " + sqlstr);
+            int a = SqlHelper.ExecuteNonQuery("delete * from userInfo " + sqlstr);
         }
     }
 }

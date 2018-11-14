@@ -138,7 +138,11 @@ namespace AutoSend
         /// <returns></returns>
         public string addUser(HttpContext context)
         {
-            return "";
+            string strjson = context.Request["json"];
+            cmUserBLL cmBLL = new cmUserBLL();
+            cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
+            cmBLL.AddUser(cm);
+            return "{\"code\": \"1\", \"msg\": \"添加成功！\"}";
         }
         /// <summary>
         /// 更新会员信息
@@ -150,7 +154,7 @@ namespace AutoSend
             string strjson = context.Request["json"];
             cmUserBLL cmBLL = new cmUserBLL();
             cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
-            cmBLL.DelUser(string.Format("where Id='{0}'", cm.Id));
+            cmBLL.UpdateUser(cm,string.Format("where Id='{0}'", cm.Id));
             return "{\"code\": \"1\", \"msg\": \"更新成功！\"}";
         }
         /// <summary>

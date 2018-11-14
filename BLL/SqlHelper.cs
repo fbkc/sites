@@ -1,24 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Data;
 using System.Configuration;
 using System.Data.SqlClient;
-using System.Security.Cryptography;
+using System.Data;
 
-namespace Data
+namespace HRMSys.DAL
 {
-    #region lhc
-    public class SqlHelper
+    class SqlHelper
     {
-        //private static string connStr = ConfigurationManager.ConnectionStrings["data"].ConnectionString;User ID=fangyuan001;Password=fangyuan001 @"Data Source=localhost;database = 你的数据库名;Integrated security = true "
         private static string connStr = "Data Source=39.105.196.3;Initial Catalog=AutouSend;User ID=lhc;Password=123456";
-        /// <summary>
-        /// 返回受影响的数据行数
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <returns></returns>
-        public static int ExecuteNoQuery(string sql)
+        //封装的原则：把不变的放到方法里 吧变化的（string sql）传到参数里
+        public static int ExecuteNonQuery(string sql, params SqlParameter[] parameters)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
@@ -26,32 +20,16 @@ namespace Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = sql;
+                    //foreach (SqlParameter param in parameters)
+                    //{
+                    //    cmd.Parameters.Add(param);
+                    //}
+                    cmd.Parameters.AddRange(parameters);
                     return cmd.ExecuteNonQuery();
-
                 }
             }
         }
-        /// <summary>
-        /// 返回一个数据集
-        /// </summary>
-        /// <param name="sql"></param>
-        /// <returns></returns>
-        public static DataSet ExecuteDataSet(string sql)
-        {
-            using (SqlConnection xonn = new SqlConnection(connStr))
-            {
-                xonn.Open();
-                using (SqlCommand cmd = xonn.CreateCommand())
-                {
-                    cmd.CommandText = sql;
-                    SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                    DataSet dataset = new DataSet();
-                    adapter.Fill(dataset);
-                    return dataset;
-                }
-            }
-        }
-        public static object ExecuteScalar(string sql)
+        public static int ExecuteNonQuery(string sql)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
@@ -59,13 +37,93 @@ namespace Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = sql;
+                    //foreach (SqlParameter param in parameters)
+                    //{
+                    //    cmd.Parameters.Add(param);
+                    //}
+                    return cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        public static object ExecuteScalar(string sql, params SqlParameter[] parameters)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    cmd.Parameters.AddRange(parameters);
                     return cmd.ExecuteScalar();
                 }
             }
         }
+        //只用来执行查询结果比较少的sql
+        public static DataTable ExecuteDataTable(string sql, params SqlParameter[] parameters)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    cmd.Parameters.AddRange(parameters);
+                    DataSet dataset = new DataSet();
+                    SqlDataAdapter apdater = new SqlDataAdapter(cmd);
+                    apdater.FillSchema(dataset, SchemaType.Source);//获得表信息必须要写
+                    apdater.Fill(dataset);
+                    return dataset.Tables[0];
+                }
+            }
+        }
+        //只用来执行查询结果比较少的sql
+        public static DataSet ExecuteDataSet(string sql)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    DataSet dataset = new DataSet();
+                    SqlDataAdapter apdater = new SqlDataAdapter(cmd);
+                    apdater.FillSchema(dataset, SchemaType.Source);//获得表信息必须要写
+                    apdater.Fill(dataset);
+                    return dataset;
+                }
+            }
+        }
+        public static SqlDataReader ExecuteDataReader(string sql, params SqlParameter[] parameters)
+        {
+            //using (SqlConnection conn = new SqlConnection(connStr))
+            //{
+            //    conn.Open();
+            //    using (SqlCommand cmd = conn.CreateCommand())
+            //    {
+            //        cmd.CommandText = sql;
+            //        cmd.Parameters.AddRange(parameters);
+            //        SqlDataReader sd = cmd.ExecuteReader(CommandBehavior.CloseConnection);
+            //        return sd;
+            //    }
+            //}
+            SqlConnection conn = null;
+            try
+            {
+                conn = new SqlConnection(connStr);
+                conn.Open();
+                SqlCommand comm = new SqlCommand(sql, conn);
+                comm.Parameters.AddRange(parameters);
+                SqlDataReader reader = comm.ExecuteReader(CommandBehavior.CloseConnection);
+                return reader;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }          
+        }
         public static object FromDBNull(object values)
         {
-            if (values == DBNull.Value)
+            if (values==DBNull.Value)
             {
                 return null;
             }
@@ -86,5 +144,4 @@ namespace Data
             }
         }
     }
-    #endregion
 }
