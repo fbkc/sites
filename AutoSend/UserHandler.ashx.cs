@@ -147,9 +147,10 @@ namespace AutoSend
         /// <returns></returns>
         public string updateUser(HttpContext context)
         {
-            string id = context.Request["Id"];
+            string strjson = context.Request["json"];
             cmUserBLL cmBLL = new cmUserBLL();
-            cmBLL.DelUser(string.Format("where Id='{0}'", id));
+            cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
+            cmBLL.DelUser(string.Format("where Id='{0}'", cm.Id));
             return "{\"code\": \"1\", \"msg\": \"更新成功！\"}";
         }
         /// <summary>
