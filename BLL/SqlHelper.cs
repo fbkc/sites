@@ -63,6 +63,28 @@ namespace Data
                 }
             }
         }
+        public static object FromDBNull(object values)
+        {
+            if (values == DBNull.Value)
+            {
+                return null;
+            }
+            else
+            {
+                return values;
+            }
+        }
+        public static object ToDBNull(object values)
+        {
+            if (values == null)
+            {
+                return DBNull.Value;
+            }
+            else
+            {
+                return values;
+            }
+        }
     }
     #endregion
 }
