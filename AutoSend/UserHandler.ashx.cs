@@ -1,5 +1,6 @@
 ﻿using BLL;
 using Model;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -141,9 +142,10 @@ namespace AutoSend
         /// <returns></returns>
         public string AddUser(HttpContext context)
         {
-            string strjson = context.Request["json"];
+            var strjson = context.Request["json"];
+            var jss = new JsonSerializerSettings {NullValueHandling=NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
+            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson,jss);
             cmBLL.AddUser(cm);
             return "{\"code\": \"1\", \"msg\": \"添加成功！\"}";
         }
@@ -154,9 +156,10 @@ namespace AutoSend
         /// <returns></returns>
         public string UpdateUser(HttpContext context)
         {
-            string strjson = context.Request["json"];
+            var strjson = context.Request["json"];
+            var jss = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
+            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson,jss);
             cmBLL.UpdateUser(cm,string.Format("where Id='{0}'", cm.Id));
             return "{\"code\": \"1\", \"msg\": \"更新成功！\"}";
         }
