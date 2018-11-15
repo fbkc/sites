@@ -7,8 +7,8 @@ using System.Web.Http.Dispatcher;
 using System.Web.Routing;
 using Swagger.Net;
 
-[assembly: WebActivator.PreApplicationStartMethod(typeof(AutoSend.App_Start.SwaggerNet), "PreStart")]
-[assembly: WebActivator.PostApplicationStartMethod(typeof(AutoSend.App_Start.SwaggerNet), "PostStart")]
+//[assembly: WebActivator.PreApplicationStartMethod(typeof(AutoSend.App_Start.SwaggerNet), "PreStart")]
+//[assembly: WebActivator.PostApplicationStartMethod(typeof(AutoSend.App_Start.SwaggerNet), "PostStart")]
 namespace AutoSend.App_Start 
 {
     /// <summary>

@@ -109,6 +109,7 @@
     <Content Include="UserHandler.ashx" />
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
+    <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
