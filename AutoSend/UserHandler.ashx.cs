@@ -15,7 +15,10 @@ namespace AutoSend
     /// </summary>
     public class Handler : IHttpHandler, IRequiresSessionState
     {
-
+        /// <summary>
+        /// 主进程
+        /// </summary>
+        /// <param name="context"></param>
         public void ProcessRequest(HttpContext context)
         {
             context.Response.ContentType = "text/html";
@@ -34,9 +37,9 @@ namespace AutoSend
                         case "login": _strContent.Append(UserLogin(context)); break;//会员登录
                         case "test": _strContent.Append("这是个测试"); break;
                         case "getuser": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
-                        case "adduser": _strContent.Append(addUser(context)); break;//添加会员
-                        case "putuser": _strContent.Append(updateUser(context)); break;//修改会员信息
-                        case "deluser": _strContent.Append(delUser(context)); break;//删除会员
+                        case "adduser": _strContent.Append(AddUser(context)); break;//添加会员
+                        case "putuser": _strContent.Append(UpdateUser(context)); break;//修改会员信息
+                        case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
                         default: break;
                     }
                 }
@@ -72,7 +75,7 @@ namespace AutoSend
             }
             else
             {
-                cmUserBLL bll = new cmUserBLL();
+                CmUserBLL bll = new CmUserBLL();
                 DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
                 if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
                 {
@@ -106,7 +109,7 @@ namespace AutoSend
         /// <returns></returns>
         public string GetUserInfo(HttpContext context)
         {
-            cmUserBLL bll = new cmUserBLL();
+            CmUserBLL bll = new CmUserBLL();
             List<cmUserInfo> uList = new List<cmUserInfo>();
             DataTable dt = bll.GetUser("");
             if (dt.Rows.Count < 1)
@@ -136,10 +139,10 @@ namespace AutoSend
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string addUser(HttpContext context)
+        public string AddUser(HttpContext context)
         {
             string strjson = context.Request["json"];
-            cmUserBLL cmBLL = new cmUserBLL();
+            CmUserBLL cmBLL = new CmUserBLL();
             cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
             cmBLL.AddUser(cm);
             return "{\"code\": \"1\", \"msg\": \"添加成功！\"}";
@@ -149,10 +152,10 @@ namespace AutoSend
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string updateUser(HttpContext context)
+        public string UpdateUser(HttpContext context)
         {
             string strjson = context.Request["json"];
-            cmUserBLL cmBLL = new cmUserBLL();
+            CmUserBLL cmBLL = new CmUserBLL();
             cmUserInfo cm = SerializerHelper.DeserializeJsonToObject<cmUserInfo>(strjson);
             cmBLL.UpdateUser(cm,string.Format("where Id='{0}'", cm.Id));
             return "{\"code\": \"1\", \"msg\": \"更新成功！\"}";
@@ -162,13 +165,16 @@ namespace AutoSend
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string delUser(HttpContext context)
+        public string DelUser(HttpContext context)
         {
             string id = context.Request["Id"];
-            cmUserBLL cmBLL = new cmUserBLL();
+            CmUserBLL cmBLL = new CmUserBLL();
             cmBLL.DelUser(string.Format("where Id='{0}'", id));
             return "{\"code\": \"1\", \"msg\": \"删除成功！\"}";
         }
+        /// <summary>
+        /// IsReusable
+        /// </summary>
         public bool IsReusable
         {
             get

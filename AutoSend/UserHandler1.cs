@@ -82,7 +82,7 @@ namespace AutoSend
             }
             else
             {
-                cmUserBLL bll = new cmUserBLL();
+                CmUserBLL bll = new CmUserBLL();
                 DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
                 if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
                 {
@@ -116,7 +116,7 @@ namespace AutoSend
         /// <returns></returns>
         public string GetUserInfo(HttpContext context)
         {
-            cmUserBLL bll = new cmUserBLL();
+            CmUserBLL bll = new CmUserBLL();
             List<cmUserInfo> uList = new List<cmUserInfo>();
             DataTable dt = bll.GetUser("");
             if (dt.Rows.Count < 1)
@@ -158,7 +158,7 @@ namespace AutoSend
         public string updateUser(HttpContext context)
         {
             string id = context.Request["Id"];
-            cmUserBLL cmBLL = new cmUserBLL();
+            CmUserBLL cmBLL = new CmUserBLL();
             cmBLL.DelUser(string.Format("where Id='{0}'", id));
             return "{\"code\": \"1\", \"msg\": \"更新成功！\"}";
         }
@@ -170,7 +170,7 @@ namespace AutoSend
         public string delUser(HttpContext context)
         {
             string id = context.Request["Id"];
-            cmUserBLL cmBLL = new cmUserBLL();
+            CmUserBLL cmBLL = new CmUserBLL();
             cmBLL.DelUser(string.Format("where Id='{0}'", id));
             return "{\"code\": \"1\", \"msg\": \"删除成功！\"}";
         }

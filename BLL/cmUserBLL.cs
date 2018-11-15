@@ -9,7 +9,7 @@ using System.Text;
 
 namespace BLL
 {
-    public class cmUserBLL
+    public class CmUserBLL
     {
         /// <summary>
         /// 查找用户
