@@ -96,7 +96,7 @@ namespace AutoSend
                 {
                     int _userid = 0;
                     int.TryParse(dt.Rows[0]["Id"].ToString(), out _userid);
-                    model.Id = _userid.ToString();
+                    model.Id = _userid;
                     model.username = dt.Rows[0]["username"].ToString();
                     model.password = dt.Rows[0]["password"].ToString();
                     if (model.password != _password)
@@ -124,10 +124,11 @@ namespace AutoSend
             foreach (DataRow row in dt.Rows)
             {
                 cmUserInfo userInfo = new cmUserInfo();
-                userInfo.Id = (string)row["Id"].ToString();
+                userInfo.Id = (int)row["Id"];
                 userInfo.username = (string)row["username"];
                 userInfo.password = (string)row["password"];
-                userInfo.accountGrade = (int)row["accountGrade"];
+                userInfo.userType = (int)row["userType"];
+                userInfo.gradeId = (int)row["gradeId"];
                 userInfo.canPubCount = (int)row["canPubCount"];
                 userInfo.realmNameInfo = (string)row["realmNameInfo"];
                 userInfo.expirationTime = (string)row["expirationTime"];

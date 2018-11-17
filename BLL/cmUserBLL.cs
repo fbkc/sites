@@ -28,11 +28,12 @@ namespace BLL
         public void AddUser(cmUserInfo cmUser)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[userInfo]
-           (username,password,accountGrade,canPubCount,realmNameInfo,expirationTime,endPubCount,endTodayPubCount,registerTime,registerIP) VALUES
-           (@username,@password,@accountGrade,@canPubCount,@realmNameInfo,@expirationTime,@endPubCount,@endTodayPubCount,@registerTime,@registerIP)",
+           (username,password,userType,accountGrade,canPubCount,realmNameInfo,expirationTime,endPubCount,endTodayPubCount,registerTime,registerIP) VALUES
+           (@username,@password,@userType,@gradeId,@canPubCount,@realmNameInfo,@expirationTime,@endPubCount,@endTodayPubCount,@registerTime,@registerIP)",
            new SqlParameter("@username", SqlHelper.ToDBNull(cmUser.username)),
            new SqlParameter("@password", SqlHelper.ToDBNull(cmUser.password)),
-           new SqlParameter("@accountGrade", SqlHelper.ToDBNull(cmUser.accountGrade)),
+           new SqlParameter("@userType", SqlHelper.ToDBNull(cmUser.userType)),
+           new SqlParameter("@gradeId", SqlHelper.ToDBNull(cmUser.gradeId)),
            new SqlParameter("@canPubCount", SqlHelper.ToDBNull(cmUser.canPubCount)),
            new SqlParameter("@realmNameInfo", SqlHelper.ToDBNull(cmUser.realmNameInfo)),
            new SqlParameter("@expirationTime", SqlHelper.ToDBNull(cmUser.expirationTime)),
@@ -45,12 +46,13 @@ namespace BLL
         /// 更新会员信息
         /// </summary>
         /// <param name="sqlstr"></param>
-        public void UpdateUser(cmUserInfo cmUser,string sqlstr)
+        public void UpdateUser(cmUserInfo cmUser, string sqlstr)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
    SET[username] = @username
       ,[password] = @password
-      ,[accountGrade] = @accountGrade
+,[userType] = @userType
+      ,[gradeId] = @gradeId
       ,[canPubCount] = @canPubCount
       ,[realmNameInfo] = @realmNameInfo
       ,[expirationTime] = @expirationTime
