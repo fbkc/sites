@@ -124,6 +124,7 @@
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\SwaggerNet.cs" />
     <Compile Include="detail.cs" />
+    <Compile Include="jsonInfo.cs" />
     <Compile Include="MyInfo.cs" />
     <Compile Include="UserHandler.ashx.cs">
       <DependentUpon>UserHandler.ashx</DependentUpon>

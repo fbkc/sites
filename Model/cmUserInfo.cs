@@ -11,6 +11,7 @@ namespace Model
         public string username { get; set; }
         public string password { get; set; }
         public int userType { get; set; }
+        public bool isStop { get; set; }
         public int gradeId { get; set; }
         public int canPubCount { get; set; }
         public string realmNameInfo { get; set; }

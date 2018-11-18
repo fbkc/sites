@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -17,6 +18,7 @@ namespace AutoSend
     /// </summary>
     public class Handler : IHttpHandler, IRequiresSessionState
     {
+        private static JavaScriptSerializer jss = new JavaScriptSerializer();
         /// <summary>
         /// 主进程
         /// </summary>
@@ -30,7 +32,11 @@ namespace AutoSend
                 string _strAction = context.Request.Params["action"];
                 if (string.IsNullOrEmpty(_strAction))
                 {
-                    _strContent.Append("{\"code\": \"0\", \"msg\": \"禁止访问！\",\"detail\": \"\"}");
+                    jsonInfo json = new jsonInfo();
+                    json.code = "0";
+                    json.msg = "禁止访问";
+                    json.detail = null;
+                    _strContent.Append(jss.Serialize(json));
                 }
                 else
                 {
@@ -41,7 +47,8 @@ namespace AutoSend
                         case "adduser": _strContent.Append(AddUser(context)); break;//添加会员
                         case "putuser": _strContent.Append(UpdateUser(context)); break;//修改会员信息
                         case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
-                        case "getAccount": _strContent.Append(GetAccount(context)); break;//获取所有会员
+                        case "getAccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
+                        case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名   
                         default: break;
                     }
                 }
@@ -57,14 +64,21 @@ namespace AutoSend
         {
             string result = "";
             string header = context.Request.Headers["Authorization"];
-            if (string.IsNullOrEmpty(header))
-            {
-                return "{\"code\": \"0\", \"msg\": \"\",\"detail\": \"\"}";
-            }
             if (header.Contains(MyInfo.cookie))
             {
-                JavaScriptSerializer jss = new JavaScriptSerializer();
-                return "{\"code\": \"0\", \"msg\": \"\",\"detail\": \"" + jss.Serialize((cmUserInfo)context.Session["UserModel"]) + "\"}";
+                jsonInfo json = new jsonInfo();
+                json.code = "1";
+                json.msg = "";
+                //json.detail.cmUser = (cmUserInfo)context.Session["UserModel"];
+                result = jss.Serialize(json);
+            }
+            else
+            {
+                jsonInfo json = new jsonInfo();
+                json.code = "0";
+                json.msg = "您尚未登录";
+                json.detail = null;
+                result = jss.Serialize(json);
             }
             return result;
         }
@@ -78,35 +92,26 @@ namespace AutoSend
             string result = "";
             string _username = context.Request["username"];
             string _password = context.Request["password"];
-            if (string.IsNullOrEmpty(_username))
-                return "{\"code\": \"0\", \"msg\": \"用户名不能为空！\",\"detail\": \"\"}";
-            if (string.IsNullOrEmpty(_password))
-                return "{\"code\": \"0\", \"msg\": \"密码不能为空！\",\"detail\": \"\"}";
+            if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
+                return "";
             cmUserInfo model = new cmUserInfo();
-            //if (context.Session["UserModel"] != null)
-            //{   //当前浏览器已经有用户登录 判断是不是当前输入的用户
-            //    model = (cmUserInfo)context.Session["UserModel"];
-            //    if (model.username != _username)
-            //    {
-            //        result = "{\"code\": \"0\", \"msg\": \"此浏览器已经有其他用户登录！\",\"detail\": \"\"}";
-            //    }
-            //    else
-            //    {
-            //        result = "{\"code\": \"1\", \"msg\": \"登录成功！\",\"detail\": \"\"}";
-            //        context.Response.Redirect("http://localhost:6808/UserHandler.ashx?action=login&username=liu&password=");
-            //    }
-            //}
-            //else
-            //{
             CmUserBLL bll = new CmUserBLL();
             DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
             if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
             {
-                result = "{\"code\": \"0\", \"msg\": \"登录错误！\",\"detail\": \"\"}";
+                jsonInfo json = new jsonInfo();
+                json.code = "0";
+                json.msg = "登录错误";
+                json.detail = null;
+                result = jss.Serialize(json);
             }
             else if (dt.Rows.Count == 0)
             {
-                result = "{\"code\": \"0\", \"msg\": \"用户名不存在！\",\"detail\": \"\"}";
+                jsonInfo json = new jsonInfo();
+                json.code = "0";
+                json.msg = "用户名不存在";
+                json.detail = null;
+                result = jss.Serialize(json);
             }
             else if (dt.Rows.Count == 1)
             {
@@ -119,22 +124,42 @@ namespace AutoSend
                 int.TryParse(dt.Rows[0]["userType"].ToString(), out _userType);
                 model.userType = _userType;
                 if (model.password != _password)
-                    result = "{\"code\": \"0\", \"msg\": \"密码错误！\",\"detail\": \"\"}";
+                {
+                    jsonInfo json = new jsonInfo();
+                    json.code = "0";
+                    json.msg = "密码错误";
+                    json.detail = null;
+                    result = jss.Serialize(json);
+                }
+                if (model.isStop)
+                {
+                    jsonInfo json = new jsonInfo();
+                    json.code = "0";
+                    json.msg = "该用户已被停用";
+                    json.detail = null;
+                    result = jss.Serialize(json);
+                }
                 else
                 {
                     context.Session["UserModel"] = model;
                     JavaScriptSerializer jss = new JavaScriptSerializer();
-                    detail d = new detail();
-                    d.cmUser = model;
-                    d.userCookie = GetMD5(model.username);
+                    //detail d = new detail();
+                    //d.cmUser = model;
+                    //d.userCookie = GetMD5(model.username);
+                    StringBuilder _strContent = new StringBuilder();
+                    _strContent.Append(model);
+                    string md5 = GetMD5(model.username);
+                    _strContent.Append(md5);
                     MyInfo.user = model.username;//用户名
                     MyInfo.cmUser = model;//用户信息
-                    MyInfo.cookie = d.userCookie;//cookie存到全局变量
-                    result = "{\"code\": \"1\", \"msg\": \"登录成功！\",\"detail\": \"" + jss.Serialize(d) + "\"}";
-                    //context.Response.Redirect("~/");
+                    MyInfo.cookie = md5;//cookie存到全局变量
+                    jsonInfo json = new jsonInfo();
+                    json.code = "1";
+                    json.msg = "登陆成功";
+                    json.detail = _strContent;
+                    result = jss.Serialize(json);
                 }
             }
-            //}
             return result;
         }
         /// <summary>
@@ -155,6 +180,7 @@ namespace AutoSend
                 userInfo.username = (string)row["username"];
                 userInfo.password = (string)row["password"];
                 userInfo.userType = (int)row["userType"];
+                userInfo.isStop = (bool)row["isStop"];
                 userInfo.gradeId = (int)row["gradeId"];
                 userInfo.canPubCount = (int)row["canPubCount"];
                 userInfo.realmNameInfo = (string)row["realmNameInfo"];
@@ -166,9 +192,15 @@ namespace AutoSend
                 uList.Add(userInfo);
             }
             //将list对象集合转换为Json
-            JavaScriptSerializer jss = new JavaScriptSerializer();
-            return "{\"code\": \"1\", \"msg\": \"添加成功！\",\"detail\": \"" + jss.Serialize(uList) + "\"}";
-
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            //detail d = new detail();
+            //d.det1 = uList;
+            StringBuilder _strContent = new StringBuilder();
+            _strContent.Append(uList);
+            json.detail = _strContent;
+            return jss.Serialize(json);
         }
         /// <summary>
         /// 添加会员
@@ -178,11 +210,15 @@ namespace AutoSend
         public string AddUser(HttpContext context)
         {
             var strjson = context.Request["json"];
-            var jss = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, jss);
+            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
             cmBLL.AddUser(cm);
-            return "{\"code\": \"1\", \"msg\": \"添加成功！\",\"detail\": \"\"}";
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "添加成功";
+            json.detail = null;
+            return jss.Serialize(json);
         }
         /// <summary>
         /// 更新会员信息
@@ -192,11 +228,15 @@ namespace AutoSend
         public string UpdateUser(HttpContext context)
         {
             var strjson = context.Request["json"];
-            var jss = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, jss);
+            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
             cmBLL.UpdateUser(cm, string.Format("where Id='{0}'", cm.Id));
-            return "{\"code\": \"1\", \"msg\": \"更新成功！\",\"detail\": \"\"}";
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "更新成功";
+            json.detail = null;
+            return jss.Serialize(json);
         }
         /// <summary>
         /// 删除会员 
@@ -208,7 +248,11 @@ namespace AutoSend
             string id = context.Request["Id"];
             CmUserBLL cmBLL = new CmUserBLL();
             cmBLL.DelUser(string.Format("where Id='{0}'", id));
-            return "{\"code\": \"1\", \"msg\": \"删除成功！\",\"detail\": \"\"}";
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "删除成功";
+            json.detail = null;
+            return jss.Serialize(json);
         }
         /// <summary>
         /// MD5
@@ -230,6 +274,38 @@ namespace AutoSend
 
             }
             return pwd;
+        }
+        /// <summary>
+        /// 获取域名
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetRealmList(HttpContext context)
+        {
+            realmBLL bll = new realmBLL();
+            List<realmNameInfo> rList = new List<realmNameInfo>();
+            DataTable dt = bll.GetRealmList("");
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                realmNameInfo rInfo = new realmNameInfo();
+                rInfo.Id = (int)row["Id"];
+                rInfo.realmName = (string)row["realmName"];
+                rInfo.realmAddress = (string)row["realmAddress"];
+                rInfo.isUseing = (bool)row["isUseing"];
+                rList.Add(rInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            //detail d = new detail();
+            //d.det1 = rList;
+            StringBuilder _strContent = new StringBuilder();
+            _strContent.Append(rList);
+            json.detail = _strContent;
+            return jss.Serialize(json);
         }
         /// <summary>
         /// IsReusable
