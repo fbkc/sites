@@ -35,7 +35,7 @@ namespace AutoSend
                     jsonInfo json = new jsonInfo();
                     json.code = "0";
                     json.msg = "禁止访问";
-                    json.detail = null;
+                    json.detail = new object { };
                     _strContent.Append(jss.Serialize(json));
                 }
                 else
@@ -69,7 +69,7 @@ namespace AutoSend
                 jsonInfo json = new jsonInfo();
                 json.code = "1";
                 json.msg = "";
-                //json.detail.cmUser = (cmUserInfo)context.Session["UserModel"];
+                json.detail = new object { };
                 result = jss.Serialize(json);
             }
             else
@@ -77,7 +77,7 @@ namespace AutoSend
                 jsonInfo json = new jsonInfo();
                 json.code = "0";
                 json.msg = "您尚未登录";
-                json.detail = null;
+                json.detail = new object { };
                 result = jss.Serialize(json);
             }
             return result;
@@ -102,7 +102,7 @@ namespace AutoSend
                 jsonInfo json = new jsonInfo();
                 json.code = "0";
                 json.msg = "登录错误";
-                json.detail = null;
+                json.detail = new object { };
                 result = jss.Serialize(json);
             }
             else if (dt.Rows.Count == 0)
@@ -110,7 +110,7 @@ namespace AutoSend
                 jsonInfo json = new jsonInfo();
                 json.code = "0";
                 json.msg = "用户名不存在";
-                json.detail = null;
+                json.detail = new object { };
                 result = jss.Serialize(json);
             }
             else if (dt.Rows.Count == 1)
@@ -122,41 +122,37 @@ namespace AutoSend
                 model.password = dt.Rows[0]["password"].ToString();
                 int _userType = 0;
                 int.TryParse(dt.Rows[0]["userType"].ToString(), out _userType);
-                model.userType = _userType;
+                model.userType = _userType;//用户角色
+                model.isStop = (bool)dt.Rows[0]["isStop"];
                 if (model.password != _password)
                 {
                     jsonInfo json = new jsonInfo();
                     json.code = "0";
                     json.msg = "密码错误";
-                    json.detail = null;
+                    json.detail = new object { };
                     result = jss.Serialize(json);
                 }
-                if (model.isStop)
+                else  if (model.isStop)
                 {
                     jsonInfo json = new jsonInfo();
                     json.code = "0";
                     json.msg = "该用户已被停用";
-                    json.detail = null;
+                    json.detail = new object { };
                     result = jss.Serialize(json);
                 }
                 else
                 {
                     context.Session["UserModel"] = model;
                     JavaScriptSerializer jss = new JavaScriptSerializer();
-                    //detail d = new detail();
-                    //d.cmUser = model;
-                    //d.userCookie = GetMD5(model.username);
-                    StringBuilder _strContent = new StringBuilder();
-                    _strContent.Append(model);
                     string md5 = GetMD5(model.username);
-                    _strContent.Append(md5);
                     MyInfo.user = model.username;//用户名
                     MyInfo.cmUser = model;//用户信息
                     MyInfo.cookie = md5;//cookie存到全局变量
                     jsonInfo json = new jsonInfo();
                     json.code = "1";
                     json.msg = "登陆成功";
-                    json.detail = _strContent;
+                    var obj = new { userCookie = md5, cmUser = model };
+                    json.detail = obj;
                     result = jss.Serialize(json);
                 }
             }
@@ -195,11 +191,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "成功";
-            //detail d = new detail();
-            //d.det1 = uList;
-            StringBuilder _strContent = new StringBuilder();
-            _strContent.Append(uList);
-            json.detail = _strContent;
+            json.detail = new { cmUserList = uList };
             return jss.Serialize(json);
         }
         /// <summary>
@@ -217,7 +209,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "添加成功";
-            json.detail = null;
+            json.detail = new { };
             return jss.Serialize(json);
         }
         /// <summary>
@@ -235,7 +227,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "更新成功";
-            json.detail = null;
+            json.detail = new { };
             return jss.Serialize(json);
         }
         /// <summary>
@@ -251,7 +243,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "删除成功";
-            json.detail = null;
+            json.detail = new { };
             return jss.Serialize(json);
         }
         /// <summary>
@@ -300,11 +292,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "成功";
-            //detail d = new detail();
-            //d.det1 = rList;
-            StringBuilder _strContent = new StringBuilder();
-            _strContent.Append(rList);
-            json.detail = _strContent;
+            json.detail = new { realmList = rList };
             return jss.Serialize(json);
         }
         /// <summary>
