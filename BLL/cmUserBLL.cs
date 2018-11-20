@@ -28,7 +28,7 @@ namespace BLL
         public void AddUser(cmUserInfo cmUser)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[userInfo]
-           (username,password,userType,isStop,accountGrade,canPubCount,realmNameInfo,expirationTime,endPubCount,endTodayPubCount,registerTime,registerIP,companyName,columnInfoId,
+           (username,password,userType,isStop,gradeId,canPubCount,realmNameInfo,expirationTime,endPubCount,endTodayPubCount,registerTime,registerIP,companyName,columnInfoId,
 person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,unit,city,address,com_web,companyRemark,yewu,ziduan1) VALUES
            (@username,@password,@userType,@isStop,@gradeId,@canPubCount,@realmNameInfo,@expirationTime,@endPubCount,@endTodayPubCount,@registerTime,@registerIP,@companyName,
 @columnInfoId,@person,@telephone,@modile,@ten_qq,@keyword,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,@address,@com_web,@companyRemark,@yewu,@ziduan1)",

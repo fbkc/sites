@@ -1,10 +1,12 @@
 ﻿using BLL;
 using Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -25,7 +27,7 @@ namespace AutoSend
         /// <param name="context"></param>
         public void ProcessRequest(HttpContext context)
         {
-            context.Response.ContentType = "text/plain";
+            context.Response.ContentType = "application/json";
             StringBuilder _strContent = new StringBuilder();
             if (_strContent.Length == 0)
             {
@@ -196,6 +198,21 @@ namespace AutoSend
                 userInfo.endTodayPubCount = (int)row["endTodayPubCount"];
                 userInfo.registerTime = (string)row["registerTime"];
                 userInfo.registerIP = (string)row["registerIP"];
+                userInfo.companyName = (string)row["companyName"];
+                userInfo.columnInfoId = (int)row["columnInfoId"];
+                userInfo.person = (string)row["person"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
+                userInfo.companyName = (string)row["registerIP"];
                 uList.Add(userInfo);
             }
             //将list对象集合转换为Json
@@ -212,16 +229,33 @@ namespace AutoSend
         /// <returns></returns>
         public string AddUser(HttpContext context)
         {
-            var strjson = context.Request["json"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
-            cmBLL.AddUser(cm);
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "添加成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            try
+            {
+                StreamReader reader = new StreamReader(context.Request.InputStream);
+                string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
+                //Dictionary<string, object> str = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(strjson);
+                //JObject jo = new JObject();
+                //foreach (var item in str)
+                //{
+                //    //把字典转换成Json对象
+                //    jo.Add(item.Key, item.Value.ToString());
+                //}
+                
+                //return jo["username"].ToString();
+                CmUserBLL cmBLL = new CmUserBLL();
+                cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson);
+                //return cm.username;
+                cmBLL.AddUser(cm);
+                jsonInfo json = new jsonInfo();
+                json.code = "1";
+                json.msg = "添加成功";
+                json.detail = new { };
+                return jss.Serialize(json);
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
         }
         /// <summary>
         /// 更新会员信息
@@ -230,7 +264,7 @@ namespace AutoSend
         /// <returns></returns>
         public string UpdateUser(HttpContext context)
         {
-            var strjson = context.Request["user"];
+            var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
             cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
@@ -452,7 +486,7 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "成功";
-            json.detail = new { columnList =  cList};
+            json.detail = new { columnList = cList };
             return jss.Serialize(json);
         }
         /// <summary>

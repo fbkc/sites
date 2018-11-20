@@ -1,5 +1,9 @@
-﻿using System;
+﻿using BLL;
+using Model;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -33,30 +37,93 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        case "getParalist": _strContent.Append(GetParaInfo(context)); break;//获取此会员下所有段落
+                        case "getParalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "addPara": _strContent.Append(AddPara(context)); break;//添加段落
                         case "updatePara": _strContent.Append(UpdatePara(context)); break;//修改段落
                         case "delPara": _strContent.Append(DelPara(context)); break;//删除段落
-                        case "getAccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
-                        case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名 
-                        case "addrealm": _strContent.Append(AddRealm(context)); break;//增加域名 
-                        case "updaterealm": _strContent.Append(UpdateRealm(context)); break;//更新域名 
-                        case "delrealm": _strContent.Append(DeleteRealm(context)); break;//删除域名 
-                        case "getgradelist": _strContent.Append(GetGradeList(context)); break;//获取账号级别列表 
-                        case "addgrade": _strContent.Append(AddGrade(context)); break;//增加账号级别 
-                        case "updategrade": _strContent.Append(UpdateGrade(context)); break;//更新账号级别
-                        case "delgrade": _strContent.Append(DeleteGrade(context)); break;//删除账号级别
-                        case "getcolumnlist": _strContent.Append(GetColumnList(context)); break;//获取栏目列表 
-                        case "addcolumn": _strContent.Append(AddColumn(context)); break;//增加栏目 
-                        case "updatecolumn": _strContent.Append(UpdateColumn(context)); break;//更新栏目
-                        case "delcolumn": _strContent.Append(DeleteColumn(context)); break;//删除栏目
                         default: break;
                     }
                 }
             }
             context.Response.Write(_strContent.ToString());
         }
-
+        /// <summary>
+        /// 获取此会员下所有段落
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetParaList(HttpContext context)
+        {
+            paragraphBLL bll = new paragraphBLL();
+            List<paragraphInfo> pList = new List<paragraphInfo>();
+            var userId = context.Request["userId"];
+            DataTable dt = bll.GetParagraphList(string.Format("where Id='{0}'", userId));
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                paragraphInfo pInfo = new paragraphInfo();
+                pInfo.Id = (int)row["Id"];
+                pInfo.paraId = (string)row["paraId"];
+                pInfo.paraCotent = (string)row["paraCotent"];
+                pInfo.usedCount = (int)row["usedCount"];
+                pInfo.userId = (int)row["userId"];
+                pList.Add(pInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { paraList = pList };
+            return jss.Serialize(json);
+        }
+        public string AddPara(HttpContext context)
+        {
+            var strjson = context.Request["Para"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            paragraphBLL bll = new paragraphBLL();
+            paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
+            bll.AddParagraph(p);
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "添加成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 更新段落
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string UpdatePara(HttpContext context)
+        {
+            var strjson = context.Request["para"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            paragraphBLL bll = new paragraphBLL();
+            paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
+            bll.UpdateParagraph(p, string.Format("where Id='{0}'", p.Id));
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "更新成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除段落
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelPara(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            paragraphBLL bll = new paragraphBLL();
+            bll.DelParagraph(string.Format("where Id='{0}'", id));
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "删除成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
         public bool IsReusable
         {
             get
