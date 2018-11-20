@@ -107,6 +107,7 @@
     <Content Include="SwaggerUI\swagger-ui.js" />
     <Content Include="SwaggerUI\swagger-ui.min.js" />
     <Content Include="UserHandler.ashx" />
+    <Content Include="informationHandler.ashx" />
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
@@ -123,6 +124,9 @@
   <ItemGroup>
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\SwaggerNet.cs" />
+    <Compile Include="informationHandler.ashx.cs">
+      <DependentUpon>informationHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="jsonInfo.cs" />
     <Compile Include="MyInfo.cs" />
     <Compile Include="UserHandler.ashx.cs">

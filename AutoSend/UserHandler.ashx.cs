@@ -45,10 +45,21 @@ namespace AutoSend
                         case "login": _strContent.Append(UserLogin(context)); break;//会员登录
                         case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
                         case "adduser": _strContent.Append(AddUser(context)); break;//添加会员
-                        case "putuser": _strContent.Append(UpdateUser(context)); break;//修改会员信息
+                        case "updateuser": _strContent.Append(UpdateUser(context)); break;//修改会员信息
                         case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
                         case "getAccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
-                        case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名   
+                        case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名 
+                        case "addrealm": _strContent.Append(AddRealm(context)); break;//增加域名 
+                        case "updaterealm": _strContent.Append(UpdateRealm(context)); break;//更新域名 
+                        case "delrealm": _strContent.Append(DeleteRealm(context)); break;//删除域名 
+                        case "getgradelist": _strContent.Append(GetGradeList(context)); break;//获取账号级别列表 
+                        case "addgrade": _strContent.Append(AddGrade(context)); break;//增加账号级别 
+                        case "updategrade": _strContent.Append(UpdateGrade(context)); break;//更新账号级别
+                        case "delgrade": _strContent.Append(DeleteGrade(context)); break;//删除账号级别
+                        case "getcolumnlist": _strContent.Append(GetColumnList(context)); break;//获取栏目列表 
+                        case "addcolumn": _strContent.Append(AddColumn(context)); break;//增加栏目 
+                        case "updatecolumn": _strContent.Append(UpdateColumn(context)); break;//更新栏目
+                        case "delcolumn": _strContent.Append(DeleteColumn(context)); break;//删除栏目
                         default: break;
                     }
                 }
@@ -132,7 +143,7 @@ namespace AutoSend
                     json.detail = new object { };
                     result = jss.Serialize(json);
                 }
-                else  if (model.isStop)
+                else if (model.isStop)
                 {
                     jsonInfo json = new jsonInfo();
                     json.code = "0";
@@ -219,7 +230,7 @@ namespace AutoSend
         /// <returns></returns>
         public string UpdateUser(HttpContext context)
         {
-            var strjson = context.Request["json"];
+            var strjson = context.Request["user"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             CmUserBLL cmBLL = new CmUserBLL();
             cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
@@ -268,7 +279,7 @@ namespace AutoSend
             return pwd;
         }
         /// <summary>
-        /// 获取域名
+        /// 获取所有域名
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -293,6 +304,210 @@ namespace AutoSend
             json.code = "1";
             json.msg = "成功";
             json.detail = new { realmList = rList };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 增加域名
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string AddRealm(HttpContext context)
+        {
+            realmBLL bll = new realmBLL();
+            var strjson = context.Request["realm"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            realmNameInfo rm = JsonConvert.DeserializeObject<realmNameInfo>(strjson, js);
+            bll.AddRealm(rm);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 更新域名
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpdateRealm(HttpContext context)
+        {
+            realmBLL bll = new realmBLL();
+            var strjson = context.Request["realm"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            realmNameInfo rm = JsonConvert.DeserializeObject<realmNameInfo>(strjson, js);
+            bll.UpdateRealm(rm, string.Format("where Id='{0}'", rm.Id));
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除域名
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string DeleteRealm(HttpContext context)
+        {
+            realmBLL bll = new realmBLL();
+            var id = context.Request["realmId"];
+            bll.DelRealm(id);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 获取所有账户级别列表
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetGradeList(HttpContext context)
+        {
+            gradeBLL bll = new gradeBLL();
+            List<gradeInfo> gList = new List<gradeInfo>();
+            DataTable dt = bll.GetGradeList("");
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                gradeInfo gInfo = new gradeInfo();
+                gInfo.Id = (int)row["Id"];
+                gInfo.gradeName = (string)row["gradeName"];
+                gInfo.pubCount = (int)row["pubCount"];
+                gList.Add(gInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { gradeList = gList };
+            return jss.Serialize(json);
+        }
+        private string AddGrade(HttpContext context)
+        {
+            gradeBLL bll = new gradeBLL();
+            var strjson = context.Request["grade"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            gradeInfo grade = JsonConvert.DeserializeObject<gradeInfo>(strjson, js);
+            bll.AddGrade(grade);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        private string UpdateGrade(HttpContext context)
+        {
+            gradeBLL bll = new gradeBLL();
+            var strjson = context.Request["grade"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            gradeInfo grade = JsonConvert.DeserializeObject<gradeInfo>(strjson, js);
+            bll.UpdateGrade(grade, string.Format("where Id='{0}'", grade.Id));
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        private string DeleteGrade(HttpContext context)
+        {
+            gradeBLL bll = new gradeBLL();
+            var id = context.Request["gradeId"];
+            bll.DelGrade(id);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 获取所有栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetColumnList(HttpContext context)
+        {
+            columnBLL bll = new columnBLL();
+            List<columnInfo> cList = new List<columnInfo>();
+            DataTable dt = bll.GetColumnList("");
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                columnInfo cInfo = new columnInfo();
+                cInfo.Id = (int)row["Id"];
+                cInfo.columnId = (string)row["columnId"];
+                cInfo.columnName = (string)row["columnName"];
+                cList.Add(cInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { columnList =  cList};
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 增加栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string AddColumn(HttpContext context)
+        {
+            columnBLL bll = new columnBLL();
+            var strjson = context.Request["column"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            columnInfo column = JsonConvert.DeserializeObject<columnInfo>(strjson, js);
+            bll.AddColumn(column);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 更新栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpdateColumn(HttpContext context)
+        {
+            columnBLL bll = new columnBLL();
+            var strjson = context.Request["column"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            columnInfo column = JsonConvert.DeserializeObject<columnInfo>(strjson, js);
+            bll.UpdateColumn(column, string.Format("where Id='{0}'", column.Id));
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string DeleteColumn(HttpContext context)
+        {
+            columnBLL bll = new columnBLL();
+            var id = context.Request["columnId"];
+            bll.DelColumn(id);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
             return jss.Serialize(json);
         }
         /// <summary>

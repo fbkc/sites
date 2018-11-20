@@ -5,10 +5,10 @@ using System.Text;
 
 namespace Model
 {
-    public class gradeInfo
+    public class columnInfo
     {
         public int Id { get; set; }
-        public string gradeName { get; set; }
-        public int pubCount { get; set; }
+        public string columnId { get; set; }
+        public string columnName { get; set; }
     }
 }

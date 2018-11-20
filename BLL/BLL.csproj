@@ -41,7 +41,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="cmUserBLL.cs" />
+    <Compile Include="columnBLL.cs" />
     <Compile Include="gradeBLL.cs" />
+    <Compile Include="paragraphBLL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="realmBLL.cs" />
     <Compile Include="SqlHelper.cs" />
