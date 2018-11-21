@@ -237,8 +237,9 @@ namespace AutoSend
             try
             {
                 //StreamReader reader = new StreamReader(context.Request.InputStream);
-                //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());context.Request.Form["data[xm]"]
-                string strjson = context.Request.Form["username"];
+                //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
+                //context.Request.Form["data[xm]"]
+                string strjson = context.Request.Form["params"];
                 //Dictionary<string, object> str = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(strjson);
                 //JObject jo = new JObject();
                 //foreach (var item in str)
@@ -248,13 +249,23 @@ namespace AutoSend
                 //}
 
                 //return jo["username"].ToString();
-                if (string.IsNullOrEmpty(strjson))
-                {
+                //if (string.IsNullOrEmpty(strjson))
+                //{
 
-                    return "0";
-                }
-                else
-                    return strjson;
+                //    return "0";
+                //}
+                //else
+                //    return strjson;
+                //Stream stream = context.Request.InputStream;
+                //byte[] bytes = new byte[stream.Length];
+                //stream.Read(bytes, 0, bytes.Length);
+                //string parameters = Encoding.Default.GetString(bytes);
+                //cmUserInfo cm = new cmUserInfo();
+                //JObject jObject = (JObject)JsonConvert.DeserializeObject(parameters);
+                //cm.username = jObject["username"].ToString();
+                //cm.password = jObject["password"].ToString();
+
+
                 CmUserBLL cmBLL = new CmUserBLL();
                 cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson);
                 //return cm.username;
