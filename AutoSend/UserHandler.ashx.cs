@@ -27,7 +27,8 @@ namespace AutoSend
         /// <param name="context"></param>
         public void ProcessRequest(HttpContext context)
         {
-            context.Response.ContentType = "application/json";
+            //context.Response.ContentType = "application/json";
+            context.Response.ContentType = "text/plain";
             StringBuilder _strContent = new StringBuilder();
             if (_strContent.Length == 0)
             {
@@ -201,18 +202,22 @@ namespace AutoSend
                 userInfo.companyName = (string)row["companyName"];
                 userInfo.columnInfoId = (int)row["columnInfoId"];
                 userInfo.person = (string)row["person"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
-                userInfo.companyName = (string)row["registerIP"];
+                userInfo.telephone = (string)row["telephone"];
+                userInfo.modile = (string)row["modile"];
+                userInfo.ten_qq = (string)row["ten_qq"];
+                userInfo.keyword = (string)row["keyword"];
+                userInfo.pinpai = (string)row["pinpai"];
+                userInfo.xinghao = (string)row["xinghao"];
+                userInfo.price = (string)row["price"];
+                userInfo.smallCount = (string)row["smallCount"];
+                userInfo.sumCount = (string)row["sumCount"];
+                userInfo.unit = (string)row["unit"];
+                userInfo.city = (string)row["city"];
+                userInfo.address = (string)row["address"];
+                userInfo.com_web = (string)row["com_web"];
+                userInfo.companyRemark = (string)row["companyRemark"];
+                userInfo.yewu = (string)row["yewu"];
+                userInfo.ziduan1 = (string)row["ziduan1"];
                 uList.Add(userInfo);
             }
             //将list对象集合转换为Json
@@ -231,8 +236,9 @@ namespace AutoSend
         {
             try
             {
-                StreamReader reader = new StreamReader(context.Request.InputStream);
-                string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
+                //StreamReader reader = new StreamReader(context.Request.InputStream);
+                //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());context.Request.Form["data[xm]"]
+                string strjson = context.Request.Form["username"];
                 //Dictionary<string, object> str = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(strjson);
                 //JObject jo = new JObject();
                 //foreach (var item in str)
@@ -240,8 +246,15 @@ namespace AutoSend
                 //    //把字典转换成Json对象
                 //    jo.Add(item.Key, item.Value.ToString());
                 //}
-                
+
                 //return jo["username"].ToString();
+                if (string.IsNullOrEmpty(strjson))
+                {
+
+                    return "0";
+                }
+                else
+                    return strjson;
                 CmUserBLL cmBLL = new CmUserBLL();
                 cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson);
                 //return cm.username;
