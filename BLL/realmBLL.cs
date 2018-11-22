@@ -43,12 +43,12 @@ namespace AutoSend
         /// </summary>
         /// <param name="realm"></param>
         /// <param name="sqlstr"></param>
-        public void UpdateRealm(realmNameInfo realm, string sqlstr)
+        public void UpdateRealm(realmNameInfo realm)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[realmNameInfo]
    SET [realmName] = @realmName
       ,[realmAddress] = @realmAddress
-      ,[isUseing] = @isUseing" + sqlstr,
+      ,[isUseing] = @isUseing where Id=@Id",
       new SqlParameter("@Id", SqlHelper.ToDBNull(realm.Id)),
        new SqlParameter("@realmName", SqlHelper.ToDBNull(realm.realmName)),
                new SqlParameter("@realmAddress", SqlHelper.ToDBNull(realm.realmAddress)),

@@ -19,21 +19,16 @@ namespace BLL
         public void AddColumn(columnInfo column)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[columnInfo]
-           ([columnId]
-           ,[columnName])
+           ([columnName])
      VALUES
-           (@columnId
-           ,@columnName)",
-               new SqlParameter("@columnId", SqlHelper.ToDBNull(column.columnId)),
+           (@columnName)",
                new SqlParameter("@columnName", SqlHelper.ToDBNull(column.columnName)));
         }
-        public void UpdateColumn(columnInfo column, string sqlstr)
+        public void UpdateColumn(columnInfo column)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[columnInfo]
-   SET [columnId] = @columnId
-      ,[columnName] = @columnName" + sqlstr,
+   SET [columnName] = @columnName where Id=@Id",
       new SqlParameter("@Id", SqlHelper.ToDBNull(column.Id)),
-       new SqlParameter("@columnId", SqlHelper.ToDBNull(column.columnId)),
                new SqlParameter("@columnName", SqlHelper.ToDBNull(column.columnName)));
         }
         public void DelColumn(string Id)

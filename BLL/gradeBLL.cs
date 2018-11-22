@@ -41,11 +41,11 @@ namespace BLL
         /// </summary>
         /// <param name="grade"></param>
         /// <param name="sqlstr"></param>
-        public void UpdateGrade(gradeInfo grade, string sqlstr)
+        public void UpdateGrade(gradeInfo grade)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[gradeInfo]
    SET [gradeName] = @gradeName
-      ,[pubCount] = @pubCount" + sqlstr,
+      ,[pubCount] = @pubCount where Id=@Id",
       new SqlParameter("@Id", SqlHelper.ToDBNull(grade.Id)),
        new SqlParameter("@gradeName", SqlHelper.ToDBNull(grade.gradeName)),
                new SqlParameter("@pubCount", SqlHelper.ToDBNull(grade.pubCount)));

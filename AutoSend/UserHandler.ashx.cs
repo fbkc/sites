@@ -28,7 +28,7 @@ namespace AutoSend
         public void ProcessRequest(HttpContext context)
         {
             //context.Response.ContentType = "application/json";
-            context.Response.ContentType = "text/plain";
+            context.Response.ContentType = "text/plain;charset=utf-8;";
             StringBuilder _strContent = new StringBuilder();
             if (_strContent.Length == 0)
             {
@@ -46,22 +46,18 @@ namespace AutoSend
                     switch (_strAction.Trim().ToLower())
                     {
                         case "login": _strContent.Append(UserLogin(context)); break;//会员登录
-                        case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
-                        case "adduser": _strContent.Append(AddUser(context)); break;//添加会员
-                        case "updateuser": _strContent.Append(UpdateUser(context)); break;//修改会员信息
-                        case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
                         case "getAccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
+                        case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
+                        case "saveuser": _strContent.Append(SaveUser(context)); break;//添加或修改会员信息
+                        case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
                         case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名 
-                        case "addrealm": _strContent.Append(AddRealm(context)); break;//增加域名 
-                        case "updaterealm": _strContent.Append(UpdateRealm(context)); break;//更新域名 
+                        case "saverealm": _strContent.Append(SaveRealm(context)); break;//增加或修改域名 
                         case "delrealm": _strContent.Append(DeleteRealm(context)); break;//删除域名 
                         case "getgradelist": _strContent.Append(GetGradeList(context)); break;//获取账号级别列表 
-                        case "addgrade": _strContent.Append(AddGrade(context)); break;//增加账号级别 
-                        case "updategrade": _strContent.Append(UpdateGrade(context)); break;//更新账号级别
+                        case "savegrade": _strContent.Append(SaveGrade(context)); break;//增加或更新账号级别 
                         case "delgrade": _strContent.Append(DeleteGrade(context)); break;//删除账号级别
                         case "getcolumnlist": _strContent.Append(GetColumnList(context)); break;//获取栏目列表 
-                        case "addcolumn": _strContent.Append(AddColumn(context)); break;//增加栏目 
-                        case "updatecolumn": _strContent.Append(UpdateColumn(context)); break;//更新栏目
+                        case "savecolumn": _strContent.Append(SaveColumn(context)); break;//增加或更新栏目 
                         case "delcolumn": _strContent.Append(DeleteColumn(context)); break;//删除栏目
                         default: break;
                     }
@@ -232,14 +228,14 @@ namespace AutoSend
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string AddUser(HttpContext context)
+        public string SaveUser(HttpContext context)
         {
             try
             {
                 //StreamReader reader = new StreamReader(context.Request.InputStream);
                 //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
                 //context.Request.Form["data[xm]"]
-                string strjson = context.Request.Form["params"];
+
                 //Dictionary<string, object> str = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(strjson);
                 //JObject jo = new JObject();
                 //foreach (var item in str)
@@ -265,14 +261,17 @@ namespace AutoSend
                 //cm.username = jObject["username"].ToString();
                 //cm.password = jObject["password"].ToString();
 
-
+                var strjson = context.Request["params"];
+                var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 CmUserBLL cmBLL = new CmUserBLL();
-                cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson);
-                //return cm.username;
-                cmBLL.AddUser(cm);
+                cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
+                if (cm.Id == 0)
+                    cmBLL.AddUser(cm);
+                else
+                    cmBLL.UpdateUser(cm);
                 jsonInfo json = new jsonInfo();
                 json.code = "1";
-                json.msg = "添加成功";
+                json.msg = "成功";
                 json.detail = new { };
                 return jss.Serialize(json);
             }
@@ -280,24 +279,6 @@ namespace AutoSend
             {
                 return ex.ToString();
             }
-        }
-        /// <summary>
-        /// 更新会员信息
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public string UpdateUser(HttpContext context)
-        {
-            var strjson = context.Request["params"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            CmUserBLL cmBLL = new CmUserBLL();
-            cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
-            cmBLL.UpdateUser(cm, string.Format("where Id='{0}'", cm.Id));
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "更新成功";
-            json.detail = new { };
-            return jss.Serialize(json);
         }
         /// <summary>
         /// 删除会员 
@@ -365,36 +346,20 @@ namespace AutoSend
             return jss.Serialize(json);
         }
         /// <summary>
-        /// 增加域名
+        /// 增加或更新域名
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string AddRealm(HttpContext context)
+        private string SaveRealm(HttpContext context)
         {
             realmBLL bll = new realmBLL();
-            var strjson = context.Request["realm"];
+            var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             realmNameInfo rm = JsonConvert.DeserializeObject<realmNameInfo>(strjson, js);
-            bll.AddRealm(rm);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
-        }
-        /// <summary>
-        /// 更新域名
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private string UpdateRealm(HttpContext context)
-        {
-            realmBLL bll = new realmBLL();
-            var strjson = context.Request["realm"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            realmNameInfo rm = JsonConvert.DeserializeObject<realmNameInfo>(strjson, js);
-            bll.UpdateRealm(rm, string.Format("where Id='{0}'", rm.Id));
+            if (rm.Id == 0)
+                bll.AddRealm(rm);
+            else
+                bll.UpdateRealm(rm);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";
@@ -446,13 +411,21 @@ namespace AutoSend
             json.detail = new { gradeList = gList };
             return jss.Serialize(json);
         }
-        private string AddGrade(HttpContext context)
+        /// <summary>
+        /// 添加或修改账号级别信息
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveGrade(HttpContext context)
         {
-            gradeBLL bll = new gradeBLL();
-            var strjson = context.Request["grade"];
+            var strjson = context.Request.Form["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             gradeInfo grade = JsonConvert.DeserializeObject<gradeInfo>(strjson, js);
-            bll.AddGrade(grade);
+            gradeBLL bll = new gradeBLL();
+            if (grade.Id == 0)
+                bll.AddGrade(grade);
+            else
+                bll.UpdateGrade(grade);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";
@@ -460,20 +433,11 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
-        private string UpdateGrade(HttpContext context)
-        {
-            gradeBLL bll = new gradeBLL();
-            var strjson = context.Request["grade"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            gradeInfo grade = JsonConvert.DeserializeObject<gradeInfo>(strjson, js);
-            bll.UpdateGrade(grade, string.Format("where Id='{0}'", grade.Id));
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
-        }
+        /// <summary>
+        /// 删除账号级别
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private string DeleteGrade(HttpContext context)
         {
             gradeBLL bll = new gradeBLL();
@@ -502,7 +466,6 @@ namespace AutoSend
             {
                 columnInfo cInfo = new columnInfo();
                 cInfo.Id = (int)row["Id"];
-                cInfo.columnId = (string)row["columnId"];
                 cInfo.columnName = (string)row["columnName"];
                 cList.Add(cInfo);
             }
@@ -514,36 +477,20 @@ namespace AutoSend
             return jss.Serialize(json);
         }
         /// <summary>
-        /// 增加栏目
+        /// 增加或修改栏目
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string AddColumn(HttpContext context)
+        private string SaveColumn(HttpContext context)
         {
             columnBLL bll = new columnBLL();
-            var strjson = context.Request["column"];
+            var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             columnInfo column = JsonConvert.DeserializeObject<columnInfo>(strjson, js);
-            bll.AddColumn(column);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
-        }
-        /// <summary>
-        /// 更新栏目
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private string UpdateColumn(HttpContext context)
-        {
-            columnBLL bll = new columnBLL();
-            var strjson = context.Request["column"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            columnInfo column = JsonConvert.DeserializeObject<columnInfo>(strjson, js);
-            bll.UpdateColumn(column, string.Format("where Id='{0}'", column.Id));
+            if (column.Id == 0)
+                bll.AddColumn(column);
+            else
+                bll.UpdateColumn(column);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";

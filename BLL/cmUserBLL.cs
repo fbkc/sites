@@ -69,7 +69,7 @@ person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,
         /// 更新会员信息
         /// </summary>
         /// <param name="sqlstr"></param>
-        public void UpdateUser(cmUserInfo cmUser, string sqlstr)
+        public void UpdateUser(cmUserInfo cmUser)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
    SET[username] = @username
@@ -102,7 +102,7 @@ person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,
       ,[com_web] = @com_web
       ,[companyRemark] = @companyRemark
       ,[yewu] = @yewu
-      ,[ziduan1] = @ziduan1" + sqlstr,
+      ,[ziduan1] = @ziduan1 where Id=@Id",
       new SqlParameter("@Id", SqlHelper.ToDBNull(cmUser.Id)),
       new SqlParameter("@username", SqlHelper.ToDBNull(cmUser.username)),
       new SqlParameter("@password", SqlHelper.ToDBNull(cmUser.password)),

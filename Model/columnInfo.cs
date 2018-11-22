@@ -8,7 +8,6 @@ namespace Model
     public class columnInfo
     {
         public int Id { get; set; }
-        public string columnId { get; set; }
         public string columnName { get; set; }
     }
 }
