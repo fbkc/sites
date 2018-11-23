@@ -92,6 +92,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Global.asax" />
     <Content Include="SwaggerUI\css\screen.css" />
     <Content Include="SwaggerUI\images\pet_store_api.png" />
     <Content Include="SwaggerUI\images\wordnik_api.png" />
@@ -108,6 +109,7 @@
     <Content Include="SwaggerUI\swagger-ui.min.js" />
     <Content Include="UserHandler.ashx" />
     <Content Include="informationHandler.ashx" />
+    <Content Include="ApplicationErroy.ashx" />
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
@@ -124,6 +126,12 @@
   <ItemGroup>
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\SwaggerNet.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="ApplicationErroy.ashx.cs">
+      <DependentUpon>ApplicationErroy.ashx</DependentUpon>
+    </Compile>
     <Compile Include="informationHandler.ashx.cs">
       <DependentUpon>informationHandler.ashx</DependentUpon>
     </Compile>
