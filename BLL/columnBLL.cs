@@ -31,9 +31,9 @@ namespace BLL
       new SqlParameter("@Id", SqlHelper.ToDBNull(column.Id)),
                new SqlParameter("@columnName", SqlHelper.ToDBNull(column.columnName)));
         }
-        public void DelColumn(string Id)
+        public int DelColumn(string Id)
         {
-            int a = SqlHelper.ExecuteNonQuery("delete * from columnInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from columnInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

@@ -79,7 +79,7 @@ namespace AutoSend
         }
         public string AddPara(HttpContext context)
         {
-            var strjson = context.Request["Para"];
+            var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             paragraphBLL bll = new paragraphBLL();
             paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
@@ -97,7 +97,7 @@ namespace AutoSend
         /// <returns></returns>
         public string UpdatePara(HttpContext context)
         {
-            var strjson = context.Request["para"];
+            var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             paragraphBLL bll = new paragraphBLL();
             paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
@@ -117,10 +117,18 @@ namespace AutoSend
         {
             string id = context.Request["Id"];
             paragraphBLL bll = new paragraphBLL();
-            bll.DelParagraph(string.Format("where Id='{0}'", id));
+            int a = bll.DelParagraph(string.Format("where Id='{0}'", id));
             jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "删除成功";
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
             json.detail = new { };
             return jss.Serialize(json);
         }

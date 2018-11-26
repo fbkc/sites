@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -175,6 +176,12 @@ namespace AutoSend
         public string GetUserInfo(HttpContext context)
         {
             CmUserBLL bll = new CmUserBLL();
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex ="1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
             List<cmUserInfo> uList = new List<cmUserInfo>();
             DataTable dt = bll.GetUser("");
             if (dt.Rows.Count < 1)
@@ -216,11 +223,23 @@ namespace AutoSend
                 userInfo.ziduan1 = (string)row["ziduan1"];
                 uList.Add(userInfo);
             }
+            //获取会员信息
+            //var uInfo = uList.Join(
+            //    u => u.ClassNum,
+            //    (u) => new { u.Id,u.username,u.password,u.userType }
+            //    );
+
+            //查询分页数据
+            var pageData = uList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";
             json.msg = "成功";
-            json.detail = new { cmUserList = uList };
+            json.detail = new { total = uList.Count(), cmUserList = pageData };
             return jss.Serialize(json);
         }
         /// <summary>
@@ -289,10 +308,18 @@ namespace AutoSend
         {
             string id = context.Request["Id"];
             CmUserBLL cmBLL = new CmUserBLL();
-            cmBLL.DelUser(string.Format("where Id='{0}'", id));
+            int a = cmBLL.DelUser(id);
             jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "删除成功";
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
             json.detail = new { };
             return jss.Serialize(json);
         }
@@ -375,12 +402,20 @@ namespace AutoSend
         private string DeleteRealm(HttpContext context)
         {
             realmBLL bll = new realmBLL();
-            var id = context.Request["realmId"];
-            bll.DelRealm(id);
+            var id = context.Request["Id"];
+            int a = bll.DelRealm(id);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
             json.detail = new { };
             return jss.Serialize(json);
         }
@@ -441,12 +476,20 @@ namespace AutoSend
         private string DeleteGrade(HttpContext context)
         {
             gradeBLL bll = new gradeBLL();
-            var id = context.Request["gradeId"];
-            bll.DelGrade(id);
+            var id = context.Request["Id"];
+            int a = bll.DelGrade(id);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
             json.detail = new { };
             return jss.Serialize(json);
         }
@@ -506,12 +549,20 @@ namespace AutoSend
         private string DeleteColumn(HttpContext context)
         {
             columnBLL bll = new columnBLL();
-            var id = context.Request["columnId"];
-            bll.DelColumn(id);
+            var id = context.Request["Id"];
+            int a = bll.DelColumn(id);
             //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
             json.detail = new { };
             return jss.Serialize(json);
         }

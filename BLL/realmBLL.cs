@@ -58,9 +58,9 @@ namespace AutoSend
         /// 删除域名
         /// </summary>
         /// <param name="sqlstr"></param>
-        public void DelRealm(string Id)
+        public int DelRealm(string Id)
         {
-            int a = SqlHelper.ExecuteNonQuery("delete * from realmNameInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from realmNameInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

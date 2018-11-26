@@ -54,9 +54,9 @@ namespace BLL
         /// 删除会员级别
         /// </summary>
         /// <param name="Id"></param>
-        public void DelGrade(string Id)
+        public int DelGrade(string Id)
         {
-            int a = SqlHelper.ExecuteNonQuery("delete * from gradeInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from gradeInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

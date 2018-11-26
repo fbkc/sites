@@ -140,9 +140,9 @@ person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>
-        public void DelUser(string Id)
+        public int DelUser(string Id)
         {
-            int a = SqlHelper.ExecuteNonQuery("delete * from userInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from userInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

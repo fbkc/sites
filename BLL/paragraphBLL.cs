@@ -46,9 +46,9 @@ namespace BLL
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)));
         }
-        public void DelParagraph(string Id)
+        public int DelParagraph(string Id)
         {
-            int a = SqlHelper.ExecuteNonQuery("delete * from paragraphInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from paragraphInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }
