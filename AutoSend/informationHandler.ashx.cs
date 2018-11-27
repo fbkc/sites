@@ -41,6 +41,10 @@ namespace AutoSend
                         case "addPara": _strContent.Append(AddPara(context)); break;//添加段落
                         case "updatePara": _strContent.Append(UpdatePara(context)); break;//修改段落
                         case "delPara": _strContent.Append(DelPara(context)); break;//删除段落
+                        case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有段落
+                        case "addcontent": _strContent.Append(AddContent(context)); break;//添加段落
+                        case "updatecontent": _strContent.Append(UpdateContent(context)); break;//修改段落
+                        case "delcontent": _strContent.Append(DelContent(context)); break;//删除段落
                         default: break;
                     }
                 }
@@ -56,7 +60,7 @@ namespace AutoSend
         {
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
-            var userId = context.Request["userId"];
+            var userId = context.Request["Id"];
             DataTable dt = bll.GetParagraphList(string.Format("where Id='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
@@ -118,6 +122,97 @@ namespace AutoSend
             string id = context.Request["Id"];
             paragraphBLL bll = new paragraphBLL();
             int a = bll.DelParagraph(string.Format("where Id='{0}'", id));
+            jsonInfo json = new jsonInfo();
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 获取此会员下内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetContentList(HttpContext context)
+        {
+            contentMouldBLL bll = new contentMouldBLL();
+            List<contentMouldInfo> cList = new List<contentMouldInfo>();
+            var userId = context.Request["Id"];
+            DataTable dt = bll.GetContentList(string.Format("where Id='{0}'", userId));
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                contentMouldInfo cInfo = new contentMouldInfo();
+                cInfo.Id = (int)row["Id"];
+                cInfo.mouldId = (string)row["mouldId"];
+                cInfo.mouldName = (string)row["mouldName"];
+                cInfo.contentMould = (string)row["contentMould"];
+                cInfo.usedCount = (int)row["usedCount"];
+                cInfo.userId = (int)row["userId"];
+                cList.Add(cInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { contentList = cList };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 增加内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string AddContent(HttpContext context)
+        {
+            var strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            contentMouldBLL bll = new contentMouldBLL();
+            contentMouldInfo c = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
+            bll.AddContent(c);
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "添加成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 更新内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string UpdateContent(HttpContext context)
+        {
+            var strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            contentMouldBLL bll = new contentMouldBLL();
+            contentMouldInfo c = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
+            bll.UpdateContent(c);
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "更新成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelContent(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            contentMouldBLL bll = new contentMouldBLL();
+            int a = bll.DelContent(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
             {

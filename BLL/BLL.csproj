@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="cmUserBLL.cs" />
     <Compile Include="columnBLL.cs" />
+    <Compile Include="contentMouldBLL.cs" />
     <Compile Include="gradeBLL.cs" />
     <Compile Include="paragraphBLL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

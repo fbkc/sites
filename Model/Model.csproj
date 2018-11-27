@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="cmUserInfo.cs" />
     <Compile Include="columnInfo.cs" />
+    <Compile Include="contentMouldInfo.cs" />
     <Compile Include="gradeInfo.cs" />
     <Compile Include="paragraphInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -47,7 +47,7 @@ namespace AutoSend
                     switch (_strAction.Trim().ToLower())
                     {
                         case "login": _strContent.Append(UserLogin(context)); break;//会员登录
-                        case "getAccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
+                        case "getaccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
                         case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
                         case "saveuser": _strContent.Append(SaveUser(context)); break;//添加或修改会员信息
                         case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
