@@ -41,10 +41,10 @@ namespace AutoSend
                         case "addPara": _strContent.Append(AddPara(context)); break;//添加段落
                         case "updatePara": _strContent.Append(UpdatePara(context)); break;//修改段落
                         case "delPara": _strContent.Append(DelPara(context)); break;//删除段落
-                        case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有段落
-                        case "addcontent": _strContent.Append(AddContent(context)); break;//添加段落
-                        case "updatecontent": _strContent.Append(UpdateContent(context)); break;//修改段落
-                        case "delcontent": _strContent.Append(DelContent(context)); break;//删除段落
+                        case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
+                        case "addcontent": _strContent.Append(AddContent(context)); break;//添加内容模板
+                        case "updatecontent": _strContent.Append(UpdateContent(context)); break;//修改内容模板
+                        case "delcontent": _strContent.Append(DelContent(context)); break;//删除内容模板
                         default: break;
                     }
                 }
