@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -52,6 +53,7 @@ namespace AutoSend
                         case "savetailword": _strContent.Append(SaveTailword(context)); break;
                         case "deltailword": _strContent.Append(DelTailword(context)); break;
                         #endregion
+                        case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
                         default: break;
                     }
                 }
@@ -294,7 +296,64 @@ namespace AutoSend
         #endregion
 
         #region 图片库
+        private string UploadPic(HttpContext context)
+        {
+            jsonInfo json = new jsonInfo();
+            UpFileResult result = new UpFileResult();
+            try
+            {
+                HttpPostedFile _upfile = context.Request.Files["fu_UploadFile"];
+                if (_upfile == null)
+                {
+                    throw new Exception("请先选择文件！");
+                }
+                else
+                {
+                    string fileName = _upfile.FileName;/*获取文件名： C:\Documents and Settings\Administrator\桌面\123.jpg*/
+                    string suffix = fileName.Substring(fileName.LastIndexOf(".") + 1).ToLower();/*获取后缀名并转为小写： jpg*/
+                    int bytes = _upfile.ContentLength;//获取文件的字节大小  
+                                                      //
+                    if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
+                        throw new Exception("只能上传JPE，GIF,PNG文件");
+                    if (bytes > 1024 * 1024 * 10)
+                        throw new Exception("文件最大只能传10M");
+                    string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/");
+                    if (!Directory.Exists(fileDir))
+                    {
+                        Directory.CreateDirectory(fileDir);
+                    }
+                    result.FileName = fileName;
+                    string saveDir = fileDir + newfileName + "." + suffix;
+                    result.FileURL = "~/upfiles/" + newfileName + "." + suffix;
 
+
+                    _upfile.SaveAs(result.FileURL);//保存图片
+
+                    #region 存到sql图片库
+
+                    #endregion
+
+                    json.code = "1";
+                    json.msg = "上传成功";
+                    json.detail = new { FileName = result.FileName, FileURL= result.FileURL };
+                }
+            }
+            catch (System.Exception ex)
+            {
+                json.code = "0";
+                json.msg = ex.Message;//异常信息
+                json.detail = new { };
+            }
+            return jss.Serialize(json);
+        }
+        public class UpFileResult   //: AshxCommonResult
+        {
+            public bool Result { get; set; }
+            public string ErrorMessage { get; set; }
+            public string FileName { get; set; }
+            public string FileURL { get; set; }
+        }
         #endregion
 
         public bool IsReusable
