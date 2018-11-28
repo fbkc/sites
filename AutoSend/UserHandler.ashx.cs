@@ -60,6 +60,9 @@ namespace AutoSend
                         case "getcolumnlist": _strContent.Append(GetColumnList(context)); break;//获取栏目列表 
                         case "savecolumn": _strContent.Append(SaveColumn(context)); break;//增加或更新栏目 
                         case "delcolumn": _strContent.Append(DeleteColumn(context)); break;//删除栏目
+                        case "getnoticelist": _strContent.Append(GetNoticeList(context)); break;//获取公告
+                        case "savenotice": _strContent.Append(SaveNotice(context)); break;//增加或更新公告 
+                        case "delnotice": _strContent.Append(DeleteNotice(context)); break;//删除公告
                         default: break;
                     }
                 }
@@ -93,6 +96,8 @@ namespace AutoSend
             }
             return result;
         }
+
+        #region 用户登录
         /// <summary>
         /// 用户登录
         /// </summary>
@@ -169,6 +174,9 @@ namespace AutoSend
             }
             return result;
         }
+        #endregion
+
+        #region  会员管理
         /// <summary>
         /// 获取所有会员
         /// </summary>
@@ -344,6 +352,9 @@ namespace AutoSend
             }
             return pwd;
         }
+        #endregion
+
+        #region 域名管理
         /// <summary>
         /// 获取所有域名
         /// </summary>
@@ -419,6 +430,9 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
+        #endregion
+
+        #region  账号级别
         /// <summary>
         /// 获取所有账户级别列表
         /// </summary>
@@ -493,6 +507,9 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
+        #endregion
+
+        #region  栏目管理
         /// <summary>
         /// 获取所有栏目
         /// </summary>
@@ -566,6 +583,82 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
+        #endregion
+
+        #region 公告管理
+        private string GetNoticeList(HttpContext context)
+        {
+            noticeBLL bll = new noticeBLL();
+            List<noticeInfo> nList = new List<noticeInfo>();
+            DataTable dt = bll.GetNoticeList(" where isuse=1 order by pubTime desc");
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                noticeInfo nInfo = new noticeInfo();
+                nInfo.Id = (int)row["Id"];
+                nInfo.notice = (string)row["notice"];
+                nInfo.pubTime = (DateTime)row["pubTime"];
+                nInfo.isImprotant = (bool)row["isImprotant"];
+                nInfo.issue = (bool)row["issue"];
+                nList.Add(nInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { noticeList = nList };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 增加或修改栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveNotice(HttpContext context)
+        {
+            noticeBLL bll = new noticeBLL();
+            var strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            noticeInfo notice = JsonConvert.DeserializeObject<noticeInfo>(strjson, js);
+            if (notice.Id == 0)
+                bll.AddNotice(notice);
+            else
+                bll.UpdateNotice(notice);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除栏目
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string DeleteNotice(HttpContext context)
+        {
+            noticeBLL bll = new noticeBLL();
+            var id = context.Request["Id"];
+            int a = bll.DelNotice(id);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        #endregion
+
         /// <summary>
         /// IsReusable
         /// </summary>

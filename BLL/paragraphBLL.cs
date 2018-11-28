@@ -22,24 +22,27 @@ namespace BLL
            ([paraId]
            ,[paraCotent]
            ,usedCount
+           ,addTime
            ,userId)
      VALUES
            (@paraId
            ,@paraCotent
-           ,usedCount
-           ,userId)",
+           ,@usedCount
+           ,getdate()
+           ,@userId)",
                new SqlParameter("@paraId", SqlHelper.ToDBNull(paragraph.paraId)),
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)));
         }
-        public void UpdateParagraph(paragraphInfo paragraph, string sqlstr)
+        public void UpdateParagraph(paragraphInfo paragraph)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[paragraphInfo]
    SET [paraId] = @paraId
       ,[paraCotent] = @paraCotent
       ,[usedCount] = @usedCount
-      ,[userId] = @userId" + sqlstr,
+      ,[addTime] = getdate()
+      ,[userId] = @userId where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(paragraph.Id)),
                new SqlParameter("@paraId", SqlHelper.ToDBNull(paragraph.paraId)),
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),

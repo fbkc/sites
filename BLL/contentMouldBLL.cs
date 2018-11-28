@@ -23,13 +23,15 @@ namespace BLL
            ,[mouldName]
            ,contentMould
            ,usedCount
+           ,addTime
            ,userId)
      VALUES
            (@mouldId
            ,@mouldName
-           ,contentMould
-           ,usedCount
-           ,userId)",
+           ,@contentMould
+           ,@usedCount
+           ,getdate()
+           ,@userId)",
                new SqlParameter("@mouldId", SqlHelper.ToDBNull(content.mouldId)),
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
@@ -43,6 +45,7 @@ namespace BLL
       ,[mouldName] = @mouldName
       ,[contentMould] = @contentMould
       ,[usedCount] = @usedCount
+      ,[addTime] = getdate()
       ,[userId] = @userId where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(content.Id)),
                new SqlParameter("@mouldId", SqlHelper.ToDBNull(content.mouldId)),

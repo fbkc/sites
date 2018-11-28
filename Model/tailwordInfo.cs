@@ -5,12 +5,10 @@ using System.Text;
 
 namespace Model
 {
-    public class paragraphInfo
+    public class tailwordInfo
     {
         public int Id { get; set; }
-        public string paraId { get; set; }
-        public string paraCotent { get; set; }
-        public int usedCount { get; set; }
+        public string tailword { get; set; }
         public DateTime addTime { get; set; }
         public int userId { get; set; }
     }

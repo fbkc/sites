@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="noticeInfo.cs" />
+    <Compile Include="tailwordInfo.cs" />
     <Compile Include="cmUserInfo.cs" />
     <Compile Include="columnInfo.cs" />
     <Compile Include="contentMouldInfo.cs" />

@@ -37,20 +37,29 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        case "getParalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
-                        case "addPara": _strContent.Append(AddPara(context)); break;//添加段落
-                        case "updatePara": _strContent.Append(UpdatePara(context)); break;//修改段落
-                        case "delPara": _strContent.Append(DelPara(context)); break;//删除段落
+                        #region 段落处理
+                        case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
+                        case "savepara": _strContent.Append(SavePara(context)); break;
+                        case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
+                        #endregion
+                        #region 内容模板
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
-                        case "addcontent": _strContent.Append(AddContent(context)); break;//添加内容模板
-                        case "updatecontent": _strContent.Append(UpdateContent(context)); break;//修改内容模板
+                        case "savecontent": _strContent.Append(SaveContent(context)); break;
                         case "delcontent": _strContent.Append(DelContent(context)); break;//删除内容模板
+                        #endregion
+                        #region 长尾词
+                        case "gettailwordlist": _strContent.Append(GetTailwordList(context)); break;
+                        case "savetailword": _strContent.Append(SaveTailword(context)); break;
+                        case "deltailword": _strContent.Append(DelTailword(context)); break;
+                        #endregion
                         default: break;
                     }
                 }
             }
             context.Response.Write(_strContent.ToString());
         }
+
+        #region 段落
         /// <summary>
         /// 获取此会员下所有段落
         /// </summary>
@@ -61,7 +70,7 @@ namespace AutoSend
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
             var userId = context.Request["Id"];
-            DataTable dt = bll.GetParagraphList(string.Format("where Id='{0}'", userId));
+            DataTable dt = bll.GetParagraphList(string.Format(" where Id='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -71,6 +80,7 @@ namespace AutoSend
                 pInfo.paraId = (string)row["paraId"];
                 pInfo.paraCotent = (string)row["paraCotent"];
                 pInfo.usedCount = (int)row["usedCount"];
+                pInfo.addTime = (DateTime)row["addTime"];
                 pInfo.userId = (int)row["userId"];
                 pList.Add(pInfo);
             }
@@ -81,34 +91,25 @@ namespace AutoSend
             json.detail = new { paraList = pList };
             return jss.Serialize(json);
         }
-        public string AddPara(HttpContext context)
-        {
-            var strjson = context.Request["params"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            paragraphBLL bll = new paragraphBLL();
-            paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
-            bll.AddParagraph(p);
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "添加成功";
-            json.detail = new { };
-            return jss.Serialize(json);
-        }
         /// <summary>
-        /// 更新段落
+        /// 增加或修改段落
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string UpdatePara(HttpContext context)
+        private string SavePara(HttpContext context)
         {
+            paragraphBLL bll = new paragraphBLL();
             var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            paragraphBLL bll = new paragraphBLL();
-            paragraphInfo p = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
-            bll.UpdateParagraph(p, string.Format("where Id='{0}'", p.Id));
+            paragraphInfo para = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
+            if (para.Id == 0)
+                bll.AddParagraph(para);
+            else
+                bll.UpdateParagraph(para);
+            //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";
-            json.msg = "更新成功";
+            json.msg = "成功";
             json.detail = new { };
             return jss.Serialize(json);
         }
@@ -121,7 +122,7 @@ namespace AutoSend
         {
             string id = context.Request["Id"];
             paragraphBLL bll = new paragraphBLL();
-            int a = bll.DelParagraph(string.Format("where Id='{0}'", id));
+            int a = bll.DelParagraph(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
             {
@@ -136,6 +137,9 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
+        #endregion
+
+        #region 内容模板
         /// <summary>
         /// 获取此会员下内容模板
         /// </summary>
@@ -146,7 +150,7 @@ namespace AutoSend
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
             var userId = context.Request["Id"];
-            DataTable dt = bll.GetContentList(string.Format("where Id='{0}'", userId));
+            DataTable dt = bll.GetContentList(string.Format(" where Id='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -157,6 +161,7 @@ namespace AutoSend
                 cInfo.mouldName = (string)row["mouldName"];
                 cInfo.contentMould = (string)row["contentMould"];
                 cInfo.usedCount = (int)row["usedCount"];
+                cInfo.addTime = (DateTime)row["addTime"];
                 cInfo.userId = (int)row["userId"];
                 cList.Add(cInfo);
             }
@@ -168,38 +173,24 @@ namespace AutoSend
             return jss.Serialize(json);
         }
         /// <summary>
-        /// 增加内容模板
+        /// 增加或修改内容模板
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string AddContent(HttpContext context)
+        private string SaveContent(HttpContext context)
         {
+            contentMouldBLL bll = new contentMouldBLL();
             var strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            contentMouldBLL bll = new contentMouldBLL();
-            contentMouldInfo c = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
-            bll.AddContent(c);
+            contentMouldInfo content = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
+            if (content.Id == 0)
+                bll.AddContent(content);
+            else
+                bll.UpdateContent(content);
+            //将list对象集合转换为Json
             jsonInfo json = new jsonInfo();
             json.code = "1";
-            json.msg = "添加成功";
-            json.detail = new { };
-            return jss.Serialize(json);
-        }
-        /// <summary>
-        /// 更新内容模板
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public string UpdateContent(HttpContext context)
-        {
-            var strjson = context.Request["params"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            contentMouldBLL bll = new contentMouldBLL();
-            contentMouldInfo c = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
-            bll.UpdateContent(c);
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "更新成功";
+            json.msg = "成功";
             json.detail = new { };
             return jss.Serialize(json);
         }
@@ -227,6 +218,85 @@ namespace AutoSend
             json.detail = new { };
             return jss.Serialize(json);
         }
+        #endregion
+
+        #region 长尾词
+        private string GetTailwordList(HttpContext context)
+        {
+            tailwordBLL bll = new tailwordBLL();
+            List<tailwordInfo> tList = new List<tailwordInfo>();
+            var userId = context.Request["Id"];
+            DataTable dt = bll.GetTailwordList(string.Format(" where Id='{0}'", userId));
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                tailwordInfo tInfo = new tailwordInfo();
+                tInfo.Id = (int)row["Id"];
+                tInfo.tailword = (string)row["tailword"];
+                tInfo.addTime = (DateTime)row["addTime"];
+                tInfo.userId = (int)row["userId"];
+                tList.Add(tInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { tailwordList = tList };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 增加或修改长尾词
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveTailword(HttpContext context)
+        {
+            tailwordBLL bll = new tailwordBLL();
+            var strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            tailwordInfo tailword = JsonConvert.DeserializeObject<tailwordInfo>(strjson, js);
+            if (tailword.Id == 0)
+                bll.AddTailword(tailword);
+            else
+                bll.UpdateTailword(tailword);
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelTailword(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            tailwordBLL bll = new tailwordBLL();
+            int a = bll.DelTailword(id);
+            jsonInfo json = new jsonInfo();
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
+            json.detail = new { };
+            return jss.Serialize(json);
+        }
+        #endregion
+
+        #region 图片库
+
+        #endregion
+
         public bool IsReusable
         {
             get

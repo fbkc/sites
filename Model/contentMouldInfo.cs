@@ -12,6 +12,7 @@ namespace Model
         public string mouldName { get; set; }
         public string contentMould { get; set; }
         public int usedCount { get; set; }
+        public DateTime addTime { get; set; }
         public int userId { get; set; }
     }
 }
