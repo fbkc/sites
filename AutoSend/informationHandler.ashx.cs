@@ -22,6 +22,7 @@ namespace AutoSend
         public void ProcessRequest(HttpContext context)
         {
             context.Response.ContentType = "text/plain";
+            context.Response.AddHeader("Access-Control-Allow-Origin", "*");
             StringBuilder _strContent = new StringBuilder();
             if (_strContent.Length == 0)
             {
@@ -38,21 +39,18 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        #region 段落处理
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
-                        #endregion
-                        #region 内容模板
+
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
                         case "delcontent": _strContent.Append(DelContent(context)); break;//删除内容模板
-                        #endregion
-                        #region 长尾词
+
                         case "gettailwordlist": _strContent.Append(GetTailwordList(context)); break;
                         case "savetailword": _strContent.Append(SaveTailword(context)); break;
                         case "deltailword": _strContent.Append(DelTailword(context)); break;
-                        #endregion
+
                         case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
                         case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
                         case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
@@ -71,29 +69,34 @@ namespace AutoSend
         /// <returns></returns>
         private string GetParaList(HttpContext context)
         {
+            jsonInfo json = new jsonInfo();
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
-            var userId = context.Request["Id"];
-            DataTable dt = bll.GetParagraphList(string.Format(" where userId='{0}'", userId));
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
+            string userId = context.Request["Id"];
+            if (string.IsNullOrEmpty(userId))
+                return WriteJson(0, "Id不能为空", new { });
+            try
             {
-                paragraphInfo pInfo = new paragraphInfo();
-                pInfo.Id = (int)row["Id"];
-                pInfo.paraId = (string)row["paraId"];
-                pInfo.paraCotent = (string)row["paraCotent"];
-                pInfo.usedCount = (int)row["usedCount"];
-                pInfo.addTime = (DateTime)row["addTime"];
-                pInfo.userId = (int)row["userId"];
-                pList.Add(pInfo);
+                DataTable dt = bll.GetParagraphList(string.Format(" where userId={0}", userId));
+                if (dt.Rows.Count < 1)
+                    return WriteJson(0, "没有数据", new { });
+                foreach (DataRow row in dt.Rows)
+                {
+                    paragraphInfo pInfo = new paragraphInfo();
+                    pInfo.Id = (int)row["Id"];
+                    pInfo.paraId = (string)row["paraId"];
+                    pInfo.paraCotent = (string)row["paraCotent"];
+                    pInfo.usedCount = (int)row["usedCount"];
+                    pInfo.addTime = (DateTime)row["addTime"];
+                    pInfo.userId = (int)row["userId"];
+                    pList.Add(pInfo);
+                }
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { paraList = pList };
-            return jss.Serialize(json);
+            catch(Exception ex)
+            {
+                return WriteJson(1, ex.ToString(), new { });
+            }
+            return WriteJson(1, "成功", new { paraList = pList });
         }
         /// <summary>
         /// 增加或修改段落
@@ -103,7 +106,7 @@ namespace AutoSend
         private string SavePara(HttpContext context)
         {
             paragraphBLL bll = new paragraphBLL();
-            var strjson = context.Request["params"];
+            string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             paragraphInfo para = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
             if (para.Id == 0)
@@ -153,7 +156,7 @@ namespace AutoSend
         {
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
-            var userId = context.Request["Id"];
+            string userId = context.Request["Id"];
             DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
@@ -184,7 +187,7 @@ namespace AutoSend
         private string SaveContent(HttpContext context)
         {
             contentMouldBLL bll = new contentMouldBLL();
-            var strjson = context.Request["params"];
+            string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             contentMouldInfo content = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
             if (content.Id == 0)
@@ -229,8 +232,8 @@ namespace AutoSend
         {
             tailwordBLL bll = new tailwordBLL();
             List<tailwordInfo> tList = new List<tailwordInfo>();
-            var userId = context.Request["Id"];
-            DataTable dt = bll.GetTailwordList(string.Format(" where userId='{0}'", userId));
+            string userId = context.Request["Id"];
+            DataTable dt = bll.GetTailwordList(string.Format(" where userId={0}", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -257,7 +260,7 @@ namespace AutoSend
         private string SaveTailword(HttpContext context)
         {
             tailwordBLL bll = new tailwordBLL();
-            var strjson = context.Request["params"];
+            string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             tailwordInfo tailword = JsonConvert.DeserializeObject<tailwordInfo>(strjson, js);
             if (tailword.Id == 0)
@@ -308,10 +311,17 @@ namespace AutoSend
             jsonInfo json = new jsonInfo();
             try
             {
-                HttpPostedFile _upfile = context.Request.Files["fu_UploadFile"];
+                //return context.Request.Files.ToString();
+                //StreamReader reader = new StreamReader(context.Request.InputStream);
+                //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
+                //return "liu"+strjson;
+                return "4";
+                HttpPostedFile _upfile = context.Request.Files["file"];
                 if (_upfile == null)
                 {
+                    return "2";
                     throw new Exception("请先选择文件！");
+
                 }
                 else
                 {
@@ -334,7 +344,7 @@ namespace AutoSend
                     string saveDir = fileDir + newfileName + "." + suffix;
                     string fileUrl = "~/upfiles/" + newfileName + "." + suffix;//文件服务器存放路径
                     _upfile.SaveAs(fileUrl);//保存图片
-
+                    return "1";
                     #region 存到sql图片库
                     imageBLL bll = new imageBLL();
                     imageInfo img = new imageInfo();
@@ -343,19 +353,16 @@ namespace AutoSend
                     img.userId = MyInfo.Id;
                     bll.AddImg(img);
                     #endregion
-
-                    json.code = "1";
-                    json.msg = "上传成功";
-                    json.detail = new { fileUrl };
                 }
             }
             catch (Exception ex)
             {
-                json.code = "0";
-                json.msg = ex.Message;//异常信息
-                json.detail = new { };
+                return WriteJson(0, ex.Message, new { });
+                //json.code = "0";
+                //json.msg = ex.Message;//异常信息
+                //json.detail = new { };
             }
-            return jss.Serialize(json);
+            return WriteJson(1, "上传成功", new { });
         }
         /// <summary>
         /// 获取此用户下所有图片
@@ -413,11 +420,17 @@ namespace AutoSend
         }
         #endregion
 
+        public string WriteJson(int status1, string msg1, object data1)
+        {
+            var obj = new { code = status1, msg = msg1, detail = data1 };
+            string json = new JavaScriptSerializer().Serialize(obj);
+            return json;
+        }
         public bool IsReusable
         {
             get
             {
-                return false;
+                return true;
             }
         }
     }

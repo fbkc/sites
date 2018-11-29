@@ -11,9 +11,9 @@ namespace BLL
 {
     public class paragraphBLL
     {
-        public DataTable GetParagraphList(string sqlstr)
+        public DataTable GetParagraphList(string id)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo " + sqlstr).Tables[0];
+            DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo where userId=" + id).Tables[0];
             return ds;
         }
         public void AddParagraph(paragraphInfo paragraph)
