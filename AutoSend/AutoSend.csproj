@@ -113,6 +113,7 @@
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
+    <Content Include="Uploader.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -137,6 +138,9 @@
     </Compile>
     <Compile Include="jsonInfo.cs" />
     <Compile Include="MyInfo.cs" />
+    <Compile Include="Uploader.ashx.cs">
+      <DependentUpon>Uploader.ashx</DependentUpon>
+    </Compile>
     <Compile Include="UserHandler.ashx.cs">
       <DependentUpon>UserHandler.ashx</DependentUpon>
     </Compile>

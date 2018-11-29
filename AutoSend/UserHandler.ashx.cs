@@ -162,6 +162,7 @@ namespace AutoSend
                     JavaScriptSerializer jss = new JavaScriptSerializer();
                     string md5 = GetMD5(model.username);
                     MyInfo.user = model.username;//用户名
+                    MyInfo.Id = model.Id;//userId
                     MyInfo.cmUser = model;//用户信息
                     MyInfo.cookie = md5;//cookie存到全局变量
                     jsonInfo json = new jsonInfo();

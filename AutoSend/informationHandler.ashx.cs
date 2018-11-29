@@ -54,6 +54,8 @@ namespace AutoSend
                         case "deltailword": _strContent.Append(DelTailword(context)); break;
                         #endregion
                         case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
+                        case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
+                        case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
                         default: break;
                     }
                 }
@@ -72,7 +74,7 @@ namespace AutoSend
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
             var userId = context.Request["Id"];
-            DataTable dt = bll.GetParagraphList(string.Format(" where Id='{0}'", userId));
+            DataTable dt = bll.GetParagraphList(string.Format(" where userId='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -152,7 +154,7 @@ namespace AutoSend
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
             var userId = context.Request["Id"];
-            DataTable dt = bll.GetContentList(string.Format(" where Id='{0}'", userId));
+            DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -228,7 +230,7 @@ namespace AutoSend
             tailwordBLL bll = new tailwordBLL();
             List<tailwordInfo> tList = new List<tailwordInfo>();
             var userId = context.Request["Id"];
-            DataTable dt = bll.GetTailwordList(string.Format(" where Id='{0}'", userId));
+            DataTable dt = bll.GetTailwordList(string.Format(" where userId='{0}'", userId));
             if (dt.Rows.Count < 1)
                 return "";
             foreach (DataRow row in dt.Rows)
@@ -296,10 +298,14 @@ namespace AutoSend
         #endregion
 
         #region 图片库
+        /// <summary>
+        /// 上传并保存图片到服务器
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private string UploadPic(HttpContext context)
         {
             jsonInfo json = new jsonInfo();
-            UpFileResult result = new UpFileResult();
             try
             {
                 HttpPostedFile _upfile = context.Request.Files["fu_UploadFile"];
@@ -323,23 +329,27 @@ namespace AutoSend
                     {
                         Directory.CreateDirectory(fileDir);
                     }
-                    result.FileName = fileName;
+                    //string phyPath = context.Request.PhysicalApplicationPath;
+                    //string savePath = phyPath + virPath;
                     string saveDir = fileDir + newfileName + "." + suffix;
-                    result.FileURL = "~/upfiles/" + newfileName + "." + suffix;
-
-
-                    _upfile.SaveAs(result.FileURL);//保存图片
+                    string fileUrl = "~/upfiles/" + newfileName + "." + suffix;//文件服务器存放路径
+                    _upfile.SaveAs(fileUrl);//保存图片
 
                     #region 存到sql图片库
-
+                    imageBLL bll = new imageBLL();
+                    imageInfo img = new imageInfo();
+                    img.imageId = newfileName;
+                    img.imageURL = fileUrl;
+                    img.userId = MyInfo.Id;
+                    bll.AddImg(img);
                     #endregion
 
                     json.code = "1";
                     json.msg = "上传成功";
-                    json.detail = new { FileName = result.FileName, FileURL= result.FileURL };
+                    json.detail = new { fileUrl };
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 json.code = "0";
                 json.msg = ex.Message;//异常信息
@@ -347,12 +357,59 @@ namespace AutoSend
             }
             return jss.Serialize(json);
         }
-        public class UpFileResult   //: AshxCommonResult
+        /// <summary>
+        /// 获取此用户下所有图片
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetPicList(HttpContext context)
         {
-            public bool Result { get; set; }
-            public string ErrorMessage { get; set; }
-            public string FileName { get; set; }
-            public string FileURL { get; set; }
+            imageBLL bll = new imageBLL();
+            List<imageInfo> iList = new List<imageInfo>();
+            var userId = context.Request["Id"];
+            DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' order by addTime desc", userId));
+            if (dt.Rows.Count < 1)
+                return "";
+            foreach (DataRow row in dt.Rows)
+            {
+                imageInfo iInfo = new imageInfo();
+                iInfo.Id = (int)row["Id"];
+                iInfo.imageId = (string)row["imageId"];
+                iInfo.imageURL = (string)row["imageURL"];
+                iInfo.addTime = (DateTime)row["addTime"];
+                iInfo.userId = (int)row["userId"];
+                iList.Add(iInfo);
+            }
+            //将list对象集合转换为Json
+            jsonInfo json = new jsonInfo();
+            json.code = "1";
+            json.msg = "成功";
+            json.detail = new { picList = iList };
+            return jss.Serialize(json);
+        }
+        /// <summary>
+        /// 删除图片
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelPic(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            imageBLL bll = new imageBLL();
+            int a = bll.DelImg(id);
+            jsonInfo json = new jsonInfo();
+            if (a == 1)
+            {
+                json.code = "1";
+                json.msg = "删除成功";
+            }
+            else
+            {
+                json.code = "0";
+                json.msg = "删除失败";
+            }
+            json.detail = new { };
+            return jss.Serialize(json);
         }
         #endregion
 
