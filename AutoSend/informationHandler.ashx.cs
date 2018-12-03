@@ -92,7 +92,7 @@ namespace AutoSend
                     pList.Add(pInfo);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return WriteJson(1, ex.ToString(), new { });
             }
@@ -113,12 +113,7 @@ namespace AutoSend
                 bll.AddParagraph(para);
             else
                 bll.UpdateParagraph(para);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除段落
@@ -132,17 +127,9 @@ namespace AutoSend
             int a = bll.DelParagraph(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -172,12 +159,7 @@ namespace AutoSend
                 cInfo.userId = (int)row["userId"];
                 cList.Add(cInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { contentList = cList };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { contentList = cList });
         }
         /// <summary>
         /// 增加或修改内容模板
@@ -194,12 +176,7 @@ namespace AutoSend
                 bll.AddContent(content);
             else
                 bll.UpdateContent(content);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除内容模板
@@ -213,17 +190,9 @@ namespace AutoSend
             int a = bll.DelContent(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -245,12 +214,7 @@ namespace AutoSend
                 tInfo.userId = (int)row["userId"];
                 tList.Add(tInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { tailwordList = tList };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { tailwordList = tList });
         }
         /// <summary>
         /// 增加或修改长尾词
@@ -267,12 +231,7 @@ namespace AutoSend
                 bll.AddTailword(tailword);
             else
                 bll.UpdateTailword(tailword);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除
@@ -286,17 +245,9 @@ namespace AutoSend
             int a = bll.DelTailword(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -315,7 +266,7 @@ namespace AutoSend
                 //StreamReader reader = new StreamReader(context.Request.InputStream);
                 //string strjson = HttpUtility.UrlDecode(reader.ReadToEnd());
                 //return "liu"+strjson;
-                return "4";
+                //return "4";
                 HttpPostedFile _upfile = context.Request.Files["file"];
                 if (_upfile == null)
                 {
@@ -387,12 +338,7 @@ namespace AutoSend
                 iInfo.userId = (int)row["userId"];
                 iList.Add(iInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { picList = iList };
-            return jss.Serialize(json);
+            return WriteJson(1, "成功", new { picList = iList });
         }
         /// <summary>
         /// 删除图片
@@ -406,20 +352,18 @@ namespace AutoSend
             int a = bll.DelImg(id);
             jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return WriteJson(0, "删除失败", new { });
         }
         #endregion
-
+        /// <summary>
+        /// json封装方法
+        /// </summary>
+        /// <param name="status1"></param>
+        /// <param name="msg1"></param>
+        /// <param name="data1"></param>
+        /// <returns></returns>
         public string WriteJson(int status1, string msg1, object data1)
         {
             var obj = new { code = status1, msg = msg1, detail = data1 };
