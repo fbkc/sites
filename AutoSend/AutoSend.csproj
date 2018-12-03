@@ -136,6 +136,7 @@
     <Compile Include="informationHandler.ashx.cs">
       <DependentUpon>informationHandler.ashx</DependentUpon>
     </Compile>
+    <Compile Include="json.cs" />
     <Compile Include="jsonInfo.cs" />
     <Compile Include="MyInfo.cs" />
     <Compile Include="Uploader.ashx.cs">

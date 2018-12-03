@@ -36,11 +36,7 @@ namespace AutoSend
                 string _strAction = context.Request.Params["action"];
                 if (string.IsNullOrEmpty(_strAction))
                 {
-                    jsonInfo json = new jsonInfo();
-                    json.code = "0";
-                    json.msg = "禁止访问";
-                    json.detail = new object { };
-                    _strContent.Append(jss.Serialize(json));
+                    _strContent.Append(_strContent.Append(json.WriteJson(0, "禁止访问", new { })));
                 }
                 else
                 {
@@ -76,25 +72,11 @@ namespace AutoSend
         /// <returns></returns>
         private string GetAccount(HttpContext context)
         {
-            string result = "";
             string header = context.Request.Headers["Authorization"];
             if (header.Contains(MyInfo.cookie))
-            {
-                jsonInfo json = new jsonInfo();
-                json.code = "1";
-                json.msg = "";
-                json.detail = new object { };
-                result = jss.Serialize(json);
-            }
+                return json.WriteJson(1, "", new { });
             else
-            {
-                jsonInfo json = new jsonInfo();
-                json.code = "0";
-                json.msg = "您尚未登录";
-                json.detail = new object { };
-                result = jss.Serialize(json);
-            }
-            return result;
+                return json.WriteJson(0, "您尚未登录", new { });
         }
 
         #region 用户登录
@@ -114,21 +96,9 @@ namespace AutoSend
             CmUserBLL bll = new CmUserBLL();
             DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
             if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
-            {
-                jsonInfo json = new jsonInfo();
-                json.code = "0";
-                json.msg = "登录错误";
-                json.detail = new object { };
-                result = jss.Serialize(json);
-            }
+                return json.WriteJson(0, "登录错误", new { });
             else if (dt.Rows.Count == 0)
-            {
-                jsonInfo json = new jsonInfo();
-                json.code = "0";
-                json.msg = "用户名不存在";
-                json.detail = new object { };
-                result = jss.Serialize(json);
-            }
+                return json.WriteJson(0, "用户名不存在", new { });
             else if (dt.Rows.Count == 1)
             {
                 int _userid = 0;
@@ -141,21 +111,9 @@ namespace AutoSend
                 model.userType = _userType;//用户角色
                 model.isStop = (bool)dt.Rows[0]["isStop"];
                 if (model.password != _password)
-                {
-                    jsonInfo json = new jsonInfo();
-                    json.code = "0";
-                    json.msg = "密码错误";
-                    json.detail = new object { };
-                    result = jss.Serialize(json);
-                }
+                    return json.WriteJson(0, "密码错误", new { });
                 else if (model.isStop)
-                {
-                    jsonInfo json = new jsonInfo();
-                    json.code = "0";
-                    json.msg = "该用户已被停用";
-                    json.detail = new object { };
-                    result = jss.Serialize(json);
-                }
+                    return json.WriteJson(0, "该用户已被停用", new { });
                 else
                 {
                     context.Session["UserModel"] = model;
@@ -165,12 +123,7 @@ namespace AutoSend
                     MyInfo.Id = model.Id;//userId
                     MyInfo.cmUser = model;//用户信息
                     MyInfo.cookie = md5;//cookie存到全局变量
-                    jsonInfo json = new jsonInfo();
-                    json.code = "1";
-                    json.msg = "登陆成功";
-                    var obj = new { userCookie = md5, cmUser = model };
-                    json.detail = obj;
-                    result = jss.Serialize(json);
+                    return json.WriteJson(1, "登陆成功", new { userCookie = md5, cmUser = model });
                 }
             }
             return result;
@@ -188,7 +141,7 @@ namespace AutoSend
             string pageIndex = context.Request["page"];
             string pageSize = context.Request["pageSize"];
             if (string.IsNullOrEmpty(pageIndex))
-                pageIndex ="1";
+                pageIndex = "1";
             if (string.IsNullOrEmpty(pageSize))
                 pageSize = "10";
             List<cmUserInfo> uList = new List<cmUserInfo>();
@@ -243,13 +196,7 @@ namespace AutoSend
                 .OrderByDescending(u => u.Id)
                 .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
                 .Take(int.Parse(pageSize)).ToList();
-
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { total = uList.Count(), cmUserList = pageData };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { total = uList.Count(), cmUserList = pageData });
         }
         /// <summary>
         /// 添加会员
@@ -297,15 +244,11 @@ namespace AutoSend
                     cmBLL.AddUser(cm);
                 else
                     cmBLL.UpdateUser(cm);
-                jsonInfo json = new jsonInfo();
-                json.code = "1";
-                json.msg = "成功";
-                json.detail = new { };
-                return jss.Serialize(json);
+                return json.WriteJson(1, "成功", new { });
             }
             catch (Exception ex)
             {
-                return ex.ToString();
+                return json.WriteJson(0, ex.ToString(), new { });
             }
         }
         /// <summary>
@@ -316,21 +259,14 @@ namespace AutoSend
         public string DelUser(HttpContext context)
         {
             string id = context.Request["Id"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
             CmUserBLL cmBLL = new CmUserBLL();
             int a = cmBLL.DelUser(id);
-            jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return json.WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return json.WriteJson(0, "删除失败", new { });
         }
         /// <summary>
         /// MD5
@@ -377,12 +313,7 @@ namespace AutoSend
                 rInfo.isUseing = (bool)row["isUseing"];
                 rList.Add(rInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { realmList = rList };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { realmList = rList });
         }
         /// <summary>
         /// 增加或更新域名
@@ -399,12 +330,7 @@ namespace AutoSend
                 bll.AddRealm(rm);
             else
                 bll.UpdateRealm(rm);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new {});
         }
         /// <summary>
         /// 删除域名
@@ -416,20 +342,10 @@ namespace AutoSend
             realmBLL bll = new realmBLL();
             var id = context.Request["Id"];
             int a = bll.DelRealm(id);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return json.WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -454,12 +370,7 @@ namespace AutoSend
                 gInfo.pubCount = (int)row["pubCount"];
                 gList.Add(gInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { gradeList = gList };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { gradeList = gList });
         }
         /// <summary>
         /// 添加或修改账号级别信息
@@ -476,12 +387,7 @@ namespace AutoSend
                 bll.AddGrade(grade);
             else
                 bll.UpdateGrade(grade);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除账号级别
@@ -493,20 +399,10 @@ namespace AutoSend
             gradeBLL bll = new gradeBLL();
             var id = context.Request["Id"];
             int a = bll.DelGrade(id);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return json.WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -530,12 +426,7 @@ namespace AutoSend
                 cInfo.columnName = (string)row["columnName"];
                 cList.Add(cInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { columnList = cList };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { columnList = cList });
         }
         /// <summary>
         /// 增加或修改栏目
@@ -552,12 +443,7 @@ namespace AutoSend
                 bll.AddColumn(column);
             else
                 bll.UpdateColumn(column);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除栏目
@@ -569,20 +455,10 @@ namespace AutoSend
             columnBLL bll = new columnBLL();
             var id = context.Request["Id"];
             int a = bll.DelColumn(id);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return json.WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 
@@ -604,12 +480,7 @@ namespace AutoSend
                 nInfo.issue = (bool)row["issue"];
                 nList.Add(nInfo);
             }
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { noticeList = nList };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new { noticeList = nList });
         }
         /// <summary>
         /// 增加或修改栏目
@@ -626,12 +497,7 @@ namespace AutoSend
                 bll.AddNotice(notice);
             else
                 bll.UpdateNotice(notice);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
-            json.code = "1";
-            json.msg = "成功";
-            json.detail = new { };
-            return jss.Serialize(json);
+            return json.WriteJson(1, "成功", new {});
         }
         /// <summary>
         /// 删除栏目
@@ -643,20 +509,10 @@ namespace AutoSend
             noticeBLL bll = new noticeBLL();
             var id = context.Request["Id"];
             int a = bll.DelNotice(id);
-            //将list对象集合转换为Json
-            jsonInfo json = new jsonInfo();
             if (a == 1)
-            {
-                json.code = "1";
-                json.msg = "删除成功";
-            }
+                return json.WriteJson(1, "删除成功", new { });
             else
-            {
-                json.code = "0";
-                json.msg = "删除失败";
-            }
-            json.detail = new { };
-            return jss.Serialize(json);
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 

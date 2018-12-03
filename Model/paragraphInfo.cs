@@ -7,7 +7,7 @@ namespace Model
 {
     public class paragraphInfo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string paraId { get; set; }
         public string paraCotent { get; set; }
         public int usedCount { get; set; }

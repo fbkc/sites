@@ -7,7 +7,7 @@ namespace Model
 {
     public class imageInfo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string imageId { get; set; }
         public string imageURL { get; set; }
         public DateTime addTime { get; set; }
