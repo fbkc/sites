@@ -17,10 +17,9 @@ namespace AutoSend
     /// <summary>
     /// informationHandler 的摘要说明
     /// </summary>
-    public class informationHandler : IHttpHandler, IRequiresSessionState
+    public class informationHandler : BaseHandle,IHttpHandler, IRequiresSessionState
     {
-        private static JavaScriptSerializer jss = new JavaScriptSerializer();
-        public void ProcessRequest(HttpContext context)
+        public override void OnLoad(HttpContext context)
         {
             context.Response.ContentType = "text/plain;charset=utf-8;";
             context.Response.AddHeader("Access-Control-Allow-Origin", "*");

@@ -19,16 +19,14 @@ namespace AutoSend
     /// <summary>
     /// Handler 的摘要说明
     /// </summary>
-    public class Handler : IHttpHandler, IRequiresSessionState
+    public class Handler : BaseHandle, IHttpHandler, IRequiresSessionState
     {
-        private static JavaScriptSerializer jss = new JavaScriptSerializer();
         /// <summary>
         /// 主进程
         /// </summary>
         /// <param name="context"></param>
-        public void ProcessRequest(HttpContext context)
+        public override void OnLoad(HttpContext context)
         {
-            //context.Response.ContentType = "application/json";
             context.Response.ContentType = "text/plain;charset=utf-8;";
             StringBuilder _strContent = new StringBuilder();
             if (_strContent.Length == 0)
@@ -42,8 +40,6 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        case "login": _strContent.Append(UserLogin(context)); break;//会员登录
-                        case "getaccount": _strContent.Append(GetAccount(context)); break;//判断是否登录接口
                         case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
                         case "saveuser": _strContent.Append(SaveUser(context)); break;//添加或修改会员信息
                         case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
@@ -65,70 +61,6 @@ namespace AutoSend
             }
             context.Response.Write(_strContent.ToString());
         }
-        /// <summary>
-        /// 判断是否登录接口
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private string GetAccount(HttpContext context)
-        {
-            string header = context.Request.Headers["Authorization"];
-            if (header.Contains(MyInfo.cookie))
-                return json.WriteJson(1, "", new { });
-            else
-                return json.WriteJson(0, "您尚未登录", new { });
-        }
-
-        #region 用户登录
-        /// <summary>
-        /// 用户登录
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private string UserLogin(HttpContext context)
-        {
-            string result = "";
-            string _username = context.Request["username"];
-            string _password = context.Request["password"];
-            if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
-                return "";
-            cmUserInfo model = new cmUserInfo();
-            CmUserBLL bll = new CmUserBLL();
-            DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
-            if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
-                return json.WriteJson(0, "登录错误", new { });
-            else if (dt.Rows.Count == 0)
-                return json.WriteJson(0, "用户名不存在", new { });
-            else if (dt.Rows.Count == 1)
-            {
-                int _userid = 0;
-                int.TryParse(dt.Rows[0]["Id"].ToString(), out _userid);
-                model.Id = _userid;
-                model.username = dt.Rows[0]["username"].ToString();
-                model.password = dt.Rows[0]["password"].ToString();
-                int _userType = 0;
-                int.TryParse(dt.Rows[0]["userType"].ToString(), out _userType);
-                model.userType = _userType;//用户角色
-                model.isStop = (bool)dt.Rows[0]["isStop"];
-                if (model.password != _password)
-                    return json.WriteJson(0, "密码错误", new { });
-                else if (model.isStop)
-                    return json.WriteJson(0, "该用户已被停用", new { });
-                else
-                {
-                    context.Session["UserModel"] = model;
-                    JavaScriptSerializer jss = new JavaScriptSerializer();
-                    string md5 = GetMD5(model.username);
-                    MyInfo.user = model.username;//用户名
-                    MyInfo.Id = model.Id;//userId
-                    MyInfo.cmUser = model;//用户信息
-                    MyInfo.cookie = md5;//cookie存到全局变量
-                    return json.WriteJson(1, "登陆成功", new { userCookie = md5, cmUser = model });
-                }
-            }
-            return result;
-        }
-        #endregion
 
         #region  会员管理
         /// <summary>
@@ -268,27 +200,6 @@ namespace AutoSend
             else
                 return json.WriteJson(0, "删除失败", new { });
         }
-        /// <summary>
-        /// MD5
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static string GetMD5(string str)
-        {
-            string cl = str;
-            string pwd = "";
-            MD5 md5 = MD5.Create();//实例化一个md5对像
-            // 加密后是一个字节类型的数组，这里要注意编码UTF8/Unicode等的选择　
-            byte[] s = md5.ComputeHash(Encoding.UTF8.GetBytes(cl));
-            // 通过使用循环，将字节类型的数组转换为字符串，此字符串是常规字符格式化所得
-            for (int i = 0; i < s.Length; i++)
-            {
-                // 将得到的字符串使用十六进制类型格式。格式后的字符是小写的字母，如果使用大写（X）则格式后的字符是大写字符 
-                pwd = pwd + s[i].ToString("x2");
-
-            }
-            return pwd;
-        }
         #endregion
 
         #region 域名管理
@@ -330,7 +241,7 @@ namespace AutoSend
                 bll.AddRealm(rm);
             else
                 bll.UpdateRealm(rm);
-            return json.WriteJson(1, "成功", new {});
+            return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除域名
@@ -497,7 +408,7 @@ namespace AutoSend
                 bll.AddNotice(notice);
             else
                 bll.UpdateNotice(notice);
-            return json.WriteJson(1, "成功", new {});
+            return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 删除栏目

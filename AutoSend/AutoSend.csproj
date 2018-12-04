@@ -110,6 +110,8 @@
     <Content Include="UserHandler.ashx" />
     <Content Include="informationHandler.ashx" />
     <Content Include="ApplicationErroy.ashx" />
+    <Content Include="BaseHandle.ashx" />
+    <Content Include="Login.ashx" />
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
@@ -127,6 +129,9 @@
   <ItemGroup>
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\SwaggerNet.cs" />
+    <Compile Include="BaseHandle.ashx.cs">
+      <DependentUpon>BaseHandle.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -138,6 +143,9 @@
     </Compile>
     <Compile Include="json.cs" />
     <Compile Include="jsonInfo.cs" />
+    <Compile Include="Login.ashx.cs">
+      <DependentUpon>Login.ashx</DependentUpon>
+    </Compile>
     <Compile Include="MyInfo.cs" />
     <Compile Include="Uploader.ashx.cs">
       <DependentUpon>Uploader.ashx</DependentUpon>
