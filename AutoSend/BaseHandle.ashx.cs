@@ -13,32 +13,30 @@ namespace AutoSend
     {
         public void ProcessRequest(HttpContext context)
         {
-            context.Response.ContentType = "text/plain";
+            context.Response.ContentType = "text/plain;charset=utf-8;";
             string header = context.Request.Headers["Authorization"];
-            if (string.IsNullOrEmpty(header))
-            {
-                json.WriteJson(0, "请先登录", new { });
-                context.Response.StatusCode = 405;
-                context.Response.End();
-            }
-            if (!header.Contains(MyInfo.cookie))
-            {
-                json.WriteJson(0, "请先登录", new { });
-                context.Response.StatusCode = 405;
-                context.Response.End();
-            }
-            //if (context.Session == null)
+            //if (string.IsNullOrEmpty(header))
             //{
             //    json.WriteJson(0, "请先登录", new { });
             //    context.Response.StatusCode = 405;
             //    context.Response.End();
             //}
-            //if (context.Session["UserModel"] == null)
+            //if (!header.Contains(MyInfo.cookie))
             //{
             //    json.WriteJson(0, "请先登录", new { });
             //    context.Response.StatusCode = 405;
             //    context.Response.End();
             //}
+            if (context.Session == null)
+            {
+                context.Response.StatusCode = 401;
+                context.Response.End();
+            }
+            if (context.Session["UserModel"] == null)
+            {
+                context.Response.StatusCode = 401;
+                context.Response.End();
+            }
             OnLoad(context);
         }
 

@@ -55,11 +55,22 @@ namespace AutoSend
                         case "getnoticelist": _strContent.Append(GetNoticeList(context)); break;//获取公告
                         case "savenotice": _strContent.Append(SaveNotice(context)); break;//增加或更新公告 
                         case "delnotice": _strContent.Append(DeleteNotice(context)); break;//删除公告
+                        case "logout": _strContent.Append(LogOut(context)); break;//登出
                         default: break;
                     }
                 }
             }
             context.Response.Write(_strContent.ToString());
+        }
+        /// <summary>
+        /// 登出
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string LogOut(HttpContext context)
+        {
+            context.Session["UserModel"] = null;
+            return json.WriteJson(1, "成功", new { });
         }
 
         #region  会员管理

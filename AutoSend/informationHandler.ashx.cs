@@ -17,7 +17,7 @@ namespace AutoSend
     /// <summary>
     /// informationHandler 的摘要说明
     /// </summary>
-    public class informationHandler : BaseHandle,IHttpHandler, IRequiresSessionState
+    public class informationHandler : BaseHandle, IHttpHandler, IRequiresSessionState
     {
         public override void OnLoad(HttpContext context)
         {
@@ -67,7 +67,8 @@ namespace AutoSend
         {
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
-            string userId = context.Request["Id"];
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string userId = model.Id.ToString();
             if (string.IsNullOrEmpty(userId))
                 return json.WriteJson(0, "Id不能为空", new { });
             try
@@ -139,7 +140,8 @@ namespace AutoSend
         {
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
-            string userId = context.Request["Id"];
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string userId = model.Id.ToString();
             if (string.IsNullOrEmpty(userId))
                 return json.WriteJson(0, "Id不能为空", new { });
             try
@@ -207,7 +209,8 @@ namespace AutoSend
         {
             tailwordBLL bll = new tailwordBLL();
             List<tailwordInfo> tList = new List<tailwordInfo>();
-            string userId = context.Request["Id"];
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string userId = model.Id.ToString();
             if (string.IsNullOrEmpty(userId))
                 return json.WriteJson(0, "Id不能为空", new { });
             try
@@ -275,9 +278,8 @@ namespace AutoSend
         /// <returns></returns>
         private string UploadPic(HttpContext context)
         {
-            //string header = context.Request.Headers["Authorization"];
-            //if (!header.Contains(MyInfo.cookie))
-            //    FormsAuthentication.RedirectFromLoginPage(MyInfo.cookie, false);
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string username = model.username.ToString();
             string fileUrl = "";
             try
             {
@@ -302,14 +304,14 @@ namespace AutoSend
                     //string phyPath = context.Request.PhysicalApplicationPath;
                     //string savePath = phyPath + virPath;
                     string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
-                    fileUrl = "/upfiles/" + MyInfo.user + "/" + newfileName + "." + suffix;
+                    fileUrl = "/upfiles/" + username + "/" + newfileName + "." + suffix;
                     _upfile.SaveAs(saveDir);//保存图片
                     #region 存到sql图片库
                     imageBLL bll = new imageBLL();
                     imageInfo img = new imageInfo();
                     img.imageId = newfileName;
                     img.imageURL = fileUrl;
-                    img.userId = MyInfo.Id;
+                    img.userId = model.Id;
                     bll.AddImg(img);
                     #endregion
                 }
@@ -329,14 +331,13 @@ namespace AutoSend
         {
             imageBLL bll = new imageBLL();
             List<imageInfo> iList = new List<imageInfo>();
-            string userId = context.Request["Id"];
-            if (string.IsNullOrEmpty(userId))
-                return json.WriteJson(0, "Id不能为空", new { });
             try
             {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
                 DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' order by addTime desc", userId));
                 if (dt.Rows.Count < 1)
-                    return "";
+                    return json.WriteJson(1, "", new { });
                 foreach (DataRow row in dt.Rows)
                 {
                     imageInfo iInfo = new imageInfo();
@@ -348,7 +349,7 @@ namespace AutoSend
                     iList.Add(iInfo);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return json.WriteJson(0, ex.Message, new { });
             }
@@ -371,7 +372,6 @@ namespace AutoSend
         }
         #endregion
 
-        
         public bool IsReusable
         {
             get
