@@ -185,9 +185,9 @@ namespace AutoSend
                 cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
                 if (cm.Id == 0)
                 {
-
+                    if(cmBLL.IsExistUser(cm.username))
+                        return json.WriteJson(0, "此用户名已被注册", new { });
                     cmBLL.AddUser(cm);
-
                 }
                 else
                     cmBLL.UpdateUser(cm);
