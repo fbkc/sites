@@ -65,6 +65,13 @@ person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,
                new SqlParameter("@ziduan1", SqlHelper.ToDBNull(cmUser.ziduan1))
                );
         }
+        public bool IsExistUser(string name)
+        {
+            object o = SqlHelper.ExecuteScalar("select count(*) from userInfo where username=@username",
+                new SqlParameter("@username",name));
+            return Convert.ToBoolean(o);
+        }
+
         /// <summary>
         /// 更新会员信息
         /// </summary>

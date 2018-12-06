@@ -69,8 +69,6 @@ namespace AutoSend
             List<paragraphInfo> pList = new List<paragraphInfo>();
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             string userId = model.Id.ToString();
-            if (string.IsNullOrEmpty(userId))
-                return json.WriteJson(0, "Id不能为空", new { });
             try
             {
                 DataTable dt = bll.GetParagraphList(userId);
@@ -140,15 +138,13 @@ namespace AutoSend
         {
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
-            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-            string userId = model.Id.ToString();
-            if (string.IsNullOrEmpty(userId))
-                return json.WriteJson(0, "Id不能为空", new { });
             try
             {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
                 DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
                 if (dt.Rows.Count < 1)
-                    return "";
+                    return json.WriteJson(0, "没有数据", new { });
                 foreach (DataRow row in dt.Rows)
                 {
                     contentMouldInfo cInfo = new contentMouldInfo();
@@ -209,15 +205,13 @@ namespace AutoSend
         {
             tailwordBLL bll = new tailwordBLL();
             List<tailwordInfo> tList = new List<tailwordInfo>();
-            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-            string userId = model.Id.ToString();
-            if (string.IsNullOrEmpty(userId))
-                return json.WriteJson(0, "Id不能为空", new { });
             try
             {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
                 DataTable dt = bll.GetTailwordList(string.Format(" where userId={0}", userId));
                 if (dt.Rows.Count < 1)
-                    return "";
+                    return json.WriteJson(0, "没有数据", new { });
                 foreach (DataRow row in dt.Rows)
                 {
                     tailwordInfo tInfo = new tailwordInfo();

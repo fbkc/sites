@@ -184,7 +184,11 @@ namespace AutoSend
                 CmUserBLL cmBLL = new CmUserBLL();
                 cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
                 if (cm.Id == 0)
+                {
+
                     cmBLL.AddUser(cm);
+
+                }
                 else
                     cmBLL.UpdateUser(cm);
                 return json.WriteJson(1, "成功", new { });
