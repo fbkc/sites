@@ -356,9 +356,20 @@ namespace AutoSend
         /// <returns></returns>
         public string DelPic(HttpContext context)
         {
-            string id = context.Request["Id"];
-            imageBLL bll = new imageBLL();
-            int a = bll.DelImg(id);
+            int a = 0;
+            try
+            {
+                string id = context.Request["Id"];
+                imageBLL bll = new imageBLL();
+                string imgfath = bll.GetFathById(id);
+                if (imgfath != "")
+                    File.Delete(HttpContext.Current.Server.MapPath("~"+imgfath));
+                a = bll.DelImg(id);
+            }
+            catch(Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
             if (a == 1)
                 return json.WriteJson(1, "删除成功", new { });
             else

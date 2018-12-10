@@ -37,5 +37,14 @@ namespace BLL
             return SqlHelper.ExecuteNonQuery("delete from imageInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
+        public string GetFathById(string Id)
+        {
+            DataTable ds = SqlHelper.ExecuteDataTable("select imageURL from imageInfo where Id=@Id",
+                new SqlParameter("@Id",Id));
+            if (ds.Rows.Count < 0)
+                return "";
+            DataRow row = ds.Rows[0];
+            return row["imageURL"].ToString();
+        }
     }
 }
