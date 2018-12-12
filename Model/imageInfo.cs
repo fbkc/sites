@@ -10,7 +10,7 @@ namespace Model
         public long Id { get; set; }
         public string imageId { get; set; }
         public string imageURL { get; set; }
-        public DateTime addTime { get; set; }
+        public string addTime { get; set; }
         public int userId { get; set; }
     }
 }

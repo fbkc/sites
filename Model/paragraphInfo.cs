@@ -11,7 +11,7 @@ namespace Model
         public string paraId { get; set; }
         public string paraCotent { get; set; }
         public int usedCount { get; set; }
-        public DateTime addTime { get; set; }
+        public string addTime { get; set; }
         public int userId { get; set; }
     }
 }

@@ -81,7 +81,7 @@ namespace AutoSend
                     pInfo.paraId = (string)row["paraId"];
                     pInfo.paraCotent = (string)row["paraCotent"];
                     pInfo.usedCount = (int)row["usedCount"];
-                    pInfo.addTime = (DateTime)row["addTime"];
+                    pInfo.addTime =((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     pInfo.userId = (int)row["userId"];
                     pList.Add(pInfo);
                 }
@@ -153,7 +153,7 @@ namespace AutoSend
                     cInfo.mouldName = (string)row["mouldName"];
                     cInfo.contentMould = (string)row["contentMould"];
                     cInfo.usedCount = (int)row["usedCount"];
-                    cInfo.addTime = (DateTime)row["addTime"];
+                    cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     cInfo.userId = (int)row["userId"];
                     cList.Add(cInfo);
                 }
@@ -217,7 +217,7 @@ namespace AutoSend
                     tailwordInfo tInfo = new tailwordInfo();
                     tInfo.Id = (int)row["Id"];
                     tInfo.tailword = (string)row["tailword"];
-                    tInfo.addTime = (DateTime)row["addTime"];
+                    tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     tInfo.userId = (int)row["userId"];
                     tList.Add(tInfo);
                 }
@@ -288,7 +288,7 @@ namespace AutoSend
                     if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
                         throw new Exception("只能上传JPE，GIF,PNG文件");
                     if (bytes > 1024 * 1024 * 2)
-                        throw new Exception("文件最大只能传2M");
+                        throw new Exception("图片最大只能传2M");
                     string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
                     string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
                     if (!Directory.Exists(fileDir))
@@ -338,7 +338,7 @@ namespace AutoSend
                     iInfo.Id = (long)row["Id"];
                     iInfo.imageId = (string)row["imageId"];
                     iInfo.imageURL = (string)row["imageURL"];
-                    iInfo.addTime = (DateTime)row["addTime"];
+                    iInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     iInfo.userId = (int)row["userId"];
                     iList.Add(iInfo);
                 }
@@ -360,8 +360,8 @@ namespace AutoSend
             try
             {
                 string id = context.Request["Id"];
+                string imgfath = context.Request["imageURL"];
                 imageBLL bll = new imageBLL();
-                string imgfath = bll.GetFathById(id);
                 if (imgfath != "")
                     File.Delete(HttpContext.Current.Server.MapPath("~"+imgfath));
                 a = bll.DelImg(id);
