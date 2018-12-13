@@ -7,6 +7,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.Security;
@@ -38,6 +39,7 @@ namespace AutoSend
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
+                        case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键处理
 
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
@@ -125,6 +127,108 @@ namespace AutoSend
                 return json.WriteJson(1, "删除成功", new { });
             else
                 return json.WriteJson(0, "删除失败", new { });
+        }
+        /// <summary>
+        /// 段落一键处理
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string OneKeyDealPara(HttpContext context)
+        {
+            string para = context.Request["para"];
+            try
+            {
+                List<string> strList = new List<string>();
+                para = Regex.Replace(para, "0?(13|14|15|16|17|18)[0-9]{9}", " ");
+                para = Regex.Replace(para, "[0-9-()（）]{7,18}", " ");
+                para = Regex.Replace(para, "^((https|http|ftp|rtsp|mms)?:\\/\\/)[^\\s]+", " ");
+                para = Regex.Replace(para, "^(http|https|ftp)\\://[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\\-\\._\\?\\,\\'/\\\\\\+&$%\\$#\\=~])*$", " ");
+                para = Regex.Replace(para, "((http|ftp|https)://)(([a-zA-Z0-9\\._-]+\\.[a-zA-Z]{2,6})|([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}))(:[0-9]{1,4})*(/[a-zA-Z0-9\\&%_\\./-~-]*)?", " ");
+                para = Regex.Replace(para, "(([a-zA-Z0-9\\._-]+\\.[a-zA-Z]{2,6})|([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}))(:[0-9]{1,4})*(/[a-zA-Z0-9\\&%_\\./-~-]*)?", " ");
+                para = Regex.Replace(para, "\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}", " ");
+                para = Regex.Replace(para, "[1-9]([0-9]{5,11})", " ");
+                //para = Regex.Replace(para, @"([零一二三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟亿]+亿)?零?([一二三四五六七八九十百千壹贰叁肆伍陆柒捌玖拾佰仟]+万)?零?([一二三四五六七八九十百壹贰叁肆伍陆柒捌玖拾佰][千仟])?零?([一二三四五六七八九十壹贰叁肆伍陆柒捌玖拾][百佰])?零?([一二三四五六七八九壹贰叁肆伍陆柒捌玖]?[十拾])?零?([一二三四五六七八九壹贰叁肆伍陆柒捌玖])?", " ");
+                para = Regex.Replace(para, @"\d", " ").Replace("、", " ").Replace(".", " ").Replace("：", " ").Replace("①", " ")
+                    .Replace("②", " ").Replace("③", " ").Replace("④", " ").Replace("⑤", " ").Replace("⑥", " ").Replace("⑦", " ").Replace("⑧", " ").Replace("⑨", " ")
+                    .Replace("⑩", " ").Replace("⑪", " ").Replace("⑫", " ").Replace("⑬", " ").Replace("（", " ").Replace("）", " ").Replace("(", " ").Replace("）", " ")
+                    .Replace("⑴", " ").Replace("⑵", " ").Replace("⑶", " ").Replace("⑷", " ").Replace("⑸", " ").Replace("⑹", " ").Replace("⑺", " ").Replace("⑻", " ").Replace("⑼", " ")
+                    .Replace("⒈", " ").Replace("⒉", " ").Replace("⒊", " ").Replace("⒋", " ").Replace("⒌", " ").Replace("⒍", " ").Replace("⒎", " ").Replace("⒏", " ").Replace("⒐", " ").Replace("⒑", " ");
+                string text = para.Replace("\r\n", "").Replace(" ", "").Replace("\r", "").Replace("\n", "").Replace("\u3000", "");
+                string[] array = text.Split(new char[]
+                {
+                '。',
+                '？',
+                '！'
+                });
+                if (array.Length > 1)
+                {
+                    string text2 = "";
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        string text3 = array[i];
+                        if (text3.Length <= 200)
+                        {
+                            text2 = text2 + text3 + "。";
+                            if (text2.Length > 200)
+                            {
+                                if (text3.StartsWith("\u3000\u3000"))
+                                {
+                                    strList.Add(text2);
+                                }
+                                else
+                                {
+                                    strList.Add("\u3000\u3000" + text2);
+                                }
+                                text2 = "";
+                            }
+                        }
+                        else if (text3.Length > 200 && text3.Length < 250)
+                        {
+                            if (text3.StartsWith("\u3000\u3000"))
+                            {
+                                strList.Add(text3 + "。");
+                            }
+                            else
+                            {
+                                strList.Add("\u3000\u3000" + text3 + "。");
+                            }
+                        }
+                        else if (text3.Length >= 250)
+                        {
+                            text3 = text3.Substring(0, 250);
+                            if (text3.StartsWith("\u3000\u3000"))
+                            {
+                                strList.Add(text3 + "。");
+                            }
+                            else
+                            {
+                                strList.Add("\u3000\u3000" + text3 + "。");
+                            }
+                        }
+                    }
+                }
+                else if (array.Length < 2 && text.Length > 220)
+                {
+                    for (int i = 0; i < text.Length - 220; i += 220)
+                    {
+                        string text3 = text.Substring(i, 220);
+                        if (text3.StartsWith("\u3000\u3000"))
+                        {
+                            strList.Add(text3 + "。");
+                        }
+                        else
+                        {
+                            strList.Add("\u3000\u3000" + text3 + "。");
+                        }
+                    }
+                }
+                para = string.Join("\r\n", strList.ToArray());
+            }
+            catch(Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { paralist = para });
         }
         #endregion
 

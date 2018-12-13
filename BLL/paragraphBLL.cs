@@ -27,12 +27,11 @@ namespace BLL
      VALUES
            (@paraId
            ,@paraCotent
-           ,@usedCount
+           ,0
            ,getdate()
            ,@userId)",
                new SqlParameter("@paraId", SqlHelper.ToDBNull(paragraph.paraId)),
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),
-               new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)));
         }
         public void UpdateParagraph(paragraphInfo paragraph)
