@@ -39,8 +39,9 @@ namespace AutoSend
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
-                        case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键处理
+                        case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键整理
                         case "onekeygather": _strContent.Append(OneKeyGather(context)); break;//一键采集
+                        case "preview": _strContent.Append(Preview(context)); break;//一键采集
 
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
@@ -150,16 +151,16 @@ namespace AutoSend
                 return json.WriteJson(0, "删除失败", new { });
         }
         /// <summary>
-        /// 段落一键处理
+        /// 段落一键整理
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         private string OneKeyDealPara(HttpContext context)
         {
             string para = context.Request["params"];
+            List<string> strList = new List<string>();
             try
             {
-                List<string> strList = new List<string>();
                 para = Regex.Replace(para, "0?(13|14|15|16|17|18)[0-9]{9}", " ");
                 para = Regex.Replace(para, "[0-9-()（）]{7,18}", " ");
                 para = Regex.Replace(para, "^((https|http|ftp|rtsp|mms)?:\\/\\/)[^\\s]+", " ");
@@ -174,7 +175,7 @@ namespace AutoSend
                     .Replace("⑩", " ").Replace("⑪", " ").Replace("⑫", " ").Replace("⑬", " ").Replace("（", " ").Replace("）", " ").Replace("(", " ").Replace("）", " ")
                     .Replace("⑴", " ").Replace("⑵", " ").Replace("⑶", " ").Replace("⑷", " ").Replace("⑸", " ").Replace("⑹", " ").Replace("⑺", " ").Replace("⑻", " ").Replace("⑼", " ")
                     .Replace("⒈", " ").Replace("⒉", " ").Replace("⒊", " ").Replace("⒋", " ").Replace("⒌", " ").Replace("⒍", " ").Replace("⒎", " ").Replace("⒏", " ").Replace("⒐", " ").Replace("⒑", " ");
-                string text = para.Replace("\r\n", "").Replace(" ", "").Replace("\r", "").Replace("\n", "").Replace("\u3000", "");
+                string text = para.Replace("\r\n", "").Replace(" ", "").Replace("\r", "").Replace("\n", "").Replace("\u3000", "").Replace("“","").Replace("”","");
                 string[] array = text.Split(new char[]
                 {
                 '。',
@@ -243,13 +244,13 @@ namespace AutoSend
                         }
                     }
                 }
-                para = string.Join("\r\n", strList.ToArray());
+                //para = string.Join("\r\n", strList.ToArray());
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { paralist = para });
+            return json.WriteJson(1, "成功", new { paralist = strList });
         }
         /// <summary>
         /// 段落一键采集
@@ -260,12 +261,11 @@ namespace AutoSend
         {
             string strjson = context.Request["params"];//网址
             string urltxt = strjson;
+            List<gather> galist = new List<gather>();
             try
             {
                 if (!urltxt.EndsWith("/"))
-                {
                     urltxt += "/";
-                }
                 string html = "";
                 try
                 {
@@ -274,62 +274,177 @@ namespace AutoSend
                 catch (Exception ex)
                 {
                     string pattern2 = "(http|https)://(?<domain>[^(:|/]*)";
-                    Match match2 = Regex.Match(txturlgather.Text, pattern2);
+                    Match match2 = Regex.Match(strjson, pattern2);
                     urltxt = match2.Groups[0].ToString();
                     if (!urltxt.EndsWith("/"))
-                    {
                         urltxt += "/";
-                    }
                     html = NetHelper.HttpGet(urltxt, "", Encoding.GetEncoding("UTF-8"));
                 }
                 if (isLuan(html))
-                {
-                    html = NetHelper.HttpGet(this.urltxt, "", Encoding.GetEncoding("gb2312"));
-                }
-                List<gather> list = new List<gather>();
+                    html = NetHelper.HttpGet(urltxt, "", Encoding.GetEncoding("gb2312"));
+
                 string pattern3 = "(?is)<a(?:(?!href=).)*href=(['\"]?)(?<url>[^\"\\s>]*)\\1[^>]*>(?<text>(?:(?!</?a\\b).)*)</a>";
                 MatchCollection matchCollection = Regex.Matches(html, pattern3, RegexOptions.Multiline);
                 foreach (Match match3 in matchCollection)
                 {
                     string input = Regex.Replace(match3.Groups["text"].Value, "<[^>]*>", string.Empty);
                     string title = Regex.Replace(input, "\\s", "").Replace("&nbsp;", "").Replace("&quot", "").Replace("&raquo", "");
-                    if (Encoding.Default.GetByteCount(title) > 17)
+                    if (Encoding.Default.GetByteCount(title) < 18)
+                        continue;
+                    gather gather = new gather();
+                    gather.title = title;
+                    string url = match3.Groups["url"].Value;
+                    if (string.IsNullOrEmpty(url))
+                        continue;
+                    if (url.StartsWith("http://") || url.StartsWith("https://"))
+                        gather.url = url;
+                    else
                     {
-                        gather gather = new gather();
-                        gather.title = title;
-                        string url = match3.Groups["url"].Value;
-                        if (!string.IsNullOrEmpty(url))
-                        {
-                            if (url.StartsWith("http://") || url.StartsWith("https://"))
-                            {
-                                gather.url = url;
-                            }
-                            else
-                            {
-                                string pattern2 = "(http|https)://(?<domain>[^(:|/]*)";
-                                Match match2 = Regex.Match(this.txturlgather.Text, pattern2);
-                                this.urltxt = match2.Groups[0].ToString();
-                                if (!this.urltxt.EndsWith("/"))
-                                {
-                                    this.urltxt += "/";
-                                }
-                                gather.url = this.urltxt + url;
-                            }
-                            gather.isdeal = "---";
-                            list.Add(gather);
-                        }
+                        string pattern2 = "(http|https)://(?<domain>[^(:|/]*)";
+                        Match match2 = Regex.Match(strjson, pattern2);
+                        urltxt = match2.Groups[0].ToString();
+                        if (!urltxt.EndsWith("/"))
+                            urltxt += "/";
+                        gather.url = urltxt + url;
                     }
+                    gather.isdeal = "---";
+                    galist.Add(gather);
                 }
-                this.dgvtitlegather.AutoGenerateColumns = false;
-                this.dgvtitlegather.DataSource = list;
-                MessageBox.Show("抓取文章共" + this.dgvtitlegather.Rows.Count + "篇");
-                this.label60.Text = "文章数量：" + this.dgvtitlegather.Rows.Count + "篇";
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "删除成功", new { });
+            return json.WriteJson(1, "成功", new { paraList = galist });
+        }
+        /// <summary>
+        /// 段落预览
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string Preview(HttpContext context)
+        {
+            string url = context.Request["params"];//网址
+            string content = "";
+            try
+            {
+                //string url = dgvtitlegather.Rows[e.RowIndex].Cells["urls"].Value.ToString();
+                string html = NetHelper.HttpGet(url, "", Encoding.GetEncoding("UTF-8"));
+                if (isLuan(html))//判断是否有乱码
+                {
+                    html = NetHelper.HttpGet(url, "", Encoding.GetEncoding("gb2312"));//有乱码，用gbk编码再查一次
+                }
+                string p = GetContent(html);//获取p标签内容
+                //p = HttpUtility.UrlDecode(p, System.Text.Encoding.Unicode);
+                if (p == "")
+                    return json.WriteJson(0, "获取段落失败，跳过", new { para = content });
+                else
+                {
+                    //frmparagraphdeal frmpar = new frmparagraphdeal(f);
+                    //frmpar.par = formatHTML(p);
+                    //frmpar.isAdd = true;
+                    //frmpar.ShowDialog();
+                    //f.databind1();
+                    content = formatHTML(p);
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, "获取段落失败，跳过", new { para = content });
+                //MessageBox.Show("获取段落失败，跳过");
+                //dgvtitlegather.Rows[e.RowIndex].Cells["IsState"].Value = "跳过";
+            }
+            return json.WriteJson(1, "成功", new { para = content });
+        }
+        /// <summary>
+        /// 根据链接采集文章
+        /// </summary>
+        /// <param name="html"></param>
+        /// <returns></returns>
+        public string GetContent(string html)
+        {
+            string content = string.Empty;
+            string reg = @"(?i)<p[^>]*?>([\s\S]*?)</p>";
+            string pp = "";
+            MatchCollection mcTable = Regex.Matches(html, reg);
+            foreach (Match mTable in mcTable)
+            {
+                pp = Regex.Replace(mTable.Groups[1].Value, "<[^>]*>", string.Empty, RegexOptions.Singleline);
+                string p1 = Regex.Replace(pp, @"\s", "");
+                if (System.Text.Encoding.Default.GetByteCount(p1) > 150)
+                {
+                    if (p1.Contains("Copyright") || p1.Contains("copyright") || p1.Contains("版权所有") || p1.Contains("技术支持："))
+                        continue;
+                    if (p1.Contains("新浪") || p1.Contains("关于我们") || p1.Contains("ICP") || p1.Contains("法律顾问："))
+                        continue;
+                    if (p1.Contains("上一篇：") || p1.Contains("下一篇：") || p1.Contains("微信扫描二维码") || p1.Contains("微信扫码二维码")
+                        || p1.Contains("分享至好友和朋友圈"))
+                        continue;
+                    if (p1.Contains("来源：") || p1.Contains("【") || p1.Contains("s后自动返回") || p1.Contains("用户名")
+                        || p1.Contains("地址：") || p1.Contains("客户端"))
+                        continue;
+                    if (p1.Contains("|退出") || p1.Contains("◎文/图")
+                        || p1.Contains("评论()"))
+                        continue;
+                    content += "    " + p1 + "\r\n";
+                }
+            }
+            //if (content.EndsWith("\r\n") && content.Length > 2)
+            //    return content.Substring(0, content.Length - 2);
+            //else
+            return content;
+        }
+        /// <summary>
+        /// 描述:格式化网页源码
+        /// </summary>
+        /// <param name="htmlContent"></param>
+        /// <returns></returns>
+        public string formatHTML(string htmlContent)
+        {
+            string result = "";
+
+            result = htmlContent.Replace("&raquo;", "").Replace("&nbsp;", "")
+                    .Replace("&copy;", "").Replace("/r", "").Replace("/t", "")
+                    .Replace("/n", "").Replace("&amp;", "&").Replace("&rdquo;", "")
+                    .Replace("&ldquo;", "").Replace("&quot;", "").Replace("-", "")
+                    .Replace("原文链接", "").Replace("推荐帖子", "").Replace("注册", "")
+                    .Replace("登陆", "").Replace("登录", "").Replace("&hellip;", "")
+                    .Replace("相关阅读", "").Replace("特价影票4折起在线选座", "")
+                    .Replace("忘记密码？", "").Replace("&rarr", "").Replace("&", "");
+            return result;
+        }
+        /// <summary>
+        /// 判断网页是否有乱码
+        /// </summary>
+        /// <param name="txt"></param>
+        /// <returns></returns>
+        bool isLuan(string txt)
+        {
+            var bytes = Encoding.UTF8.GetBytes(txt);
+            //239 191 189
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                if (i < bytes.Length - 3)
+                    if (bytes[i] == 239 && bytes[i + 1] == 191 && bytes[i + 2] == 189)
+                    {
+                        return true;
+                    }
+            }
+            return false;
+        }
+        bool isLuan1(string txt)
+        {
+            var bytes = Encoding.Default.GetBytes(txt);
+            //239 191 189
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                if (i < bytes.Length - 3)
+                    if (bytes[i] == 239 && bytes[i + 1] == 191 && bytes[i + 2] == 189)
+                    {
+                        return true;
+                    }
+            }
+            return false;
         }
         #endregion
 
