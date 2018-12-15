@@ -40,6 +40,7 @@ namespace AutoSend
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
                         case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键处理
+                        case "onekeygather": _strContent.Append(OneKeyGather(context)); break;//一键采集
 
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
@@ -83,7 +84,7 @@ namespace AutoSend
                     pInfo.paraId = (string)row["paraId"];
                     pInfo.paraCotent = (string)row["paraCotent"];
                     pInfo.usedCount = (int)row["usedCount"];
-                    pInfo.addTime =((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                    pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     pInfo.userId = (int)row["userId"];
                     pList.Add(pInfo);
                 }
@@ -101,14 +102,34 @@ namespace AutoSend
         /// <returns></returns>
         private string SavePara(HttpContext context)
         {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             paragraphBLL bll = new paragraphBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            paragraphInfo para = JsonConvert.DeserializeObject<paragraphInfo>(strjson, js);
-            if (para.Id == 0)
-                bll.AddParagraph(para);
-            else
-                bll.UpdateParagraph(para);
+            try
+            {
+                List<paragraphInfo> paraList = JsonConvert.DeserializeObject<List<paragraphInfo>>(strjson, js);
+                if (paraList[0].Id == 0)//新增段落，针对多个
+                {
+                    if (paraList != null && paraList.Count > 0)
+                    {
+                        int num = 1000001 + bll.GetNumId();
+                        for (int i = 0; i < paraList.Count; i++)
+                        {
+                            paraList[i].paraId = "N" + num.ToString();
+                            paraList[i].userId = model.Id;//会员Id
+                            if (bll.AddParagraph(paraList[i]) == 1)
+                                num++;
+                        }
+                    }
+                }
+                else//更新，只针对一个
+                    bll.UpdateParagraph(paraList[0]);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
@@ -135,7 +156,7 @@ namespace AutoSend
         /// <returns></returns>
         private string OneKeyDealPara(HttpContext context)
         {
-            string para = context.Request["para"];
+            string para = context.Request["params"];
             try
             {
                 List<string> strList = new List<string>();
@@ -224,11 +245,91 @@ namespace AutoSend
                 }
                 para = string.Join("\r\n", strList.ToArray());
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "成功", new { paralist = para });
+        }
+        /// <summary>
+        /// 段落一键采集
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string OneKeyGather(HttpContext context)
+        {
+            string strjson = context.Request["params"];//网址
+            string urltxt = strjson;
+            try
+            {
+                if (!urltxt.EndsWith("/"))
+                {
+                    urltxt += "/";
+                }
+                string html = "";
+                try
+                {
+                    html = NetHelper.HttpGet(urltxt, "", Encoding.GetEncoding("UTF-8"));
+                }
+                catch (Exception ex)
+                {
+                    string pattern2 = "(http|https)://(?<domain>[^(:|/]*)";
+                    Match match2 = Regex.Match(txturlgather.Text, pattern2);
+                    urltxt = match2.Groups[0].ToString();
+                    if (!urltxt.EndsWith("/"))
+                    {
+                        urltxt += "/";
+                    }
+                    html = NetHelper.HttpGet(urltxt, "", Encoding.GetEncoding("UTF-8"));
+                }
+                if (isLuan(html))
+                {
+                    html = NetHelper.HttpGet(this.urltxt, "", Encoding.GetEncoding("gb2312"));
+                }
+                List<gather> list = new List<gather>();
+                string pattern3 = "(?is)<a(?:(?!href=).)*href=(['\"]?)(?<url>[^\"\\s>]*)\\1[^>]*>(?<text>(?:(?!</?a\\b).)*)</a>";
+                MatchCollection matchCollection = Regex.Matches(html, pattern3, RegexOptions.Multiline);
+                foreach (Match match3 in matchCollection)
+                {
+                    string input = Regex.Replace(match3.Groups["text"].Value, "<[^>]*>", string.Empty);
+                    string title = Regex.Replace(input, "\\s", "").Replace("&nbsp;", "").Replace("&quot", "").Replace("&raquo", "");
+                    if (Encoding.Default.GetByteCount(title) > 17)
+                    {
+                        gather gather = new gather();
+                        gather.title = title;
+                        string url = match3.Groups["url"].Value;
+                        if (!string.IsNullOrEmpty(url))
+                        {
+                            if (url.StartsWith("http://") || url.StartsWith("https://"))
+                            {
+                                gather.url = url;
+                            }
+                            else
+                            {
+                                string pattern2 = "(http|https)://(?<domain>[^(:|/]*)";
+                                Match match2 = Regex.Match(this.txturlgather.Text, pattern2);
+                                this.urltxt = match2.Groups[0].ToString();
+                                if (!this.urltxt.EndsWith("/"))
+                                {
+                                    this.urltxt += "/";
+                                }
+                                gather.url = this.urltxt + url;
+                            }
+                            gather.isdeal = "---";
+                            list.Add(gather);
+                        }
+                    }
+                }
+                this.dgvtitlegather.AutoGenerateColumns = false;
+                this.dgvtitlegather.DataSource = list;
+                MessageBox.Show("抓取文章共" + this.dgvtitlegather.Rows.Count + "篇");
+                this.label60.Text = "文章数量：" + this.dgvtitlegather.Rows.Count + "篇";
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "删除成功", new { });
         }
         #endregion
 
@@ -467,10 +568,10 @@ namespace AutoSend
                 string imgfath = context.Request["imageURL"];
                 imageBLL bll = new imageBLL();
                 if (imgfath != "")
-                    File.Delete(HttpContext.Current.Server.MapPath("~"+imgfath));
+                    File.Delete(HttpContext.Current.Server.MapPath("~" + imgfath));
                 a = bll.DelImg(id);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }

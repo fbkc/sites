@@ -16,9 +16,9 @@ namespace BLL
             DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo where userId=" + id).Tables[0];
             return ds;
         }
-        public void AddParagraph(paragraphInfo paragraph)
+        public int AddParagraph(paragraphInfo paragraph)
         {
-            int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[paragraphInfo]
+            return SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[paragraphInfo]
            ([paraId]
            ,[paraCotent]
            ,usedCount
@@ -37,21 +37,22 @@ namespace BLL
         public void UpdateParagraph(paragraphInfo paragraph)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[paragraphInfo]
-   SET [paraId] = @paraId
-      ,[paraCotent] = @paraCotent
+   SET [paraCotent] = @paraCotent
       ,[usedCount] = @usedCount
-      ,[addTime] = getdate()
-      ,[userId] = @userId where Id=@Id",
+      ,[addTime] = getdate() where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(paragraph.Id)),
-               new SqlParameter("@paraId", SqlHelper.ToDBNull(paragraph.paraId)),
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),
-               new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)));
+               new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)));
         }
         public int DelParagraph(string Id)
         {
             return SqlHelper.ExecuteNonQuery("delete from paragraphInfo where Id=@Id",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
+        }
+        public int GetNumId()
+        {
+            object o= SqlHelper.ExecuteScalar("SELECT TOP 1 Id FROM paragraphInfo ORDER BY Id DESC");
+            return int.Parse(o.ToString());
         }
     }
 }
