@@ -39,6 +39,7 @@ namespace AutoSend
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
+                        case "delparas": _strContent.Append(DelParas(context)); break;//多行删除
                         case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键整理
                         case "onekeygather": _strContent.Append(OneKeyGather(context)); break;//一键采集
                         case "preview": _strContent.Append(Preview(context)); break;//一键采集
@@ -69,6 +70,12 @@ namespace AutoSend
         /// <returns></returns>
         private string GetParaList(HttpContext context)
         {
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
             paragraphBLL bll = new paragraphBLL();
             List<paragraphInfo> pList = new List<paragraphInfo>();
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
@@ -76,25 +83,31 @@ namespace AutoSend
             try
             {
                 DataTable dt = bll.GetParagraphList(userId);
-                if (dt.Rows.Count < 1)
-                    return json.WriteJson(0, "没有数据", new { });
-                foreach (DataRow row in dt.Rows)
+                if (dt.Rows.Count > 0)
                 {
-                    paragraphInfo pInfo = new paragraphInfo();
-                    pInfo.Id = (long)row["Id"];
-                    pInfo.paraId = (string)row["paraId"];
-                    pInfo.paraCotent = (string)row["paraCotent"];
-                    pInfo.usedCount = (int)row["usedCount"];
-                    pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    pInfo.userId = (int)row["userId"];
-                    pList.Add(pInfo);
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        paragraphInfo pInfo = new paragraphInfo();
+                        pInfo.Id = (long)row["Id"];
+                        pInfo.paraId = (string)row["paraId"];
+                        pInfo.paraCotent = (string)row["paraCotent"];
+                        pInfo.usedCount = (int)row["usedCount"];
+                        pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        pInfo.userId = (int)row["userId"];
+                        pList.Add(pInfo);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { paraList = pList });
+            //查询分页数据
+            var pageData = pList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = pList.Count(), paraList = pageData });
         }
         /// <summary>
         /// 增加或修改段落
@@ -144,11 +157,35 @@ namespace AutoSend
             if (string.IsNullOrEmpty(id))
                 return json.WriteJson(0, "Id不能为空", new { });
             paragraphBLL bll = new paragraphBLL();
-            int a = bll.DelParagraph(id);
-            if (a == 1)
+            try
+            {
+                int a = bll.DelParagraph(id);
                 return json.WriteJson(1, "删除成功", new { });
-            else
-                return json.WriteJson(0, "删除失败", new { });
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
+        }
+        /// <summary>
+        /// 多行删除
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelParas(HttpContext context)
+        {
+            paragraphBLL bll = new paragraphBLL();
+            string id = context.Request["Ids"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            try
+            {
+                string[] ids = id.Split(',');
+                int a = 0;
+                foreach (string d in ids)
+                    a = bll.DelParagraph(d);
+                return json.WriteJson(1, "删除成功", new { });
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
         }
         /// <summary>
         /// 段落一键整理
@@ -175,7 +212,7 @@ namespace AutoSend
                     .Replace("⑩", " ").Replace("⑪", " ").Replace("⑫", " ").Replace("⑬", " ").Replace("（", " ").Replace("）", " ").Replace("(", " ").Replace("）", " ")
                     .Replace("⑴", " ").Replace("⑵", " ").Replace("⑶", " ").Replace("⑷", " ").Replace("⑸", " ").Replace("⑹", " ").Replace("⑺", " ").Replace("⑻", " ").Replace("⑼", " ")
                     .Replace("⒈", " ").Replace("⒉", " ").Replace("⒊", " ").Replace("⒋", " ").Replace("⒌", " ").Replace("⒍", " ").Replace("⒎", " ").Replace("⒏", " ").Replace("⒐", " ").Replace("⒑", " ");
-                string text = para.Replace("\r\n", "").Replace(" ", "").Replace("\r", "").Replace("\n", "").Replace("\u3000", "").Replace("“","").Replace("”","");
+                string text = para.Replace("\r\n", "").Replace(" ", "").Replace("\r", "").Replace("\n", "").Replace("\u3000", "").Replace("“", "").Replace("”", "");
                 string[] array = text.Split(new char[]
                 {
                 '。',
