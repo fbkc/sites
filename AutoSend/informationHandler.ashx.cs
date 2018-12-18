@@ -42,7 +42,8 @@ namespace AutoSend
                         case "delparas": _strContent.Append(DelParas(context)); break;//多行删除
                         case "onekeydealpara": _strContent.Append(OneKeyDealPara(context)); break;//一键整理
                         case "onekeygather": _strContent.Append(OneKeyGather(context)); break;//一键采集
-                        case "preview": _strContent.Append(Preview(context)); break;//一键采集
+                        case "preview": _strContent.Append(Preview(context)); break;//预览
+                        case "onekeyedit": _strContent.Append(OneKeyEdit(context)); break;//一键编辑
 
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
@@ -344,7 +345,7 @@ namespace AutoSend
                             urltxt += "/";
                         gather.url = urltxt + url;
                     }
-                    gather.isdeal = "---";
+                    gather.isdeal = false;
                     galist.Add(gather);
                 }
             }
@@ -368,30 +369,62 @@ namespace AutoSend
                 //string url = dgvtitlegather.Rows[e.RowIndex].Cells["urls"].Value.ToString();
                 string html = NetHelper.HttpGet(url, "", Encoding.GetEncoding("UTF-8"));
                 if (isLuan(html))//判断是否有乱码
-                {
                     html = NetHelper.HttpGet(url, "", Encoding.GetEncoding("gb2312"));//有乱码，用gbk编码再查一次
-                }
                 string p = GetContent(html);//获取p标签内容
                 //p = HttpUtility.UrlDecode(p, System.Text.Encoding.Unicode);
                 if (p == "")
                     return json.WriteJson(0, "获取段落失败，跳过", new { para = content });
                 else
-                {
-                    //frmparagraphdeal frmpar = new frmparagraphdeal(f);
-                    //frmpar.par = formatHTML(p);
-                    //frmpar.isAdd = true;
-                    //frmpar.ShowDialog();
-                    //f.databind1();
                     content = formatHTML(p);
-                }
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, "获取段落失败，跳过", new { para = content });
-                //MessageBox.Show("获取段落失败，跳过");
-                //dgvtitlegather.Rows[e.RowIndex].Cells["IsState"].Value = "跳过";
             }
             return json.WriteJson(1, "成功", new { para = content });
+        }
+        /// <summary>
+        /// 一键编辑
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string OneKeyEdit(HttpContext context)
+        {
+            string content = "";
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            try
+            {
+                List<string> pUrl = JsonConvert.DeserializeObject<List<string>>(strjson, js);
+                int page = pUrl.Count;//采集到的行数
+                if (page > 30)
+                    page = 30;
+                int i = 0;
+                while (i < page)
+                {
+                    string url = pUrl[i];
+                    string text = "";
+                    try
+                    {
+                        text = NetHelper.HttpGet(url, "", Encoding.GetEncoding("UTF-8"));
+                    }
+                    catch (Exception ex)
+                    {
+                        i++;
+                        continue;
+                    }
+                    if (this.isLuan(text))
+                    {
+                        text = NetHelper.HttpGet(url, "", Encoding.GetEncoding("gb2312"));
+                    }
+                    string htmlContent = this.GetContent(text);
+                    content += this.formatHTML(htmlContent);
+                    i++;
+                }
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
+            return json.WriteJson(1, "成功", new { paras = content });
         }
         /// <summary>
         /// 根据链接采集文章

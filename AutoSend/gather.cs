@@ -9,6 +9,6 @@ namespace AutoSend
     {
         public string title { get; set; }
         public string url { get; set; }
-        public string isdeal { get; set; }
+        public bool isdeal { get; set; }
     }
 }
