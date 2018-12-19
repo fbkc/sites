@@ -43,18 +43,27 @@ namespace AutoSend
                         case "getuserlist": _strContent.Append(GetUserInfo(context)); break;//获取所有会员
                         case "saveuser": _strContent.Append(SaveUser(context)); break;//添加或修改会员信息
                         case "deluser": _strContent.Append(DelUser(context)); break;//删除会员
+
                         case "getrealmlist": _strContent.Append(GetRealmList(context)); break;//获取域名 
                         case "saverealm": _strContent.Append(SaveRealm(context)); break;//增加或修改域名 
                         case "delrealm": _strContent.Append(DeleteRealm(context)); break;//删除域名 
+
                         case "getgradelist": _strContent.Append(GetGradeList(context)); break;//获取账号级别列表 
                         case "savegrade": _strContent.Append(SaveGrade(context)); break;//增加或更新账号级别 
                         case "delgrade": _strContent.Append(DeleteGrade(context)); break;//删除账号级别
+
                         case "getcolumnlist": _strContent.Append(GetColumnList(context)); break;//获取栏目列表 
                         case "savecolumn": _strContent.Append(SaveColumn(context)); break;//增加或更新栏目 
                         case "delcolumn": _strContent.Append(DeleteColumn(context)); break;//删除栏目
+
                         case "getnoticelist": _strContent.Append(GetNoticeList(context)); break;//获取公告
                         case "savenotice": _strContent.Append(SaveNotice(context)); break;//增加或更新公告 
                         case "delnotice": _strContent.Append(DeleteNotice(context)); break;//删除公告
+
+                        case "gettailwordlist": _strContent.Append(GetTailwordList(context)); break;//获取公共长尾词
+                        case "savetailword": _strContent.Append(SaveTailword(context)); break;
+                        case "deltailword": _strContent.Append(DelTailword(context)); break;
+
                         case "logout": _strContent.Append(LogOut(context)); break;//登出
                         default: break;
                     }
@@ -185,7 +194,7 @@ namespace AutoSend
                 cmUserInfo cm = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
                 if (cm.Id == 0)
                 {
-                    if(cmBLL.IsExistUser(cm.username))
+                    if (cmBLL.IsExistUser(cm.username))
                         return json.WriteJson(0, "此用户名已被注册", new { });
                     cmBLL.AddUser(cm);
                 }
@@ -435,6 +444,78 @@ namespace AutoSend
             noticeBLL bll = new noticeBLL();
             var id = context.Request["Id"];
             int a = bll.DelNotice(id);
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
+        }
+        #endregion
+
+        #region 长尾词管理
+        private string GetTailwordList(HttpContext context)
+        {
+            tailwordBLL bll = new tailwordBLL();
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
+            List<tailwordInfo> tList = new List<tailwordInfo>();
+            try
+            {
+                DataTable dt = bll.GetTailwordList();
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        tailwordInfo tInfo = new tailwordInfo();
+                        tInfo.Id = (int)row["Id"];
+                        tInfo.tailword = (string)row["tailword"];
+                        tList.Add(tInfo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            //查询分页数据
+            var pageData = tList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = tList.Count(), tailwordList = pageData });
+        }
+        /// <summary>
+        /// 增加或修改长尾词
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveTailword(HttpContext context)
+        {
+            tailwordBLL bll = new tailwordBLL();
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            tailwordInfo tailword = JsonConvert.DeserializeObject<tailwordInfo>(strjson, js);
+            if (tailword.Id == 0)
+                bll.AddTailword(tailword);
+            else
+                bll.UpdateTailword(tailword);
+            return json.WriteJson(1, "成功", new { });
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelTailword(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            tailwordBLL bll = new tailwordBLL();
+            int a = bll.DelTailword(id);
             if (a == 1)
                 return json.WriteJson(1, "删除成功", new { });
             else

@@ -51,6 +51,7 @@
     <Compile Include="realmBLL.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="tailwordBLL.cs" />
+    <Compile Include="wordsBLL.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Model\Model.csproj">

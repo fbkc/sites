@@ -11,33 +11,25 @@ namespace BLL
 {
     public class tailwordBLL
     {
-        public DataTable GetTailwordList(string sqlstr)
+        public DataTable GetTailwordList()
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from tailwordInfo " + sqlstr).Tables[0];
+            DataTable ds = SqlHelper.ExecuteDataSet("select * from tailwordInfo").Tables[0];
             return ds;
         }
         public void AddTailword(tailwordInfo tailword)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[tailwordInfo]
-           ([tailword]
-           ,addTime
-           ,[userId])
+           ([tailword])
      VALUES
-           (@tailword
-           ,getdate()
-           ,@userId)",
-               new SqlParameter("@Content", SqlHelper.ToDBNull(tailword.tailword)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(tailword.userId)));
+           (@tailword)",
+               new SqlParameter("@tailword", SqlHelper.ToDBNull(tailword.tailword)));
         }
         public void UpdateTailword(tailwordInfo tailword)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[tailwordInfo]
-   SET [tailword] = @tailword
-      ,[addTime] = getdate()
-      ,[userId] = @userId where Id=@Id",
+   SET [tailword] = @tailword where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(tailword.Id)),
-               new SqlParameter("@paraId", SqlHelper.ToDBNull(tailword.tailword)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(tailword.userId)));
+               new SqlParameter("@tailword", SqlHelper.ToDBNull(tailword.tailword)));
         }
         public int DelTailword(string Id)
         {

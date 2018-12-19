@@ -9,7 +9,5 @@ namespace Model
     {
         public int Id { get; set; }
         public string tailword { get; set; }
-        public string addTime { get; set; }
-        public int userId { get; set; }
     }
 }

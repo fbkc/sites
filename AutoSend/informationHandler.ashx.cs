@@ -49,7 +49,8 @@ namespace AutoSend
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
                         case "delcontent": _strContent.Append(DelContent(context)); break;//删除内容模板
 
-                        case "gettailwordlist": _strContent.Append(GetTailwordList(context)); break;
+                        case "getpublictailwordlist": _strContent.Append(GetPublicTailwordList(context)); break;//获取公共长尾词
+                        case "getwordslist": _strContent.Append(GetWordsList(context)); break;//获取私人长尾词/关键词
                         case "savetailword": _strContent.Append(SaveTailword(context)); break;
                         case "deltailword": _strContent.Append(DelTailword(context)); break;
 
@@ -533,19 +534,20 @@ namespace AutoSend
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
                 DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
-                if (dt.Rows.Count < 1)
-                    return json.WriteJson(0, "没有数据", new { });
-                foreach (DataRow row in dt.Rows)
+                if (dt.Rows.Count > 0)
                 {
-                    contentMouldInfo cInfo = new contentMouldInfo();
-                    cInfo.Id = (int)row["Id"];
-                    cInfo.mouldId = (string)row["mouldId"];
-                    cInfo.mouldName = (string)row["mouldName"];
-                    cInfo.contentMould = (string)row["contentMould"];
-                    cInfo.usedCount = (int)row["usedCount"];
-                    cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    cInfo.userId = (int)row["userId"];
-                    cList.Add(cInfo);
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        contentMouldInfo cInfo = new contentMouldInfo();
+                        cInfo.Id = (int)row["Id"];
+                        cInfo.mouldId = (string)row["mouldId"];
+                        cInfo.mouldName = (string)row["mouldName"];
+                        cInfo.contentMould = (string)row["contentMould"];
+                        cInfo.usedCount = (int)row["usedCount"];
+                        cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        cInfo.userId = (int)row["userId"];
+                        cList.Add(cInfo);
+                    }
                 }
             }
             catch (Exception ex)
@@ -590,33 +592,77 @@ namespace AutoSend
         }
         #endregion
 
-        #region 长尾词
-        private string GetTailwordList(HttpContext context)
+        #region 长尾词/关键词
+        /// <summary>
+        /// 获取公共长尾词
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetPublicTailwordList(HttpContext context)
         {
             tailwordBLL bll = new tailwordBLL();
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
             List<tailwordInfo> tList = new List<tailwordInfo>();
             try
             {
-                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                string userId = model.Id.ToString();
-                DataTable dt = bll.GetTailwordList(string.Format(" where userId={0}", userId));
-                if (dt.Rows.Count < 1)
-                    return json.WriteJson(0, "没有数据", new { });
-                foreach (DataRow row in dt.Rows)
+                DataTable dt = bll.GetTailwordList();
+                if (dt.Rows.Count > 0)
                 {
-                    tailwordInfo tInfo = new tailwordInfo();
-                    tInfo.Id = (int)row["Id"];
-                    tInfo.tailword = (string)row["tailword"];
-                    tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    tInfo.userId = (int)row["userId"];
-                    tList.Add(tInfo);
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        tailwordInfo tInfo = new tailwordInfo();
+                        tInfo.Id = (int)row["Id"];
+                        tInfo.tailword = (string)row["tailword"];
+                        tList.Add(tInfo);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { tailwordList = tList });
+            //查询分页数据
+            var pageData = tList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = tList.Count(), tailwordList = pageData });
+        }
+        /// <summary>
+        /// 获取私人长尾词
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetWordsList(HttpContext context)
+        {
+            wordsBLL bll = new wordsBLL();
+            string wordType = context.Request["wordType"];//长尾词/关键词类型
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string userId = model.Id.ToString();//用户id
+            wordsInfo wInfo = new wordsInfo();
+            try
+            {
+                DataTable dt = bll.GetWords(string.Format(" where userId='{0}' and wordType='{1}'", userId, wordType));
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    wInfo.Id = (int)row["Id"];
+                    wInfo.words = (string)row["words"];
+                    wInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                    wInfo.wordType = (string)row["wordType"];
+                    wInfo.userId = (int)row["userId"];
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { wordsList = wInfo });
         }
         /// <summary>
         /// 增加或修改长尾词
@@ -625,7 +671,7 @@ namespace AutoSend
         /// <returns></returns>
         private string SaveTailword(HttpContext context)
         {
-            tailwordBLL bll = new tailwordBLL();
+            wordsBLL bll = new wordsBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             tailwordInfo tailword = JsonConvert.DeserializeObject<tailwordInfo>(strjson, js);
