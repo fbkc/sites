@@ -64,6 +64,10 @@ namespace AutoSend
                         case "savetailword": _strContent.Append(SaveTailword(context)); break;
                         case "deltailword": _strContent.Append(DelTailword(context)); break;
 
+                        case "getbadwordlist": _strContent.Append(GetBadwordList(context)); break;//获取敏感词
+                        case "savebadword": _strContent.Append(SaveBadword(context)); break;
+                        case "delbadword": _strContent.Append(DelBadword(context)); break;
+
                         case "logout": _strContent.Append(LogOut(context)); break;//登出
                         default: break;
                     }
@@ -516,6 +520,78 @@ namespace AutoSend
                 return json.WriteJson(0, "Id不能为空", new { });
             tailwordBLL bll = new tailwordBLL();
             int a = bll.DelTailword(id);
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
+        }
+        #endregion
+
+        #region 敏感词管理
+        private string GetBadwordList(HttpContext context)
+        {
+            badwordBLL bll = new badwordBLL();
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
+            List<badwordInfo> bList = new List<badwordInfo>();
+            try
+            {
+                DataTable dt = bll.GetBadwordList();
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        badwordInfo bInfo = new badwordInfo();
+                        bInfo.Id = (int)row["Id"];
+                        bInfo.badword = (string)row["badword"];
+                        bList.Add(bInfo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            //查询分页数据
+            var pageData = bList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = bList.Count(), badwordList = pageData });
+        }
+        /// <summary>
+        /// 增加或修改长尾词
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveBadword(HttpContext context)
+        {
+            badwordBLL bll = new badwordBLL();
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            badwordInfo badword = JsonConvert.DeserializeObject<badwordInfo>(strjson, js);
+            if (badword.Id == 0)
+                bll.AddBadword(badword);
+            else
+                bll.UpdateBadword(badword);
+            return json.WriteJson(1, "成功", new { });
+        }
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelBadword(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            badwordBLL bll = new badwordBLL();
+            int a = bll.DelBadword(id);
             if (a == 1)
                 return json.WriteJson(1, "删除成功", new { });
             else

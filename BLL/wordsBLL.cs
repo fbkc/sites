@@ -16,7 +16,7 @@ namespace BLL
             DataTable ds = SqlHelper.ExecuteDataSet("select * from wordsInfo " + sqlstr).Tables[0];
             return ds;
         }
-        public void AddWordsd(wordsInfo words)
+        public void AddWords(wordsInfo words)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[wordsInfo]
            (words,editTime,wordType,userId)

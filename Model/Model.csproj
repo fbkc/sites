@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="badwordInfo.cs" />
     <Compile Include="imageInfo.cs" />
     <Compile Include="noticeInfo.cs" />
     <Compile Include="tailwordInfo.cs" />

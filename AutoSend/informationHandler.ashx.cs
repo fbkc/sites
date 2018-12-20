@@ -1,6 +1,7 @@
 ﻿using BLL;
 using Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -36,6 +37,10 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
+                        case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
+                        case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
+                        case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
+
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
@@ -51,18 +56,129 @@ namespace AutoSend
 
                         case "getpublictailwordlist": _strContent.Append(GetPublicTailwordList(context)); break;//获取公共长尾词
                         case "getwordslist": _strContent.Append(GetWordsList(context)); break;//获取私人长尾词/关键词
-                        case "savetailword": _strContent.Append(SaveTailword(context)); break;
-                        case "deltailword": _strContent.Append(DelTailword(context)); break;
+                        case "savewords": _strContent.Append(SaveWords(context)); break;
+                        case "delwords": _strContent.Append(DelWords(context)); break;
+                        case "digwords": _strContent.Append(DigWords(context)); break;//挖词(暂时未做)
 
-                        case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
-                        case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
-                        case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
                         default: break;
                     }
                 }
             }
             context.Response.Write(_strContent.ToString());
         }
+
+        #region 图片库
+        /// <summary>
+        /// 上传并保存图片到服务器
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UploadPic(HttpContext context)
+        {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string username = model.username.ToString();
+            string fileUrl = "";
+            try
+            {
+                HttpPostedFile _upfile = context.Request.Files["file"];
+                if (_upfile == null)
+                    throw new Exception("请先选择文件！");
+                else
+                {
+                    string fileName = _upfile.FileName;/*获取文件名： C:\Documents and Settings\Administrator\桌面\123.jpg*/
+                    string suffix = fileName.Substring(fileName.LastIndexOf(".") + 1).ToLower();/*获取后缀名并转为小写： jpg*/
+                    int bytes = _upfile.ContentLength;//获取文件的字节大小  
+                    if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
+                        throw new Exception("只能上传JPE，GIF,PNG文件");
+                    if (bytes > 1024 * 1024 * 2)
+                        throw new Exception("图片最大只能传2M");
+                    string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
+                    if (!Directory.Exists(fileDir))
+                    {
+                        Directory.CreateDirectory(fileDir);
+                    }
+                    //string phyPath = context.Request.PhysicalApplicationPath;
+                    //string savePath = phyPath + virPath;
+                    string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
+                    fileUrl = "/upfiles/" + username + "/" + newfileName + "." + suffix;
+                    _upfile.SaveAs(saveDir);//保存图片
+                    #region 存到sql图片库
+                    imageBLL bll = new imageBLL();
+                    imageInfo img = new imageInfo();
+                    img.imageId = newfileName;
+                    img.imageURL = fileUrl;
+                    img.userId = model.Id;
+                    bll.AddImg(img);
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "上传成功", new { imgUrl = fileUrl });
+        }
+        /// <summary>
+        /// 获取此用户下所有图片
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetPicList(HttpContext context)
+        {
+            imageBLL bll = new imageBLL();
+            List<imageInfo> iList = new List<imageInfo>();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' order by addTime desc", userId));
+                if (dt.Rows.Count < 1)
+                    return json.WriteJson(1, "", new { });
+                foreach (DataRow row in dt.Rows)
+                {
+                    imageInfo iInfo = new imageInfo();
+                    iInfo.Id = (long)row["Id"];
+                    iInfo.imageId = (string)row["imageId"];
+                    iInfo.imageURL = (string)row["imageURL"];
+                    iInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                    iInfo.userId = (int)row["userId"];
+                    iList.Add(iInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "成功", new { picList = iList });
+        }
+        /// <summary>
+        /// 删除图片
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelPic(HttpContext context)
+        {
+            int a = 0;
+            try
+            {
+                string id = context.Request["Id"];
+                string imgfath = context.Request["imageURL"];
+                imageBLL bll = new imageBLL();
+                if (imgfath != "")
+                    File.Delete(HttpContext.Current.Server.MapPath("~" + imgfath));
+                a = bll.DelImg(id);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
+        }
+        #endregion
 
         #region 段落
         /// <summary>
@@ -665,151 +781,73 @@ namespace AutoSend
             return json.WriteJson(1, "成功", new { wordsList = wInfo });
         }
         /// <summary>
-        /// 增加或修改长尾词
+        /// 增加或修改长尾词/关键词
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string SaveTailword(HttpContext context)
+        private string SaveWords(HttpContext context)
         {
             wordsBLL bll = new wordsBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            tailwordInfo tailword = JsonConvert.DeserializeObject<tailwordInfo>(strjson, js);
-            if (tailword.Id == 0)
-                bll.AddTailword(tailword);
+            wordsInfo words = JsonConvert.DeserializeObject<wordsInfo>(strjson, js);
+            if (words.Id == 0)
+                bll.AddWords(words);
             else
-                bll.UpdateTailword(tailword);
+                bll.UpdateWords(words);
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
-        /// 删除
+        /// 删除长尾词/关键词
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string DelTailword(HttpContext context)
+        public string DelWords(HttpContext context)
         {
             string id = context.Request["Id"];
             if (string.IsNullOrEmpty(id))
                 return json.WriteJson(0, "Id不能为空", new { });
-            tailwordBLL bll = new tailwordBLL();
-            int a = bll.DelTailword(id);
+            wordsBLL bll = new wordsBLL();
+            int a = bll.DelWords(id);
             if (a == 1)
                 return json.WriteJson(1, "删除成功", new { });
             else
                 return json.WriteJson(0, "删除失败", new { });
         }
-        #endregion
-
-        #region 图片库
         /// <summary>
-        /// 上传并保存图片到服务器
+        /// 关键词挖掘
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string UploadPic(HttpContext context)
+        public string DigWords(HttpContext context)
         {
-            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-            string username = model.username.ToString();
-            string fileUrl = "";
+            string word = context.Request["word"];//搜索关键词
+            if (string.IsNullOrEmpty(word))
+                return json.WriteJson(0, "关键词不能为空", new { });
             try
             {
-                HttpPostedFile _upfile = context.Request.Files["file"];
-                if (_upfile == null)
-                    throw new Exception("请先选择文件！");
-                else
+                string main1 = NetHelper.HttpGet("https://www.5118.com/seo/search/word/", AShelp.UrlEncode(word,Encoding.UTF8), Encoding.UTF8);
+                return main1;
+                if (main1 == "")
+                { return json.WriteJson(0, "暂未搜到相关数据", new { }); }
+                JObject jo = (JObject)JsonConvert.DeserializeObject(main1);
+                string code = jo["code"].ToString();
+                string count = jo["count"].ToString();
+                string data = jo["data"].ToString();
+                if (code == "0")//失败
+                { throw new Exception(); }
+                else if (code == "1")//成功
                 {
-                    string fileName = _upfile.FileName;/*获取文件名： C:\Documents and Settings\Administrator\桌面\123.jpg*/
-                    string suffix = fileName.Substring(fileName.LastIndexOf(".") + 1).ToLower();/*获取后缀名并转为小写： jpg*/
-                    int bytes = _upfile.ContentLength;//获取文件的字节大小  
-                    if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
-                        throw new Exception("只能上传JPE，GIF,PNG文件");
-                    if (bytes > 1024 * 1024 * 2)
-                        throw new Exception("图片最大只能传2M");
-                    string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
-                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
-                    if (!Directory.Exists(fileDir))
-                    {
-                        Directory.CreateDirectory(fileDir);
-                    }
-                    //string phyPath = context.Request.PhysicalApplicationPath;
-                    //string savePath = phyPath + virPath;
-                    string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
-                    fileUrl = "/upfiles/" + username + "/" + newfileName + "." + suffix;
-                    _upfile.SaveAs(saveDir);//保存图片
-                    #region 存到sql图片库
-                    imageBLL bll = new imageBLL();
-                    imageInfo img = new imageInfo();
-                    img.imageId = newfileName;
-                    img.imageURL = fileUrl;
-                    img.userId = model.Id;
-                    bll.AddImg(img);
-                    #endregion
+                    List<string> wList = new List<string>();
+                    foreach (var w in jo["data"])
+                        wList.Add(w["word"].ToString());
                 }
             }
             catch (Exception ex)
             {
-                return json.WriteJson(0, ex.Message, new { });
+                return json.WriteJson(0, "暂未搜到相关数据," + ex.ToString(), new { });
             }
-            return json.WriteJson(1, "上传成功", new { imgUrl = fileUrl });
-        }
-        /// <summary>
-        /// 获取此用户下所有图片
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private string GetPicList(HttpContext context)
-        {
-            imageBLL bll = new imageBLL();
-            List<imageInfo> iList = new List<imageInfo>();
-            try
-            {
-                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                string userId = model.Id.ToString();
-                DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' order by addTime desc", userId));
-                if (dt.Rows.Count < 1)
-                    return json.WriteJson(1, "", new { });
-                foreach (DataRow row in dt.Rows)
-                {
-                    imageInfo iInfo = new imageInfo();
-                    iInfo.Id = (long)row["Id"];
-                    iInfo.imageId = (string)row["imageId"];
-                    iInfo.imageURL = (string)row["imageURL"];
-                    iInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    iInfo.userId = (int)row["userId"];
-                    iList.Add(iInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                return json.WriteJson(0, ex.Message, new { });
-            }
-            return json.WriteJson(1, "成功", new { picList = iList });
-        }
-        /// <summary>
-        /// 删除图片
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public string DelPic(HttpContext context)
-        {
-            int a = 0;
-            try
-            {
-                string id = context.Request["Id"];
-                string imgfath = context.Request["imageURL"];
-                imageBLL bll = new imageBLL();
-                if (imgfath != "")
-                    File.Delete(HttpContext.Current.Server.MapPath("~" + imgfath));
-                a = bll.DelImg(id);
-            }
-            catch (Exception ex)
-            {
-                return json.WriteJson(0, ex.ToString(), new { });
-            }
-            if (a == 1)
-                return json.WriteJson(1, "删除成功", new { });
-            else
-                return json.WriteJson(0, "删除失败", new { });
+            return json.WriteJson(1, "成功", new { });
         }
         #endregion
 
