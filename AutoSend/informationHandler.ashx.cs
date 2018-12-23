@@ -37,6 +37,10 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
+                        case "getproductlist": _strContent.Append(GetProductList(context)); break;//获取此会员下所有产品
+                        case "saveproduct": _strContent.Append(SaveProduct(context)); break;
+                        case "delproduct": _strContent.Append(DelProduct(context)); break;//删除产品
+
                         case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
                         case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
                         case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
@@ -66,6 +70,79 @@ namespace AutoSend
             }
             context.Response.Write(_strContent.ToString());
         }
+
+        #region 产品/新闻
+        /// <summary>
+        /// 获取产品列表
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetProductList(HttpContext context)
+        {
+            contentMouldBLL bll = new contentMouldBLL();
+            List<contentMouldInfo> cList = new List<contentMouldInfo>();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        contentMouldInfo cInfo = new contentMouldInfo();
+                        cInfo.Id = (int)row["Id"];
+                        cInfo.mouldId = (string)row["mouldId"];
+                        cInfo.mouldName = (string)row["mouldName"];
+                        cInfo.contentMould = (string)row["contentMould"];
+                        cInfo.usedCount = (int)row["usedCount"];
+                        cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        cInfo.userId = (int)row["userId"];
+                        cList.Add(cInfo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { contentList = cList });
+        }
+        /// <summary>
+        /// 增加或修改内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveContent(HttpContext context)
+        {
+            contentMouldBLL bll = new contentMouldBLL();
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            contentMouldInfo content = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
+            if (content.Id == 0)
+                bll.AddContent(content);
+            else
+                bll.UpdateContent(content);
+            return json.WriteJson(1, "成功", new { });
+        }
+        /// <summary>
+        /// 删除内容模板
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelContent(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            contentMouldBLL bll = new contentMouldBLL();
+            int a = bll.DelContent(id);
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
+        }
+        #endregion
 
         #region 图片库
         /// <summary>
@@ -717,12 +794,6 @@ namespace AutoSend
         private string GetPublicTailwordList(HttpContext context)
         {
             tailwordBLL bll = new tailwordBLL();
-            string pageIndex = context.Request["page"];
-            string pageSize = context.Request["pageSize"];
-            if (string.IsNullOrEmpty(pageIndex))
-                pageIndex = "1";
-            if (string.IsNullOrEmpty(pageSize))
-                pageSize = "10";
             List<tailwordInfo> tList = new List<tailwordInfo>();
             try
             {
@@ -742,12 +813,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            //查询分页数据
-            var pageData = tList.Where(u => u.Id > 0)
-                .OrderByDescending(u => u.Id)
-                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
-                .Take(int.Parse(pageSize)).ToList();
-            return json.WriteJson(1, "成功", new { total = tList.Count(), tailwordList = pageData });
+            return json.WriteJson(1, "成功", new { tailwordList = tList });
         }
         /// <summary>
         /// 获取私人长尾词
@@ -824,10 +890,10 @@ namespace AutoSend
             string word = context.Request["word"];//搜索关键词
             if (string.IsNullOrEmpty(word))
                 return json.WriteJson(0, "关键词不能为空", new { });
+            List<string> wList = new List<string>();
             try
             {
-                string main1 = NetHelper.HttpGet("https://www.5118.com/seo/search/word/", AShelp.UrlEncode(word,Encoding.UTF8), Encoding.UTF8);
-                return main1;
+                string main1 = NetHelper.HttpGet("https://www.5118.com/seo/search/word/", AShelp.UrlEncode(word, Encoding.UTF8), Encoding.UTF8);
                 if (main1 == "")
                 { return json.WriteJson(0, "暂未搜到相关数据", new { }); }
                 JObject jo = (JObject)JsonConvert.DeserializeObject(main1);
@@ -838,7 +904,6 @@ namespace AutoSend
                 { throw new Exception(); }
                 else if (code == "1")//成功
                 {
-                    List<string> wList = new List<string>();
                     foreach (var w in jo["data"])
                         wList.Add(w["word"].ToString());
                 }
@@ -847,7 +912,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, "暂未搜到相关数据," + ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { });
+            return json.WriteJson(1, "成功", new { wordsList = wList });
         }
         #endregion
 
