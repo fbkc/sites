@@ -24,19 +24,22 @@ namespace BLL
            ,contentMould
            ,usedCount
            ,addTime
-           ,userId)
+           ,userId
+           ,productId)
      VALUES
            (@mouldId
            ,@mouldName
            ,@contentMould
            ,@usedCount
            ,getdate()
-           ,@userId)",
+           ,@userId
+           ,@productId)",
                new SqlParameter("@mouldId", SqlHelper.ToDBNull(content.mouldId)),
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(content.userId)));
+               new SqlParameter("@userId", SqlHelper.ToDBNull(content.userId)),
+               new SqlParameter("@productId", SqlHelper.ToDBNull(content.productId)));
         }
         public void UpdateContent(contentMouldInfo content)
         {

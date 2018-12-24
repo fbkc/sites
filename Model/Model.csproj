@@ -52,6 +52,7 @@
     <Compile Include="paragraphInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="realmNameInfo.cs" />
+    <Compile Include="titleInfo.cs" />
     <Compile Include="wordsInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -37,14 +37,19 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        case "getproductlist": _strContent.Append(GetProductList(context)); break;//获取此会员下所有产品
+                        #region 产品分类
+                        case "getproductlist": _strContent.Append(GetProductList(context)); break;//获取此会员下所有产品分类
                         case "saveproduct": _strContent.Append(SaveProduct(context)); break;
-                        case "delproduct": _strContent.Append(DelProduct(context)); break;//删除产品
+                        case "delproduct": _strContent.Append(DelProduct(context)); break;//删除产品分类
+                        #endregion
 
+                        #region 图片
                         case "uploadpic": _strContent.Append(UploadPic(context)); break;//上传图片
                         case "getpiclist": _strContent.Append(GetPicList(context)); break;//获取图片
                         case "delpic": _strContent.Append(DelPic(context)); break;//删除图片
+                        #endregion
 
+                        #region 段落
                         case "getparalist": _strContent.Append(GetParaList(context)); break;//获取此会员下所有段落
                         case "savepara": _strContent.Append(SavePara(context)); break;
                         case "delpara": _strContent.Append(DelPara(context)); break;//删除段落
@@ -53,16 +58,27 @@ namespace AutoSend
                         case "onekeygather": _strContent.Append(OneKeyGather(context)); break;//一键采集
                         case "preview": _strContent.Append(Preview(context)); break;//预览
                         case "onekeyedit": _strContent.Append(OneKeyEdit(context)); break;//一键编辑
+                        #endregion
 
+                        #region 内容模板
                         case "getcontentlist": _strContent.Append(GetContentList(context)); break;//获取此会员下所有内容模板
                         case "savecontent": _strContent.Append(SaveContent(context)); break;
                         case "delcontent": _strContent.Append(DelContent(context)); break;//删除内容模板
+                        #endregion
 
+                        #region 长尾词/关键词
                         case "getpublictailwordlist": _strContent.Append(GetPublicTailwordList(context)); break;//获取公共长尾词
                         case "getwordslist": _strContent.Append(GetWordsList(context)); break;//获取私人长尾词/关键词
                         case "savewords": _strContent.Append(SaveWords(context)); break;
                         case "delwords": _strContent.Append(DelWords(context)); break;
                         case "digwords": _strContent.Append(DigWords(context)); break;//挖词(暂时未做)
+                        #endregion
+
+                        #region 标题
+                        case "gettitlelist": _strContent.Append(GetTitleList(context)); break;//获取此会员下所有标题
+                        case "savetitle": _strContent.Append(SaveTitle(context)); break;
+                        case "deltitle": _strContent.Append(DelTitle(context)); break;//删除标题
+                        #endregion
 
                         default: break;
                     }
@@ -79,26 +95,38 @@ namespace AutoSend
         /// <returns></returns>
         private string GetProductList(HttpContext context)
         {
-            contentMouldBLL bll = new contentMouldBLL();
-            List<contentMouldInfo> cList = new List<contentMouldInfo>();
+            productBLL bll = new productBLL();
+            List<productInfo> pList = new List<productInfo>();
             try
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
+                DataTable dt = bll.GetProduct(string.Format(" where userId='{0}'", userId));
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        contentMouldInfo cInfo = new contentMouldInfo();
-                        cInfo.Id = (int)row["Id"];
-                        cInfo.mouldId = (string)row["mouldId"];
-                        cInfo.mouldName = (string)row["mouldName"];
-                        cInfo.contentMould = (string)row["contentMould"];
-                        cInfo.usedCount = (int)row["usedCount"];
-                        cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        cInfo.userId = (int)row["userId"];
-                        cList.Add(cInfo);
+                        productInfo pInfo = new productInfo();
+                        pInfo.Id = (int)row["Id"];
+                        pInfo.productName = (string)row["productName"];
+                        pInfo.userId = (int)row["userId"];
+                        pInfo.pinpai = (string)row["contentMould"];
+                        pInfo.xinghao = (string)row["xinghao"];
+                        pInfo.price = (string)row["price"];
+                        pInfo.smallCount = (string)row["smallCount"];
+                        pInfo.sumCount = (string)row["sumCount"];
+                        pInfo.unit = (string)row["unit"];
+                        pInfo.city = (string)row["city"];
+                        pInfo.createTime = ((DateTime)row["createTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        pInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        pInfo.informationType = (string)row["informationType"];
+                        pInfo.maxPubCount = (int)row["maxPubCount"];
+                        pInfo.endPubCount = (int)row["endPubCount"];
+                        pInfo.endTodayPubCount = (int)row["endTodayPubCount"];
+                        pInfo.pub_startTime = ((DateTime)row["pub_startTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        pInfo.pubInterval = (int)row["pubInterval"];
+                        pInfo.isPub = (bool)row["isPub"];
+                        pList.Add(pInfo);
                     }
                 }
             }
@@ -106,37 +134,37 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { contentList = cList });
+            return json.WriteJson(1, "成功", new { productList = pList });
         }
         /// <summary>
-        /// 增加或修改内容模板
+        /// 增加或修改产品列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string SaveContent(HttpContext context)
+        private string SaveProduct(HttpContext context)
         {
-            contentMouldBLL bll = new contentMouldBLL();
+            productBLL bll = new productBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            contentMouldInfo content = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
-            if (content.Id == 0)
-                bll.AddContent(content);
+            productInfo product = JsonConvert.DeserializeObject<productInfo>(strjson, js);
+            if (product.Id == 0)
+                bll.AddProduct(product);
             else
-                bll.UpdateContent(content);
+                bll.UpdateProduct(product);
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
-        /// 删除内容模板
+        /// 删除产品列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public string DelContent(HttpContext context)
+        public string DelProduct(HttpContext context)
         {
             string id = context.Request["Id"];
             if (string.IsNullOrEmpty(id))
                 return json.WriteJson(0, "Id不能为空", new { });
-            contentMouldBLL bll = new contentMouldBLL();
-            int a = bll.DelContent(id);
+            productBLL bll = new productBLL();
+            int a = bll.DelProduct(id);
             if (a == 1)
                 return json.WriteJson(1, "删除成功", new { });
             else
@@ -152,6 +180,7 @@ namespace AutoSend
         /// <returns></returns>
         private string UploadPic(HttpContext context)
         {
+            string pId = context.Request["productId"];
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             string username = model.username.ToString();
             string fileUrl = "";
@@ -186,6 +215,7 @@ namespace AutoSend
                     img.imageId = newfileName;
                     img.imageURL = fileUrl;
                     img.userId = model.Id;
+                    img.productId = int.Parse(pId);
                     bll.AddImg(img);
                     #endregion
                 }
@@ -204,12 +234,13 @@ namespace AutoSend
         private string GetPicList(HttpContext context)
         {
             imageBLL bll = new imageBLL();
+            string pId = context.Request["productId"];
             List<imageInfo> iList = new List<imageInfo>();
             try
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' order by addTime desc", userId));
+                DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", userId, pId));
                 if (dt.Rows.Count < 1)
                     return json.WriteJson(1, "", new { });
                 foreach (DataRow row in dt.Rows)
@@ -220,6 +251,7 @@ namespace AutoSend
                     iInfo.imageURL = (string)row["imageURL"];
                     iInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     iInfo.userId = (int)row["userId"];
+                    iInfo.productId = (int)row["productId"];
                     iList.Add(iInfo);
                 }
             }
@@ -265,6 +297,7 @@ namespace AutoSend
         /// <returns></returns>
         private string GetParaList(HttpContext context)
         {
+            string pId = context.Request["productId"];
             string pageIndex = context.Request["page"];
             string pageSize = context.Request["pageSize"];
             if (string.IsNullOrEmpty(pageIndex))
@@ -277,7 +310,7 @@ namespace AutoSend
             string userId = model.Id.ToString();
             try
             {
-                DataTable dt = bll.GetParagraphList(userId);
+                DataTable dt = bll.GetParagraphList(userId, pId);
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
@@ -289,6 +322,7 @@ namespace AutoSend
                         pInfo.usedCount = (int)row["usedCount"];
                         pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         pInfo.userId = (int)row["userId"];
+                        pInfo.productId = (int)row["productId"];
                         pList.Add(pInfo);
                     }
                 }
@@ -720,13 +754,14 @@ namespace AutoSend
         /// <returns></returns>
         private string GetContentList(HttpContext context)
         {
+            string pId = context.Request["productId"];
             contentMouldBLL bll = new contentMouldBLL();
             List<contentMouldInfo> cList = new List<contentMouldInfo>();
             try
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetContentList(string.Format(" where userId='{0}'", userId));
+                DataTable dt = bll.GetContentList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
@@ -739,6 +774,7 @@ namespace AutoSend
                         cInfo.usedCount = (int)row["usedCount"];
                         cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         cInfo.userId = (int)row["userId"];
+                        cInfo.productId = (int)row["productId"];
                         cList.Add(cInfo);
                     }
                 }
@@ -822,6 +858,7 @@ namespace AutoSend
         /// <returns></returns>
         private string GetWordsList(HttpContext context)
         {
+            string pId = context.Request["productId"];
             wordsBLL bll = new wordsBLL();
             string wordType = context.Request["wordType"];//长尾词/关键词类型
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
@@ -829,7 +866,7 @@ namespace AutoSend
             wordsInfo wInfo = new wordsInfo();
             try
             {
-                DataTable dt = bll.GetWords(string.Format(" where userId='{0}' and wordType='{1}'", userId, wordType));
+                DataTable dt = bll.GetWords(string.Format(" where userId='{0}' and wordType='{1}' and productId='{2}'", userId, wordType, pId));
                 if (dt.Rows.Count > 0)
                 {
                     DataRow row = dt.Rows[0];
@@ -838,6 +875,7 @@ namespace AutoSend
                     wInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                     wInfo.wordType = (string)row["wordType"];
                     wInfo.userId = (int)row["userId"];
+                    wInfo.productId = (int)row["productId"];
                 }
             }
             catch (Exception ex)
@@ -913,6 +951,81 @@ namespace AutoSend
                 return json.WriteJson(0, "暂未搜到相关数据," + ex.ToString(), new { });
             }
             return json.WriteJson(1, "成功", new { wordsList = wList });
+        }
+        #endregion
+
+        #region 标题
+        /// <summary>
+        /// 获取产品列表
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetTitleList(HttpContext context)
+        {
+            string pId = context.Request["productId"];
+            titleBLL bll = new titleBLL();
+            List<titleInfo> tList = new List<titleInfo>();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                DataTable dt = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        titleInfo tInfo = new titleInfo();
+                        tInfo.Id = (int)row["Id"];
+                        tInfo.title = (string)row["title"];
+                        tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        tInfo.isSucceedPub = (int)row["isSucceedPub"];
+                        tInfo.returnMsg = (string)row["returnMsg"];
+                        tInfo.productId = (int)row["productId"];
+                        tInfo.userId = (int)row["userId"];
+                        tList.Add(tInfo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { titleList = tList });
+        }
+        /// <summary>
+        /// 增加或修改产品列表
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string SaveTitle(HttpContext context)
+        {
+            titleBLL bll = new titleBLL();
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            titleInfo title = JsonConvert.DeserializeObject<titleInfo>(strjson, js);
+            if (title.Id == 0)
+                bll.AddTitle(title);
+            else
+                bll.UpdateTitle(title);
+            return json.WriteJson(1, "成功", new { });
+        }
+        /// <summary>
+        /// 删除产品列表
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelTitle(HttpContext context)
+        {
+            string id = context.Request["Id"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            titleBLL bll = new titleBLL();
+            int a = bll.DelTitle(id);
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 

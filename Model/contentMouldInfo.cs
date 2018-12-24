@@ -14,5 +14,6 @@ namespace Model
         public int usedCount { get; set; }
         public string addTime { get; set; }
         public int userId { get; set; }
+        public int productId { get; set; }
     }
 }

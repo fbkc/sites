@@ -17,126 +17,72 @@ namespace BLL
             return ds;
         }
         /// <summary>
-        /// 增加会员信息
+        /// 增加产品类型信息
         /// </summary>
         /// <param name="sqlstr"></param>
         public void AddProduct(productInfo product)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[productInfo]
-           (productName,userId,pinpai,xinghao,price,smallCount,sumCount,unit,city,editTime,informationType,maxPubCount,endPubCount,endTodayPubCount,isPub) VALUES
-           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@isPub)",
-               new SqlParameter("@productName", SqlHelper.ToDBNull(product.username)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(product.password)),
-               new SqlParameter("@userType", SqlHelper.ToDBNull(product.userType)),
-               new SqlParameter("@isStop", SqlHelper.ToDBNull(product.isStop)),
-               new SqlParameter("@gradeId", SqlHelper.ToDBNull(product.gradeId)),
-               new SqlParameter("@canPubCount", SqlHelper.ToDBNull(cmUser.canPubCount)),
-               new SqlParameter("@realmNameInfo", SqlHelper.ToDBNull(cmUser.realmNameInfo)),
-               new SqlParameter("@expirationTime", SqlHelper.ToDBNull(cmUser.expirationTime)),
-               new SqlParameter("@endPubCount", SqlHelper.ToDBNull(cmUser.endPubCount)),
-               new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(cmUser.endTodayPubCount)),
-               new SqlParameter("@registerTime", SqlHelper.ToDBNull(cmUser.registerTime)),
-               new SqlParameter("@registerIP", SqlHelper.ToDBNull(cmUser.registerIP)),
-               new SqlParameter("@companyName", SqlHelper.ToDBNull(cmUser.companyName)),
-               new SqlParameter("@columnInfoId", SqlHelper.ToDBNull(cmUser.columnInfoId)),
-               new SqlParameter("@person", SqlHelper.ToDBNull(cmUser.person)),
-               new SqlParameter("@telephone", SqlHelper.ToDBNull(cmUser.telephone)),
-               new SqlParameter("@modile", SqlHelper.ToDBNull(cmUser.modile)),
-               new SqlParameter("@ten_qq", SqlHelper.ToDBNull(cmUser.ten_qq)),
-               new SqlParameter("@keyword", SqlHelper.ToDBNull(cmUser.keyword)),
-               new SqlParameter("@pinpai", SqlHelper.ToDBNull(cmUser.pinpai)),
-               new SqlParameter("@xinghao", SqlHelper.ToDBNull(cmUser.xinghao)),
-               new SqlParameter("@price", SqlHelper.ToDBNull(cmUser.price)),
-               new SqlParameter("@smallCount", SqlHelper.ToDBNull(cmUser.smallCount)),
-               new SqlParameter("@sumCount", SqlHelper.ToDBNull(cmUser.sumCount)),
-               new SqlParameter("@unit", SqlHelper.ToDBNull(cmUser.unit)),
-               new SqlParameter("@city", SqlHelper.ToDBNull(cmUser.city)),
-               new SqlParameter("@address", SqlHelper.ToDBNull(cmUser.address)),
-               new SqlParameter("@com_web", SqlHelper.ToDBNull(cmUser.com_web)),
-               new SqlParameter("@companyRemark", SqlHelper.ToDBNull(cmUser.companyRemark)),
-               new SqlParameter("@yewu", SqlHelper.ToDBNull(cmUser.yewu)),
-               new SqlParameter("@ziduan1", SqlHelper.ToDBNull(cmUser.ziduan1))
-               );
+           (productName,userId,pinpai,xinghao,price,smallCount,sumCount,unit,city,createTime,editTime,informationType,maxPubCount,endPubCount,endTodayPubCount,pub_startTime,pubInterval,isPub) VALUES
+           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@pub_startTime,@pubInterval,false)",
+               new SqlParameter("@productName", SqlHelper.ToDBNull(product.productName)),
+               new SqlParameter("@userId", SqlHelper.ToDBNull(product.userId)),
+               new SqlParameter("@pinpai", SqlHelper.ToDBNull(product.pinpai)),
+               new SqlParameter("@xinghao", SqlHelper.ToDBNull(product.xinghao)),
+               new SqlParameter("@price", SqlHelper.ToDBNull(product.price)),
+               new SqlParameter("@smallCount", SqlHelper.ToDBNull(product.smallCount)),
+               new SqlParameter("@sumCount", SqlHelper.ToDBNull(product.sumCount)),
+               new SqlParameter("@unit", SqlHelper.ToDBNull(product.unit)),
+               new SqlParameter("@city", SqlHelper.ToDBNull(product.city)),
+               new SqlParameter("@informationType", SqlHelper.ToDBNull(product.informationType)),
+               new SqlParameter("@maxPubCount", SqlHelper.ToDBNull(product.maxPubCount)),
+               new SqlParameter("@endPubCount", SqlHelper.ToDBNull(product.endPubCount)),
+               new SqlParameter("@pub_startTime", SqlHelper.ToDBNull(product.pub_startTime)),
+               new SqlParameter("@pubInterval", SqlHelper.ToDBNull(product.pubInterval)),
+               new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(product.endTodayPubCount)));
         }
-        public bool IsExistUser(string name)
-        {
-            object o = SqlHelper.ExecuteScalar("select count(*) from userInfo where username=@username",
-                new SqlParameter("@username", name));
-            return Convert.ToBoolean(o);
-        }
-
         /// <summary>
-        /// 更新会员信息
+        /// 更新产品类型信息
         /// </summary>
         /// <param name="sqlstr"></param>
-        public void UpdateProduct(productInfo cmUser)
+        public void UpdateProduct(productInfo product)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[productInfo]
-   SET[username] = @username
-      ,[password] = @password
-      ,[userType] = @userType
-      ,[isStop]=@isStop
-      ,[gradeId] = @gradeId
-      ,[canPubCount] = @canPubCount
-      ,[realmNameInfo] = @realmNameInfo
-      ,[expirationTime] = @expirationTime
-      ,[endPubCount] = @endPubCount
-      ,[endTodayPubCount] = @endTodayPubCount
-      ,[registerTime] = @registerTime
-      ,[registerIP] = @registerIP 
-      ,[companyName] = @companyName
-      ,[columnInfoId] = @columnInfoId
-      ,[person] = @person
-      ,[telephone] = @telephone
-      ,[modile] = @modile
-      ,[ten_qq] = @ten_qq
-      ,[keyword] = @keyword
+   SET[productName] = @productName
       ,[pinpai] = @pinpai
       ,[xinghao] = @xinghao
-      ,[price] = @price
+      ,[price]=@price
       ,[smallCount] = @smallCount
       ,[sumCount] = @sumCount
       ,[unit] = @unit
       ,[city] = @city
-      ,[address] = @address
-      ,[com_web] = @com_web
-      ,[companyRemark] = @companyRemark
-      ,[yewu] = @yewu
-      ,[ziduan1] = @ziduan1 where Id=@Id",
-      new SqlParameter("@Id", SqlHelper.ToDBNull(cmUser.Id)),
-      new SqlParameter("@username", SqlHelper.ToDBNull(cmUser.username)),
-      new SqlParameter("@password", SqlHelper.ToDBNull(cmUser.password)),
-      new SqlParameter("@userType", SqlHelper.ToDBNull(cmUser.userType)),
-      new SqlParameter("@isStop", SqlHelper.ToDBNull(cmUser.isStop)),
-      new SqlParameter("@gradeId", SqlHelper.ToDBNull(cmUser.gradeId)),
-      new SqlParameter("@canPubCount", SqlHelper.ToDBNull(cmUser.canPubCount)),
-      new SqlParameter("@realmNameInfo", SqlHelper.ToDBNull(cmUser.realmNameInfo)),
-      new SqlParameter("@expirationTime", SqlHelper.ToDBNull(cmUser.expirationTime)),
-      new SqlParameter("@endPubCount", SqlHelper.ToDBNull(cmUser.endPubCount)),
-      new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(cmUser.endTodayPubCount)),
-      new SqlParameter("@registerTime", SqlHelper.ToDBNull(cmUser.registerTime)),
-      new SqlParameter("@registerIP", SqlHelper.ToDBNull(cmUser.registerIP)),
-      new SqlParameter("@companyName", SqlHelper.ToDBNull(cmUser.companyName)),
-      new SqlParameter("@columnInfoId", SqlHelper.ToDBNull(cmUser.columnInfoId)),
-      new SqlParameter("@person", SqlHelper.ToDBNull(cmUser.person)),
-      new SqlParameter("@telephone", SqlHelper.ToDBNull(cmUser.telephone)),
-      new SqlParameter("@modile", SqlHelper.ToDBNull(cmUser.modile)),
-      new SqlParameter("@ten_qq", SqlHelper.ToDBNull(cmUser.ten_qq)),
-      new SqlParameter("@keyword", SqlHelper.ToDBNull(cmUser.keyword)),
-      new SqlParameter("@pinpai", SqlHelper.ToDBNull(cmUser.pinpai)),
-      new SqlParameter("@xinghao", SqlHelper.ToDBNull(cmUser.xinghao)),
-      new SqlParameter("@price", SqlHelper.ToDBNull(cmUser.price)),
-      new SqlParameter("@smallCount", SqlHelper.ToDBNull(cmUser.smallCount)),
-      new SqlParameter("@unit", SqlHelper.ToDBNull(cmUser.unit)),
-      new SqlParameter("@city", SqlHelper.ToDBNull(cmUser.city)),
-      new SqlParameter("@address", SqlHelper.ToDBNull(cmUser.address)),
-      new SqlParameter("@com_web", SqlHelper.ToDBNull(cmUser.com_web)),
-      new SqlParameter("@companyRemark", SqlHelper.ToDBNull(cmUser.companyRemark)),
-      new SqlParameter("@yewu", SqlHelper.ToDBNull(cmUser.yewu)),
-      new SqlParameter("@ziduan1", SqlHelper.ToDBNull(cmUser.ziduan1)));
+      ,[editTime] = getdate()
+      ,[informationType] = @informationType
+      ,[maxPubCount] = @maxPubCount
+      ,[endPubCount] = @endPubCount 
+      ,[endTodayPubCount] = @endTodayPubCount
+      ,[pub_startTime] = @pub_startTime
+      ,[pubInterval] = @pubInterval
+      ,[isPub] = @isPub where Id=@Id",
+               new SqlParameter("@Id", SqlHelper.ToDBNull(product.Id)),
+               new SqlParameter("@productName", SqlHelper.ToDBNull(product.productName)),
+               new SqlParameter("@pinpai", SqlHelper.ToDBNull(product.pinpai)),
+               new SqlParameter("@xinghao", SqlHelper.ToDBNull(product.xinghao)),
+               new SqlParameter("@price", SqlHelper.ToDBNull(product.price)),
+               new SqlParameter("@smallCount", SqlHelper.ToDBNull(product.smallCount)),
+               new SqlParameter("@sumCount", SqlHelper.ToDBNull(product.sumCount)),
+               new SqlParameter("@unit", SqlHelper.ToDBNull(product.unit)),
+               new SqlParameter("@city", SqlHelper.ToDBNull(product.city)),
+               new SqlParameter("@informationType", SqlHelper.ToDBNull(product.informationType)),
+               new SqlParameter("@maxPubCount", SqlHelper.ToDBNull(product.maxPubCount)),
+               new SqlParameter("@endPubCount", SqlHelper.ToDBNull(product.endPubCount)),
+               new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(product.endTodayPubCount)),
+               new SqlParameter("@pub_startTime", SqlHelper.ToDBNull(product.pub_startTime)),
+               new SqlParameter("@pubInterval", SqlHelper.ToDBNull(product.pubInterval)),
+               new SqlParameter("@isPub", SqlHelper.ToDBNull(product.isPub)));
         }
         /// <summary>
-        /// 删除用户
+        /// 删除产品类型
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>

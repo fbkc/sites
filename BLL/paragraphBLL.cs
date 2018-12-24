@@ -11,9 +11,9 @@ namespace BLL
 {
     public class paragraphBLL
     {
-        public DataTable GetParagraphList(string id)
+        public DataTable GetParagraphList(string id, string pId)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo where userId=" + id).Tables[0];
+            DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo where userId=" + id + " and productId=" + pId).Tables[0];
             return ds;
         }
         public int AddParagraph(paragraphInfo paragraph)
@@ -23,16 +23,19 @@ namespace BLL
            ,[paraCotent]
            ,usedCount
            ,addTime
-           ,userId)
+           ,userId
+           ,productId)
      VALUES
            (@paraId
            ,@paraCotent
            ,0
            ,getdate()
-           ,@userId)",
+           ,@userId
+           ,@productId)",
                new SqlParameter("@paraId", SqlHelper.ToDBNull(paragraph.paraId)),
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)));
+               new SqlParameter("@userId", SqlHelper.ToDBNull(paragraph.userId)),
+               new SqlParameter("@productId", SqlHelper.ToDBNull(paragraph.productId)));
         }
         public void UpdateParagraph(paragraphInfo paragraph)
         {
@@ -51,7 +54,7 @@ namespace BLL
         }
         public int GetNumId()
         {
-            object o= SqlHelper.ExecuteScalar("SELECT TOP 1 Id FROM paragraphInfo ORDER BY Id DESC");
+            object o = SqlHelper.ExecuteScalar("SELECT TOP 1 Id FROM paragraphInfo ORDER BY Id DESC");
             return int.Parse(o.ToString());
         }
     }

@@ -53,6 +53,7 @@
     <Compile Include="realmBLL.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="tailwordBLL.cs" />
+    <Compile Include="titleBLL.cs" />
     <Compile Include="wordsBLL.cs" />
   </ItemGroup>
   <ItemGroup>

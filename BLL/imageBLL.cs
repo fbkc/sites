@@ -22,14 +22,17 @@ namespace BLL
            ([imageId]
            ,[imageURL]
            ,addTime
-           ,userId)
+           ,userId
+           ,productId)
      VALUES
            (@imageId
            ,@imageURL
            ,getdate()
-           ,@userId)",
+           ,@userId
+           ,@productId)",
                new SqlParameter("@imageId", SqlHelper.ToDBNull(img.imageId)),
                new SqlParameter("@imageURL", SqlHelper.ToDBNull(img.imageURL)),
+               new SqlParameter("@productId", SqlHelper.ToDBNull(img.productId)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(img.userId)));
         }
         public int DelImg(string Id)

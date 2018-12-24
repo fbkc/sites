@@ -19,12 +19,13 @@ namespace BLL
         public void AddWords(wordsInfo words)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[wordsInfo]
-           (words,editTime,wordType,userId)
+           (words,editTime,wordType,userId,productId)
      VALUES
-           (@words,getdate(),@wordType,@userId)",
+           (@words,getdate(),@wordType,@userId,@productId)",
                new SqlParameter("@tailword", SqlHelper.ToDBNull(words.words)),
                new SqlParameter("@wordType", SqlHelper.ToDBNull(words.wordType)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(words.userId)));
+               new SqlParameter("@userId", SqlHelper.ToDBNull(words.userId)),
+               new SqlParameter("@productId", SqlHelper.ToDBNull(words.productId)));
         }
         public void UpdateWords(wordsInfo words)
         {
