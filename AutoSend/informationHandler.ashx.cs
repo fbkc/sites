@@ -110,7 +110,10 @@ namespace AutoSend
                         pInfo.Id = (int)row["Id"];
                         pInfo.productName = (string)row["productName"];
                         pInfo.userId = (int)row["userId"];
-                        pInfo.pinpai = (string)row["contentMould"];
+                        if (row["pinpai"] == DBNull.Value)
+                            pInfo.pinpai = null;
+                        else
+                            pInfo.pinpai = (string)row["pinpai"];
                         pInfo.xinghao = (string)row["xinghao"];
                         pInfo.price = (string)row["price"];
                         pInfo.smallCount = (string)row["smallCount"];
@@ -119,7 +122,7 @@ namespace AutoSend
                         pInfo.city = (string)row["city"];
                         pInfo.createTime = ((DateTime)row["createTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         pInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        pInfo.informationType = (string)row["informationType"];
+                        pInfo.informationType = (string)row["informationType"];//产品/新闻
                         pInfo.maxPubCount = (int)row["maxPubCount"];
                         pInfo.endPubCount = (int)row["endPubCount"];
                         pInfo.endTodayPubCount = (int)row["endTodayPubCount"];
@@ -143,10 +146,12 @@ namespace AutoSend
         /// <returns></returns>
         private string SaveProduct(HttpContext context)
         {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             productBLL bll = new productBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             productInfo product = JsonConvert.DeserializeObject<productInfo>(strjson, js);
+            product.userId = model.Id;
             if (product.Id == 0)
                 bll.AddProduct(product);
             else
@@ -891,10 +896,12 @@ namespace AutoSend
         /// <returns></returns>
         private string SaveWords(HttpContext context)
         {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             wordsBLL bll = new wordsBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             wordsInfo words = JsonConvert.DeserializeObject<wordsInfo>(strjson, js);
+            words.userId = model.Id;
             if (words.Id == 0)
                 bll.AddWords(words);
             else
@@ -1000,10 +1007,12 @@ namespace AutoSend
         /// <returns></returns>
         private string SaveTitle(HttpContext context)
         {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             titleBLL bll = new titleBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             titleInfo title = JsonConvert.DeserializeObject<titleInfo>(strjson, js);
+            title.userId = model.Id;
             if (title.Id == 0)
                 bll.AddTitle(title);
             else

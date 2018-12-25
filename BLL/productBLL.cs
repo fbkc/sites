@@ -24,7 +24,7 @@ namespace BLL
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[productInfo]
            (productName,userId,pinpai,xinghao,price,smallCount,sumCount,unit,city,createTime,editTime,informationType,maxPubCount,endPubCount,endTodayPubCount,pub_startTime,pubInterval,isPub) VALUES
-           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@pub_startTime,@pubInterval,false)",
+           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@pub_startTime,@pubInterval,0)",
                new SqlParameter("@productName", SqlHelper.ToDBNull(product.productName)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(product.userId)),
                new SqlParameter("@pinpai", SqlHelper.ToDBNull(product.pinpai)),
