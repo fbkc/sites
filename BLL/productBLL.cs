@@ -48,7 +48,7 @@ namespace BLL
         public void UpdateProduct(productInfo product)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[productInfo]
-   SET[productName] = @productName
+   SET [productName] = @productName
       ,[pinpai] = @pinpai
       ,[xinghao] = @xinghao
       ,[price]=@price

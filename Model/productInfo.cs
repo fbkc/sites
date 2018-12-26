@@ -20,11 +20,11 @@ namespace Model
         public string createTime { get; set; }
         public string editTime { get; set; }
         public string informationType { get; set; }//PRODUCT/NEWS
-        public int maxPubCount { get; set; }
-        public int endPubCount { get; set; }
-        public int endTodayPubCount { get; set; }
+        public int? maxPubCount { get; set; }
+        public int? endPubCount { get; set; }
+        public int? endTodayPubCount { get; set; }
         public string pub_startTime { get; set; }
-        public int pubInterval { get; set; }
+        public int? pubInterval { get; set; }
         public bool isPub { get; set; }
     }
 }
