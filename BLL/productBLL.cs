@@ -23,8 +23,8 @@ namespace BLL
         public void AddProduct(productInfo product)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[productInfo]
-           (productName,userId,pinpai,xinghao,price,smallCount,sumCount,unit,city,createTime,editTime,informationType,maxPubCount,endPubCount,endTodayPubCount,pub_startTime,pubInterval,isPub) VALUES
-           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@pub_startTime,@pubInterval,0)",
+           (productName,userId,pinpai,xinghao,price,smallCount,sumCount,unit,city,createTime,editTime,informationType,maxPubCount,endPubCount,endTodayPubCount,pub_startTime,pubInterval,isPub,isdel) VALUES
+           (@productName,@userId,@pinpai,@xinghao,@price,@smallCount,@sumCount,@unit,@city,getdate(),getdate(),@informationType,@maxPubCount,@endPubCount,@endTodayPubCount,@pub_startTime,@pubInterval,0,0)",
                new SqlParameter("@productName", SqlHelper.ToDBNull(product.productName)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(product.userId)),
                new SqlParameter("@pinpai", SqlHelper.ToDBNull(product.pinpai)),
@@ -63,7 +63,8 @@ namespace BLL
       ,[endTodayPubCount] = @endTodayPubCount
       ,[pub_startTime] = @pub_startTime
       ,[pubInterval] = @pubInterval
-      ,[isPub] = @isPub where Id=@Id",
+      ,[isPub] = @isPub
+      ,[isdel] = @isdel where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(product.Id)),
                new SqlParameter("@productName", SqlHelper.ToDBNull(product.productName)),
                new SqlParameter("@pinpai", SqlHelper.ToDBNull(product.pinpai)),
@@ -79,7 +80,8 @@ namespace BLL
                new SqlParameter("@endTodayPubCount", SqlHelper.ToDBNull(product.endTodayPubCount)),
                new SqlParameter("@pub_startTime", SqlHelper.ToDBNull(product.pub_startTime)),
                new SqlParameter("@pubInterval", SqlHelper.ToDBNull(product.pubInterval)),
-               new SqlParameter("@isPub", SqlHelper.ToDBNull(product.isPub)));
+               new SqlParameter("@isPub", SqlHelper.ToDBNull(product.isPub)),
+               new SqlParameter("@isdel", SqlHelper.ToDBNull(product.isdel)));
         }
         /// <summary>
         /// 删除产品类型

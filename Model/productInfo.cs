@@ -26,5 +26,6 @@ namespace Model
         public string pub_startTime { get; set; }
         public int? pubInterval { get; set; }
         public bool isPub { get; set; }
+        public bool isdel { get; set; }
     }
 }
