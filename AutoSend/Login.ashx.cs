@@ -14,7 +14,7 @@ namespace AutoSend
     /// <summary>
     /// Login 的摘要说明
     /// </summary>
-    public class Login :IHttpHandler, IRequiresSessionState
+    public class Login : IHttpHandler, IRequiresSessionState
     {
 
         public void ProcessRequest(HttpContext context)
@@ -65,8 +65,11 @@ namespace AutoSend
             string result = "";
             string _username = context.Request["username"];
             string _password = context.Request["password"];
-            if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
-                return "";
+            //string _code = context.Request["code"];//验证码
+            //if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password) || string.IsNullOrEmpty(_code))
+            //    return "";
+            //if (context.Session["Code"].ToString() != _code)
+            //    return json.WriteJson(0, "验证码错误", new { });
             cmUserInfo model = new cmUserInfo();
             CmUserBLL bll = new CmUserBLL();
             DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
