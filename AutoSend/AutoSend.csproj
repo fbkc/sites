@@ -118,6 +118,7 @@
     <Content Include="ApplicationErroy.ashx" />
     <Content Include="BaseHandle.ashx" />
     <Content Include="Login.ashx" />
+    <Content Include="WebService.asmx" />
     <Fakes Include="Fakes\JWT.fakes" />
     <Content Include="CodeHandler.ashx" />
     <None Include="packages.config" />
@@ -166,6 +167,10 @@
     </Compile>
     <Compile Include="SerializerHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WebService.asmx.cs">
+      <DependentUpon>WebService.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BLL\BLL.csproj">
