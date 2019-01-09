@@ -16,10 +16,96 @@ namespace BLL
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>
-        public DataTable GetUser(string sqlstr)
+        public List<cmUserInfo> GetUserList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from userInfo " + sqlstr).Tables[0];
-            return ds;
+            List<cmUserInfo> uList = new List<cmUserInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from userInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                cmUserInfo userInfo = new cmUserInfo();
+                userInfo.Id = (int)row["Id"];
+                userInfo.username = (string)row["username"];
+                userInfo.password = (string)row["password"];
+                userInfo.userType = (int)row["userType"];
+                userInfo.isStop = (bool)row["isStop"];
+                userInfo.gradeId = (int)row["gradeId"];
+                userInfo.canPubCount = (int)row["canPubCount"];
+                userInfo.realmNameInfo = (string)row["realmNameInfo"];
+                userInfo.expirationTime = ((DateTime)row["expirationTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                userInfo.endPubCount = (int)row["endPubCount"];
+                userInfo.endTodayPubCount = (int)row["endTodayPubCount"];
+                userInfo.registerTime = ((DateTime)row["registerTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                userInfo.registerIP = (string)row["registerIP"];
+                userInfo.companyName = (string)row["companyName"];
+                userInfo.columnInfoId = (int)row["columnInfoId"];
+                userInfo.person = (string)row["person"];
+                userInfo.telephone = (string)row["telephone"];
+                userInfo.modile = (string)row["modile"];
+                userInfo.ten_qq = (string)row["ten_qq"];
+                userInfo.keyword = (string)row["keyword"];
+                userInfo.pinpai = (string)row["pinpai"];
+                userInfo.xinghao = (string)row["xinghao"];
+                userInfo.price = (string)row["price"];
+                userInfo.smallCount = (string)row["smallCount"];
+                userInfo.sumCount = (string)row["sumCount"];
+                userInfo.unit = (string)row["unit"];
+                userInfo.city = (string)row["city"];
+                userInfo.address = (string)row["address"];
+                userInfo.com_web = (string)row["com_web"];
+                userInfo.companyRemark = (string)row["companyRemark"];
+                userInfo.yewu = (string)row["yewu"];
+                userInfo.ziduan1 = (string)row["ziduan1"];
+                uList.Add(userInfo);
+            }
+            return uList;
+        }
+        /// <summary>
+        /// 查找单个用户
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public cmUserInfo GetUser(string sqlstr)
+        {
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from userInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            DataRow row = dt.Rows[0];
+            cmUserInfo userInfo = new cmUserInfo();
+            userInfo.Id = (int)row["Id"];
+            userInfo.username = (string)row["username"];
+            userInfo.password = (string)row["password"];
+            userInfo.userType = (int)row["userType"];
+            userInfo.isStop = (bool)row["isStop"];
+            userInfo.gradeId = (int)row["gradeId"];
+            userInfo.canPubCount = (int)row["canPubCount"];
+            userInfo.realmNameInfo = (string)row["realmNameInfo"];
+            userInfo.expirationTime = ((DateTime)row["expirationTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+            userInfo.endPubCount = (int)row["endPubCount"];
+            userInfo.endTodayPubCount = (int)row["endTodayPubCount"];
+            userInfo.registerTime = ((DateTime)row["registerTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+            userInfo.registerIP = (string)row["registerIP"];
+            userInfo.companyName = (string)row["companyName"];
+            userInfo.columnInfoId = (int)row["columnInfoId"];
+            userInfo.person = (string)row["person"];
+            userInfo.telephone = (string)row["telephone"];
+            userInfo.modile = (string)row["modile"];
+            userInfo.ten_qq = (string)row["ten_qq"];
+            userInfo.keyword = (string)row["keyword"];
+            userInfo.pinpai = (string)row["pinpai"];
+            userInfo.xinghao = (string)row["xinghao"];
+            userInfo.price = (string)row["price"];
+            userInfo.smallCount = (string)row["smallCount"];
+            userInfo.sumCount = (string)row["sumCount"];
+            userInfo.unit = (string)row["unit"];
+            userInfo.city = (string)row["city"];
+            userInfo.address = (string)row["address"];
+            userInfo.com_web = (string)row["com_web"];
+            userInfo.companyRemark = (string)row["companyRemark"];
+            userInfo.yewu = (string)row["yewu"];
+            userInfo.ziduan1 = (string)row["ziduan1"];
+            return userInfo;
         }
         /// <summary>
         /// 增加会员信息
@@ -68,7 +154,7 @@ person,telephone,modile,ten_qq,keyword,pinpai,xinghao,price,smallCount,sumCount,
         public bool IsExistUser(string name)
         {
             object o = SqlHelper.ExecuteScalar("select count(*) from userInfo where username=@username",
-                new SqlParameter("@username",name));
+                new SqlParameter("@username", name));
             return Convert.ToBoolean(o);
         }
 

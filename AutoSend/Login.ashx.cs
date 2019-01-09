@@ -62,7 +62,6 @@ namespace AutoSend
         /// <returns></returns>
         private string UserLogin(HttpContext context)
         {
-            string result = "";
             string _username = context.Request["username"];
             string _password = context.Request["password"];
             //string _code = context.Request["code"];//验证码
@@ -70,40 +69,21 @@ namespace AutoSend
             //    return "";
             //if (context.Session["Code"].ToString() != _code)
             //    return json.WriteJson(0, "验证码错误", new { });
-            cmUserInfo model = new cmUserInfo();
             CmUserBLL bll = new CmUserBLL();
-            DataTable dt = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
-            if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
-                return json.WriteJson(0, "登录错误", new { });
-            else if (dt.Rows.Count == 0)
+            cmUserInfo userInfo = bll.GetUser(string.Format("where username='{0}'", _username.Trim()));
+            if (userInfo == null)
                 return json.WriteJson(0, "用户名不存在", new { });
-            else if (dt.Rows.Count == 1)
-            {
-                int _userid = 0;
-                int.TryParse(dt.Rows[0]["Id"].ToString(), out _userid);
-                model.Id = _userid;
-                model.username = dt.Rows[0]["username"].ToString();
-                model.password = dt.Rows[0]["password"].ToString();
-                int _userType = 0;
-                int.TryParse(dt.Rows[0]["userType"].ToString(), out _userType);
-                model.userType = _userType;//用户角色
-                model.isStop = (bool)dt.Rows[0]["isStop"];
-                if (model.password != _password)
-                    return json.WriteJson(0, "密码错误", new { });
-                else if (model.isStop)
-                    return json.WriteJson(0, "该用户已被停用", new { });
-                else
-                {
-                    context.Session["UserModel"] = model;
-                    string md5 = GetMD5(model.username);
-                    MyInfo.user = model.username;//用户名
-                    MyInfo.Id = model.Id;//userId
-                    MyInfo.cmUser = model;//用户信息
-                    MyInfo.cookie = md5;//cookie存到全局变量
-                    return json.WriteJson(1, "登陆成功", new { userCookie = md5, cmUser = model });
-                }
-            }
-            return result;
+            if (userInfo.password != _password)
+                return json.WriteJson(0, "密码错误", new { });
+            if (userInfo.isStop)
+                return json.WriteJson(0, "该用户已被停用", new { });
+            context.Session["UserModel"] = userInfo;
+            string md5 = GetMD5(userInfo.username);
+            MyInfo.user = userInfo.username;//用户名
+            MyInfo.Id = userInfo.Id;//userId
+            MyInfo.cmUser = userInfo;//用户信息
+            MyInfo.cookie = md5;//cookie存到全局变量
+            return json.WriteJson(1, "登陆成功", new { userCookie = md5, cmUser = userInfo });
         }
         /// <summary>
         /// MD5

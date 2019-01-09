@@ -100,47 +100,9 @@ namespace AutoSend
                 pageIndex = "1";
             if (string.IsNullOrEmpty(pageSize))
                 pageSize = "10";
-            List<cmUserInfo> uList = new List<cmUserInfo>();
-            DataTable dt = bll.GetUser("");
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
-            {
-                cmUserInfo userInfo = new cmUserInfo();
-                userInfo.Id = (int)row["Id"];
-                userInfo.username = (string)row["username"];
-                userInfo.password = (string)row["password"];
-                userInfo.userType = (int)row["userType"];
-                userInfo.isStop = (bool)row["isStop"];
-                userInfo.gradeId = (int)row["gradeId"];
-                userInfo.canPubCount = (int)row["canPubCount"];
-                userInfo.realmNameInfo = (string)row["realmNameInfo"];
-                userInfo.expirationTime = (string)row["expirationTime"];
-                userInfo.endPubCount = (int)row["endPubCount"];
-                userInfo.endTodayPubCount = (int)row["endTodayPubCount"];
-                userInfo.registerTime = (string)row["registerTime"];
-                userInfo.registerIP = (string)row["registerIP"];
-                userInfo.companyName = (string)row["companyName"];
-                userInfo.columnInfoId = (int)row["columnInfoId"];
-                userInfo.person = (string)row["person"];
-                userInfo.telephone = (string)row["telephone"];
-                userInfo.modile = (string)row["modile"];
-                userInfo.ten_qq = (string)row["ten_qq"];
-                userInfo.keyword = (string)row["keyword"];
-                userInfo.pinpai = (string)row["pinpai"];
-                userInfo.xinghao = (string)row["xinghao"];
-                userInfo.price = (string)row["price"];
-                userInfo.smallCount = (string)row["smallCount"];
-                userInfo.sumCount = (string)row["sumCount"];
-                userInfo.unit = (string)row["unit"];
-                userInfo.city = (string)row["city"];
-                userInfo.address = (string)row["address"];
-                userInfo.com_web = (string)row["com_web"];
-                userInfo.companyRemark = (string)row["companyRemark"];
-                userInfo.yewu = (string)row["yewu"];
-                userInfo.ziduan1 = (string)row["ziduan1"];
-                uList.Add(userInfo);
-            }
+            List<cmUserInfo> uList = bll.GetUserList("");
+            if (uList.Count < 1)
+                return json.WriteJson(0, "未获取到会员信息", new { });
             //获取会员信息
             //var uInfo = uList.Join(
             //    u => u.ClassNum,
@@ -239,19 +201,9 @@ namespace AutoSend
         private string GetRealmList(HttpContext context)
         {
             realmBLL bll = new realmBLL();
-            List<realmNameInfo> rList = new List<realmNameInfo>();
-            DataTable dt = bll.GetRealmList("");
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
-            {
-                realmNameInfo rInfo = new realmNameInfo();
-                rInfo.Id = (int)row["Id"];
-                rInfo.realmName = (string)row["realmName"];
-                rInfo.realmAddress = (string)row["realmAddress"];
-                rInfo.isUseing = (bool)row["isUseing"];
-                rList.Add(rInfo);
-            }
+            List<realmNameInfo> rList = bll.GetRealmList("");
+            if (rList.Count < 1)
+                return json.WriteJson(0, "未获取到任何域名", new { });
             return json.WriteJson(1, "成功", new { realmList = rList });
         }
         /// <summary>

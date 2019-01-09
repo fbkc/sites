@@ -15,10 +15,40 @@ namespace AutoSend
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>
-        public DataTable GetRealmList(string sqlstr)
+        public List<realmNameInfo> GetRealmList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from realmNameInfo " + sqlstr).Tables[0];
-            return ds;
+            List<realmNameInfo> rList = new List<realmNameInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from realmNameInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                realmNameInfo rInfo = new realmNameInfo();
+                rInfo.Id = (int)row["Id"];
+                rInfo.realmName = (string)row["realmName"];
+                rInfo.realmAddress = (string)row["realmAddress"];
+                rInfo.isUseing = (bool)row["isUseing"];
+                rList.Add(rInfo);
+            }
+            return rList;
+        }
+        /// <summary>
+        /// 获取单个域名
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public realmNameInfo GetRealm(string sqlstr)
+        {
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from realmNameInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            DataRow row = dt.Rows[0];
+            realmNameInfo rInfo = new realmNameInfo();
+            rInfo.Id = (int)row["Id"];
+            rInfo.realmName = (string)row["realmName"];
+            rInfo.realmAddress = (string)row["realmAddress"];
+            rInfo.isUseing = (bool)row["isUseing"];
+            return rInfo;
         }
         /// <summary>
         /// 增加域名

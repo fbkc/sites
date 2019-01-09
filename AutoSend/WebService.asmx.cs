@@ -1,11 +1,16 @@
 ﻿using BLL;
+using HRMSys.DAL;
 using Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.Services;
 using System.Web.SessionState;
@@ -22,7 +27,9 @@ namespace AutoSend
     // [System.Web.Script.Services.ScriptService]
     public class WebService : System.Web.Services.WebService, IRequiresSessionState
     {
-
+        private static string host = "http://39.105.196.3:1874/WebService.asmx/";
+        private static string uname = "";
+        private static List<realmNameInfo> realList = null;
         [WebMethod]
         public string HelloWorld()
         {
@@ -33,13 +40,11 @@ namespace AutoSend
         /// </summary>
         /// <param name="strJson"></param>
         /// <returns></returns>
-        [WebMethod(EnableSession = true)]
+        [WebMethod(Description = "登录", EnableSession = true)]
         public string Login(string strJson)
         {
-            cmUserInfo model = new cmUserInfo();
             CmUserBLL bll = new CmUserBLL();
             realmBLL rbll = new realmBLL();
-            List<realmNameInfo> rList = new List<realmNameInfo>();
             DateTime s, n;
             s = DateTime.Now;
             n = DateTime.Now;
@@ -53,61 +58,85 @@ namespace AutoSend
 
                 string keyValue = NetHelper.GetMD5(username + "100dh888");
                 if (dosubmit != "1")
-                    return json.WriteJson(0, "登录失败", new { });
+                    return json.WriteJson(0, "参数错误", new { });
                 if (key != keyValue)
-                    return json.WriteJson(0, "登录失败", new { });
-
-                DataTable dt = bll.GetUser(string.Format("where username='{0}'", username.Trim()));
-                if (dt.Rows.Count < 0 || dt.Rows.Count > 1)
-                    return json.WriteJson(0, "登录错误", new { });
-                else if (dt.Rows.Count == 0)
+                    return json.WriteJson(0, "值错误", new { });
+                cmUserInfo userInfo = bll.GetUser(string.Format("where username='{0}'", username.Trim()));
+                if (userInfo == null)
                     return json.WriteJson(0, "用户名不存在", new { });
-                else if (dt.Rows.Count == 1)
-                {
-                    int _userid = 0;
-                    int.TryParse(dt.Rows[0]["Id"].ToString(), out _userid);
-                    model.Id = _userid;
-                    model.username = dt.Rows[0]["username"].ToString();
-                    model.password = dt.Rows[0]["password"].ToString();
-                    int _userType = 0;
-                    int.TryParse(dt.Rows[0]["userType"].ToString(), out _userType);
-                    model.userType = _userType;//用户角色
-                    model.isStop = (bool)dt.Rows[0]["isStop"];
-                    model.registerTime = ((DateTime)dt.Rows[0]["registerTime"]).ToString("yyyy-MM-dd HH:mm:ss");//注册时间
-                    model.expirationTime = ((DateTime)dt.Rows[0]["expirationTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    model.realmNameInfo = (string)dt.Rows[0]["realmNameInfo"];
-                    DateTime.TryParse(model.expirationTime, out s);//到期时间
-                    if (model.password != password)
-                        return json.WriteJson(0, "密码错误", new { });
-                    else if (model.isStop)
-                        return json.WriteJson(0, "该用户已被停用", new { });
-                    else if (s <= n)
-                        return json.WriteJson(0, "登录失败，账号已到期", new { });
-                    else
-                    {
-                        Context.Session["SoftUser"] = model;
-                        #region 返回所有域名
-                        DataTable rdt = rbll.GetRealmList("");
-                        if (rdt.Rows.Count < 1)
-                            return "";
-                        foreach (DataRow row in rdt.Rows)
-                        {
-                            realmNameInfo rInfo = new realmNameInfo();
-                            rInfo.Id = (int)row["Id"];
-                            rInfo.realmName = (string)row["realmName"];
-                            rInfo.realmAddress = (string)row["realmAddress"];
-                            rInfo.isUseing = (bool)row["isUseing"];
-                            rList.Add(rInfo);
-                        }
-                        #endregion
-                    }
-                }
+                DateTime.TryParse(userInfo.expirationTime, out s);//到期时间
+                if (userInfo.password != password)
+                    return json.WriteJson(0, "密码错误", new { });
+                if (userInfo.isStop)
+                    return json.WriteJson(0, "该用户已被停用", new { });
+                if (s <= n)
+                    return json.WriteJson(0, "登录失败，账号已到期", new { });
+                Context.Session["SoftUser"] = userInfo;
+                uname = username;
+                List<realmNameInfo> rList = rbll.GetRealmList("");//获取所有域名
+                if (rList.Count < 1)
+                    return json.WriteJson(0, "登录失败，域名为空", new { });
+                realList = rList;
+                return json.WriteJson(1, "登录成功", new { cmUser = userInfo, realmList = rList });
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "登陆成功", new { cmUser = model, realmList = rList });
+        }
+        /// <summary>
+        /// 上传图片
+        /// </summary>
+        /// <param name="strJson"></param>
+        /// <returns></returns>
+        [WebMethod(Description = "上传图片", EnableSession = true)]
+        public string Upload(Image strJson)
+        {
+            string pId = Context.Request["productId"];
+            cmUserInfo model = (cmUserInfo)Context.Session["UserModel"];
+            string username = model.username.ToString();
+            string fileUrl = "";
+            try
+            {
+                HttpPostedFile _upfile = Context.Request.Files["file"];
+                if (_upfile == null)
+                    throw new Exception("请先选择文件！");
+                else
+                {
+                    string fileName = _upfile.FileName;/*获取文件名： C:\Documents and Settings\Administrator\桌面\123.jpg*/
+                    string suffix = fileName.Substring(fileName.LastIndexOf(".") + 1).ToLower();/*获取后缀名并转为小写： jpg*/
+                    int bytes = _upfile.ContentLength;//获取文件的字节大小  
+                    if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
+                        throw new Exception("只能上传JPE，GIF,PNG文件");
+                    if (bytes > 1024 * 1024 * 2)
+                        throw new Exception("图片最大只能传2M");
+                    string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
+                    if (!Directory.Exists(fileDir))
+                    {
+                        Directory.CreateDirectory(fileDir);
+                    }
+                    //string phyPath = context.Request.PhysicalApplicationPath;
+                    //string savePath = phyPath + virPath;
+                    string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
+                    fileUrl = "/upfiles/" + username + "/" + newfileName + "." + suffix;
+                    _upfile.SaveAs(saveDir);//保存图片
+                    #region 存到sql图片库
+                    imageBLL bll = new imageBLL();
+                    imageInfo img = new imageInfo();
+                    img.imageId = newfileName;
+                    img.imageURL = fileUrl;
+                    img.userId = model.Id;
+                    img.productId = int.Parse(pId);
+                    bll.AddImg(img);
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "上传成功", new { imgUrl = fileUrl });
         }
 
         /// <summary>
@@ -115,18 +144,213 @@ namespace AutoSend
         /// </summary>
         /// <param name="strJson"></param>
         /// <returns></returns>
-        [WebMethod(EnableSession = true)]
+        [WebMethod(Description = "post接口", EnableSession = true)]
         public string Post(string strJson)
         {
+            //需要做一个时间，每隔多长时间才允许访问一次
+            string keyValue = NetHelper.GetMD5("liu" + "100dh888");
+            string username = "";
             try
             {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(strJson);
+                string key = jo["key"].ToString();
+                if (key != keyValue)
+                    return json.WriteJson(0, "参数错误" + key + "keva:" + uname + keyValue, new { });
+                htmlInfo hInfo = new htmlInfo();
+                username = jo["username"].ToString();
+                hInfo.userId = GetUserId(username);//用户名
+                hInfo.title = jo["title"].ToString();
+                string cid = jo["catid"].ToString();
 
+                //命名规则：ip/目录/用户名/show_行业id+(五位数id)
+                string showName = "show_" + cid + (GetMaxId() + 1).ToString() + ".html";
+                hInfo.titleURL = host + username + "/" + showName;
+                //return json.WriteJson(1, "2222", new { });
+                hInfo.articlecontent = utf8_gb2312(jo["content"].ToString());//内容
+                hInfo.columnId = cid;//行业id，行业新闻id=23
+                hInfo.pinpai = jo["pinpai"].ToString();
+                hInfo.xinghao = jo["xinghao"].ToString();
+                hInfo.price = jo["price"].ToString();
+                hInfo.smallCount = jo["qiding"].ToString();
+                hInfo.sumCount = jo["gonghuo"].ToString();
+                hInfo.unit = jo["unit"].ToString();
+                hInfo.city = jo["city"].ToString();
+                hInfo.titleImg = jo["thumb"].ToString();
+                hInfo.realmNameId = "1";
+                AddHtml(hInfo);//存入数据库
+                //公司/会员信息
+                CmUserBLL uBLL = new CmUserBLL();
+                cmUserInfo uInfo = uBLL.GetUser(string.Format("where username='{0}'", uname));
+                WriteFile(hInfo, uInfo, username, showName);//写模板
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "登陆成功", new { });
+            return json.WriteJson(1, "发布成功", new { });
+        }
+        #region 定义模版页
+        public static string SiteTemplate()
+        {
+            string str = "";
+            str += "....";//模版页html代码
+            return str;
+        }
+        #endregion
+        /// <summary>
+        /// 写模板
+        /// </summary>
+        /// <param name="strText"></param>
+        /// <returns></returns>
+        public static bool WriteFile(htmlInfo hInfo, cmUserInfo uInfo, string username, string hName)
+        {
+            string path = HttpContext.Current.Server.MapPath("/" + username + "/test/");//文件输出目录
+            Encoding code = Encoding.GetEncoding("gb2312");
+            StreamWriter sw = null;
+
+            //string str = SiteTemplate();//读取模版页面html代码
+            string str = HttpContext.Current.Server.MapPath("/HtmlPage1.html");//模版文件
+
+            //string htmlfilename = DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";//静态文件名
+            string htmlfilename = hName;//静态文件名
+            // 替换内容
+            str = str.Replace("title_companyName_Str", hInfo.title + "_" + uInfo.companyName);
+            if (hInfo.title.Length > 5)
+                str = str.Replace("keywords_Str", hInfo.title + "," + hInfo.title.Substring(0, 2) + "," + hInfo.title.Substring(2, 4) + "," + hInfo.title.Substring(4, 6));
+            else
+                str = str.Replace("keywords_Str", hInfo.title);
+            str = str.Replace("description_Str", hInfo.articlecontent.Substring(0, 80));
+            str = str.Replace("host_Str", host);
+            str = str.Replace("catid_Str", hInfo.columnId);
+            str = str.Replace("Id_Str", hInfo.Id.ToString());
+            str = str.Replace("title_Str", hInfo.title);
+            str = str.Replace("addTime_Str", hInfo.addTime);
+
+            str = str.Replace("pinpai_Str", hInfo.pinpai);
+            str = str.Replace("price_Str", hInfo.price);
+            str = str.Replace("qiding_Str", hInfo.smallCount);
+            str = str.Replace("gonghuo_Str", hInfo.sumCount);
+            str = str.Replace("xinghao_Str", hInfo.xinghao);
+            str = str.Replace("city_Str", hInfo.city);
+            str = str.Replace("unit_Str", hInfo.unit);
+
+            str = str.Replace("titleImg_Str", hInfo.titleImg);
+            str = str.Replace("content_Str", hInfo.articlecontent);
+            // 写文件
+            try
+            {
+                sw = new StreamWriter(path + htmlfilename, false, code);
+                sw.Write(str);
+                sw.Flush();
+            }
+            catch (Exception ex)
+            {
+                HttpContext.Current.Response.Write(ex.Message);
+                HttpContext.Current.Response.End();
+            }
+            finally
+            {
+                sw.Close();
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// UTF8转换成GB2312
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string utf8_gb2312(string text)
+        {
+            //声明字符集   
+            System.Text.Encoding utf8, gb2312;
+            //utf8   
+            utf8 = System.Text.Encoding.GetEncoding("utf-8");
+            //gb2312   
+            gb2312 = System.Text.Encoding.GetEncoding("gb2312");
+            byte[] utf;
+            utf = utf8.GetBytes(text);
+            utf = System.Text.Encoding.Convert(utf8, gb2312, utf);
+            //返回转换后的字符   
+            return gb2312.GetString(utf);
+        }
+        /// <summary>
+        /// 通过用户名找Id
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public string GetUserId(string username)
+        {
+            object ob = SqlHelper.ExecuteScalar("select Id from userInfo where username='" + username + "'");
+            return ob.ToString();
+        }
+        /// <summary>
+        /// 获取当前表最大Id
+        /// </summary>
+        /// <returns></returns>
+        public int GetMaxId()
+        {
+            object ob = "";
+            try
+            {
+                ob = SqlHelper.ExecuteScalar("select Id  from userInfo order by Id desc");
+            }
+            catch (Exception ex)
+            { return 1; }
+            return int.Parse(ob.ToString());
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="info"></param>
+        public void AddHtml(htmlInfo info)
+        {
+            int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[htmlInfo]
+           ([title]
+           ,[titleURL]
+           ,[articlecontent]
+           ,[columnId]
+           ,[pinpai]
+           ,[xinghao]
+           ,[price]
+           ,[smallCount]
+           ,[sumCount]
+           ,[unit]
+           ,[city]
+           ,[titleImg]
+           ,[addTime]
+           ,[realmNameId]
+           ,[userId])
+     VALUES
+           (@title
+           ,@titleURL
+           ,@articlecontent
+           ,@columnId
+           ,@pinpai
+           ,@xinghao
+           ,@price
+           ,@smallCount
+           ,@sumCount
+           ,@unit
+           ,@city
+           ,@titleImg
+           ,getdate()
+           ,@realmNameId
+           ,@userId)",
+               new SqlParameter("@title", SqlHelper.ToDBNull(info.title)),
+               new SqlParameter("@titleURL", SqlHelper.ToDBNull(info.titleURL)),
+               new SqlParameter("@articlecontent", SqlHelper.ToDBNull(info.articlecontent)),
+               new SqlParameter("@columnId", SqlHelper.ToDBNull(info.columnId)),
+               new SqlParameter("@pinpai", SqlHelper.ToDBNull(info.pinpai)),
+               new SqlParameter("@xinghao", SqlHelper.ToDBNull(info.xinghao)),
+               new SqlParameter("@price", SqlHelper.ToDBNull(info.price)),
+               new SqlParameter("@smallCount", SqlHelper.ToDBNull(info.smallCount)),
+               new SqlParameter("@sumCount", SqlHelper.ToDBNull(info.sumCount)),
+               new SqlParameter("@unit", SqlHelper.ToDBNull(info.unit)),
+               new SqlParameter("@city", SqlHelper.ToDBNull(info.city)),
+               new SqlParameter("@titleImg", SqlHelper.ToDBNull(info.titleImg)),
+               new SqlParameter("@realmNameId", SqlHelper.ToDBNull(info.realmNameId)),
+               new SqlParameter("@userId", SqlHelper.ToDBNull(info.userId)));
         }
     }
 }
