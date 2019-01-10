@@ -11,9 +11,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Services;
 using System.Web.SessionState;
+using System.Web.UI;
 
 namespace AutoSend
 {
@@ -35,6 +37,110 @@ namespace AutoSend
         {
             return "Hello World";
         }
+        [WebMethod]
+        public string ssss()
+        {
+            string path = HttpContext.Current.Server.MapPath("~/test/" + "sdsdsd" + "/");//文件输出目录
+                                                                                         // 读取模板文件
+            string temp = HttpContext.Current.Server.MapPath("~/HtmlPage1.html");//模版文件
+
+            //string str = SiteTemplate();//读取模版页面html代码
+
+            StreamReader sr = null;
+
+            StreamWriter sw = null;
+
+            string str = "";
+
+            try
+
+            {
+
+                sr = new StreamReader(temp, Encoding.UTF8);
+
+                str = sr.ReadToEnd(); // 读取文件
+
+            }
+
+            catch (Exception exp)
+
+            {
+
+                HttpContext.Current.Response.Write(exp.Message);
+
+                HttpContext.Current.Response.End();
+
+                sr.Close();
+
+            }
+
+
+            //string htmlfilename = DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";//静态文件名
+            string htmlfilename = "ds";//静态文件名
+                                       // 替换内容
+            //str = StringToUnicode(str);
+           //str= HttpUtility.UrlDecode(str,Encoding.UTF8);
+
+            str = str.Replace("title_companyName_Str", "实打实大所");
+            return json.WriteJson(1, str, new { });
+        }
+        /// <summary>
+        /// Unicode转字符串
+        /// </summary>
+        /// <param name="source">经过Unicode编码的字符串</param>
+        /// <returns>正常字符串</returns>
+        public static string Unicode2String(string str)
+        {
+            string outStr = "";
+            string[] strlist = str.Replace("//", "").Split('u');
+            try
+            {
+                for (int i = 1; i < strlist.Length; i++)
+                {
+                    outStr += (char)int.Parse(strlist[i], System.Globalization.NumberStyles.HexNumber);
+                }
+            }
+            catch (FormatException ex)
+            {
+                outStr = ex.Message;
+            }
+            return outStr;
+        }
+
+        /// <summary>
+        /// 字符串转Unicode码
+        /// </summary>
+        /// <returns>The to unicode.</returns>
+        /// <param name="value">Value.</param>
+        private string StringToUnicode(string value)
+        {
+            byte[] bytes = Encoding.Unicode.GetBytes(value);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < bytes.Length; i += 2)
+            {
+                // 取两个字符，每个字符都是右对齐。
+                stringBuilder.AppendFormat("u{0}{1}", bytes[i + 1].ToString("x").PadLeft(2, '0'), bytes[i].ToString("x").PadLeft(2, '0'));
+            }
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Unicode转字符串
+        /// </summary>
+        /// <returns>The to string.</returns>
+        /// <param name="unicode">Unicode.</param>
+        private string UnicodeToString(string unicode)
+        {
+            string resultStr = "";
+            string[] strList = unicode.Split('u');
+            for (int i = 1; i < strList.Length; i++)
+            {
+                resultStr += (char)int.Parse(strList[i], System.Globalization.NumberStyles.HexNumber);
+            }
+            return resultStr;
+        }
+
+
         /// <summary>
         /// 登录接口
         /// </summary>
@@ -165,7 +271,7 @@ namespace AutoSend
                 //命名规则：ip/目录/用户名/show_行业id+(五位数id)
                 string showName = "show_" + cid + (GetMaxId() + 1).ToString() + ".html";
                 hInfo.titleURL = host + username + "/" + showName;
-                //return json.WriteJson(1, "2222", new { });
+                //
                 hInfo.articlecontent = utf8_gb2312(jo["content"].ToString());//内容
                 hInfo.columnId = cid;//行业id，行业新闻id=23
                 hInfo.pinpai = jo["pinpai"].ToString();
@@ -177,17 +283,113 @@ namespace AutoSend
                 hInfo.city = jo["city"].ToString();
                 hInfo.titleImg = jo["thumb"].ToString();
                 hInfo.realmNameId = "1";
+                
                 AddHtml(hInfo);//存入数据库
+                
                 //公司/会员信息
                 CmUserBLL uBLL = new CmUserBLL();
                 cmUserInfo uInfo = uBLL.GetUser(string.Format("where username='{0}'", uname));
-                WriteFile(hInfo, uInfo, username, showName);//写模板
+
+                //WriteFile(hInfo, uInfo, username, showName);//写模板
+
+                string path = HttpContext.Current.Server.MapPath("~/test/" + username + "/");//文件输出目录
+                                                                                             // 读取模板文件
+                Encoding code = Encoding.GetEncoding("gb2312");
+                string temp = HttpContext.Current.Server.MapPath("~/HtmlPage1.html");//模版文件
+
+                //string str = SiteTemplate();//读取模版页面html代码
+
+                StreamReader sr = null;
+
+                StreamWriter sw = null;
+
+                string str = "";
+
+                try
+
+                {
+
+                    sr = new StreamReader(temp,code);
+
+                    str = sr.ReadToEnd(); // 读取文件
+
+                }
+
+                catch (Exception exp)
+
+                {
+
+                    HttpContext.Current.Response.Write(exp.Message);
+
+                    HttpContext.Current.Response.End();
+
+                    sr.Close();
+
+                }
+
+
+                //string htmlfilename = DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";//静态文件名
+                string htmlfilename = showName;//静态文件名
+                                               // 替换内容
+
+                return json.WriteJson(1, str, new { });
+                str = str.Replace("title_companyName_Str", hInfo.title + "_" + uInfo.companyName);
+                return json.WriteJson(1, str, new { });
+                if (hInfo.title.Length > 5)
+                    str = str.Replace("keywords_Str", hInfo.title + "," + hInfo.title.Substring(0, 2) + "," + hInfo.title.Substring(2, 4) + "," + hInfo.title.Substring(4, 6));
+                else
+                    str = str.Replace("keywords_Str", hInfo.title);
+                str = str.Replace("description_Str", hInfo.articlecontent.Substring(0, 80));
+                str = str.Replace("host_Str", host);
+                str = str.Replace("catid_Str", hInfo.columnId);
+                str = str.Replace("Id_Str", hInfo.Id.ToString());
+                str = str.Replace("title_Str", hInfo.title);
+                str = str.Replace("addTime_Str", hInfo.addTime);
+
+                str = str.Replace("pinpai_Str", hInfo.pinpai);
+                str = str.Replace("price_Str", hInfo.price);
+                str = str.Replace("qiding_Str", hInfo.smallCount);
+                str = str.Replace("gonghuo_Str", hInfo.sumCount);
+                str = str.Replace("xinghao_Str", hInfo.xinghao);
+                str = str.Replace("city_Str", hInfo.city);
+                str = str.Replace("unit_Str", hInfo.unit);
+
+                str = str.Replace("titleImg_Str", hInfo.titleImg);
+                str = str.Replace("content_Str", hInfo.articlecontent);
+                return json.WriteJson(1, str, new { });
+                // 写文件
+                try
+                {
+                    sw = new StreamWriter(path + htmlfilename, false, code);
+                    sw.Write(str);
+                    sw.Flush();
+                }
+                catch (Exception ex)
+                {
+                    return json.WriteJson(0, "333"+ex.ToString(), new { });
+                    HttpContext.Current.Response.Write(ex.Message);
+                    HttpContext.Current.Response.End();
+                }
+                finally
+                {
+                    sw.Close();
+                }
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "发布成功", new { });
+        }
+        public string ReadHtmlContent(string Path)
+        {
+            StreamReader sr = new StreamReader(Path, Encoding.Default);
+            string content;
+            while ((content = sr.ReadLine()) != null)
+            {
+                content += content;
+            }
+            return content.ToString();
         }
         #region 定义模版页
         public static string SiteTemplate()
@@ -293,7 +495,7 @@ namespace AutoSend
             object ob = "";
             try
             {
-                ob = SqlHelper.ExecuteScalar("select Id  from userInfo order by Id desc");
+                ob = SqlHelper.ExecuteScalar("select Id  from htmlInfo order by Id desc");
             }
             catch (Exception ex)
             { return 1; }
