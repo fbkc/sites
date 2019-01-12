@@ -166,7 +166,7 @@ namespace AutoSend
                 hInfo.userId = GetUserId(username);//用户名
                 hInfo.title = jo["title"].ToString();
                 string cid = jo["catid"].ToString();
-                if(string.IsNullOrEmpty(cid))
+                if (string.IsNullOrEmpty(cid))
                     return json.WriteJson(0, "行业或栏目不能为空", new { });
 
                 //命名规则：ip/目录/用户名/show_行业id+(五位数id)
@@ -245,7 +245,7 @@ namespace AutoSend
             }
             string htmlfilename = hName;//静态文件名
             // 替换内容
-            str = str.Replace("title_companyName_Str", hInfo.title + "_" + uInfo.companyName);
+            str = str.Replace("companyName_Str", uInfo.companyName);
             if (hInfo.title.Length > 6)
                 str = str.Replace("keywords_Str", hInfo.title + "," + hInfo.title.Substring(0, 2) + "," + hInfo.title.Substring(2, 2) + "," + hInfo.title.Substring(4, 2));
             else
