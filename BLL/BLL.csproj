@@ -45,6 +45,7 @@
     <Compile Include="columnBLL.cs" />
     <Compile Include="contentMouldBLL.cs" />
     <Compile Include="gradeBLL.cs" />
+    <Compile Include="htmlBLL.cs" />
     <Compile Include="imageBLL.cs" />
     <Compile Include="noticeBLL.cs" />
     <Compile Include="paragraphBLL.cs" />

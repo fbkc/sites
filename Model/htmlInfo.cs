@@ -7,7 +7,7 @@ namespace Model
 {
     public class htmlInfo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string title { get; set; }
         public string titleURL { get; set; }
         public string articlecontent { get; set; }

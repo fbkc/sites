@@ -174,7 +174,7 @@ namespace AutoSend
                 url = host + "/" + username + "/" + showName;
                 hInfo.titleURL = url;
 
-                hInfo.articlecontent = utf8_gb2312(jo["content"].ToString());//内容
+                hInfo.articlecontent = URLDecode(jo["content"].ToString());//内容
                 hInfo.columnId = cid;//行业id，行业新闻id=23
                 hInfo.pinpai = jo["pinpai"].ToString();
                 hInfo.xinghao = jo["xinghao"].ToString();
@@ -199,6 +199,33 @@ namespace AutoSend
             }
             return json.WriteJson(1, "发布成功", new { url, username });
         }
+        /// <summary>
+        /// UTF-8解码(含%的)
+        /// </summary>
+        /// <param name="str">需要解码的字符串</param>
+        /// <returns></returns>
+        public static string URLDecode(string str)
+        {
+            //将str转为小写
+            string lowerUrl = str.ToLower();
+
+            //判断str中是否包含%，如果不包含%就不需要解码
+            if (lowerUrl.IndexOf('%') != -1)
+            {
+                //判断str中是否包含%E，如果不包含直接用GB2312解码
+                if (lowerUrl.IndexOf("%e") != -1)
+                {
+                    //以UTF-8对str进行解码
+                    string stringUrl = System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("UTF-8"));
+                    //判断解码后的字符串是否为UTF-8编码
+                    return System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("GB2312"));
+                }
+                return System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("GB2312"));
+            }
+            return str;
+        }
+
+
 
         public string ReadHtmlContent(string Path)
         {
