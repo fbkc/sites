@@ -173,8 +173,7 @@ namespace AutoSend
                 string showName = "show_" + cid + (GetMaxId() + 1).ToString() + ".html";
                 url = host + "/" + username + "/" + showName;
                 hInfo.titleURL = url;
-
-                hInfo.articlecontent = URLDecode(jo["content"].ToString());//内容
+                hInfo.articlecontent = HttpUtility.UrlDecode(jo["content"].ToString(),Encoding.UTF8);//内容,UrlDecode解码
                 hInfo.columnId = cid;//行业id，行业新闻id=23
                 hInfo.pinpai = jo["pinpai"].ToString();
                 hInfo.xinghao = jo["xinghao"].ToString();
@@ -184,6 +183,7 @@ namespace AutoSend
                 hInfo.unit = jo["unit"].ToString();
                 hInfo.city = jo["city"].ToString();
                 hInfo.titleImg = jo["thumb"].ToString();
+                hInfo.addTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 hInfo.realmNameId = "1";//发到哪个站
                 AddHtml(hInfo);//存入数据库
 
@@ -198,44 +198,6 @@ namespace AutoSend
                 return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "发布成功", new { url, username });
-        }
-        /// <summary>
-        /// UTF-8解码(含%的)
-        /// </summary>
-        /// <param name="str">需要解码的字符串</param>
-        /// <returns></returns>
-        public static string URLDecode(string str)
-        {
-            //将str转为小写
-            string lowerUrl = str.ToLower();
-
-            //判断str中是否包含%，如果不包含%就不需要解码
-            if (lowerUrl.IndexOf('%') != -1)
-            {
-                //判断str中是否包含%E，如果不包含直接用GB2312解码
-                if (lowerUrl.IndexOf("%e") != -1)
-                {
-                    //以UTF-8对str进行解码
-                    string stringUrl = System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("UTF-8"));
-                    //判断解码后的字符串是否为UTF-8编码
-                    return System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("GB2312"));
-                }
-                return System.Web.HttpUtility.UrlDecode(str, Encoding.GetEncoding("GB2312"));
-            }
-            return str;
-        }
-
-
-
-        public string ReadHtmlContent(string Path)
-        {
-            StreamReader sr = new StreamReader(Path, Encoding.Default);
-            string content;
-            while ((content = sr.ReadLine()) != null)
-            {
-                content += content;
-            }
-            return content.ToString();
         }
 
         #region 定义模版页
@@ -383,7 +345,7 @@ namespace AutoSend
            ,@unit
            ,@city
            ,@titleImg
-           ,getdate()
+           ,@addTime
            ,@realmNameId
            ,@userId)",
                new SqlParameter("@title", SqlHelper.ToDBNull(info.title)),
@@ -398,6 +360,7 @@ namespace AutoSend
                new SqlParameter("@unit", SqlHelper.ToDBNull(info.unit)),
                new SqlParameter("@city", SqlHelper.ToDBNull(info.city)),
                new SqlParameter("@titleImg", SqlHelper.ToDBNull(info.titleImg)),
+               new SqlParameter("@addTime", SqlHelper.ToDBNull(info.addTime)),
                new SqlParameter("@realmNameId", SqlHelper.ToDBNull(info.realmNameId)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(info.userId)));
         }
@@ -458,4 +421,6 @@ namespace AutoSend
             return resultStr;
         }
     }
+
+    public class obj { }
 }
