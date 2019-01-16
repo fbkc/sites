@@ -251,6 +251,10 @@ namespace AutoSend
 
             str = str.Replace("titleImg_Str", hInfo.titleImg);
             str = str.Replace("content_Str", hInfo.articlecontent);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             // 写文件
             using (StreamWriter sw = new StreamWriter(path + htmlfilename, true))
             {

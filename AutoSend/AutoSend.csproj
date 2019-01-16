@@ -116,7 +116,6 @@
     <Content Include="SwaggerUI\swagger-ui.min.js" />
     <Content Include="UserHandler.ashx" />
     <Content Include="informationHandler.ashx" />
-    <Content Include="ApplicationErroy.ashx" />
     <Content Include="BaseHandle.ashx" />
     <Content Include="Login.ashx" />
     <Content Include="WebService.asmx" />
@@ -146,9 +145,6 @@
     <Compile Include="gather.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
-    </Compile>
-    <Compile Include="ApplicationErroy.ashx.cs">
-      <DependentUpon>ApplicationErroy.ashx</DependentUpon>
     </Compile>
     <Compile Include="CodeHandler.ashx.cs">
       <DependentUpon>CodeHandler.ashx</DependentUpon>
