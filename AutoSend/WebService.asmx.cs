@@ -32,11 +32,6 @@ namespace AutoSend
         private static string host = "http://39.105.196.3:1874/test";
         private static string uname = "";
         private static List<realmNameInfo> realList = null;
-        [WebMethod]
-        public string HelloWorld()
-        {
-            return "Hello World";
-        }
 
         /// <summary>
         /// 登录接口
@@ -265,26 +260,6 @@ namespace AutoSend
             }
             return true;
         }
-
-        /// <summary>
-        /// UTF8转换成GB2312
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static string utf8_gb2312(string text)
-        {
-            //声明字符集   
-            System.Text.Encoding utf8, gb2312;
-            //utf8   
-            utf8 = System.Text.Encoding.GetEncoding("utf-8");
-            //gb2312   
-            gb2312 = System.Text.Encoding.GetEncoding("gb2312");
-            byte[] utf;
-            utf = utf8.GetBytes(text);
-            utf = System.Text.Encoding.Convert(utf8, gb2312, utf);
-            //返回转换后的字符   
-            return gb2312.GetString(utf);
-        }
         /// <summary>
         /// 通过用户名找Id
         /// </summary>
@@ -311,7 +286,7 @@ namespace AutoSend
             return int.Parse(ob.ToString());
         }
         /// <summary>
-        /// 
+        /// 将html内容参数存入数据库
         /// </summary>
         /// <param name="info"></param>
         public void AddHtml(htmlInfo info)
@@ -364,63 +339,5 @@ namespace AutoSend
                new SqlParameter("@realmNameId", SqlHelper.ToDBNull(info.realmNameId)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(info.userId)));
         }
-
-        /// <summary>
-        /// Unicode转字符串
-        /// </summary>
-        /// <param name="source">经过Unicode编码的字符串</param>
-        /// <returns>正常字符串</returns>
-        public static string Unicode2String(string str)
-        {
-            string outStr = "";
-            string[] strlist = str.Replace("//", "").Split('u');
-            try
-            {
-                for (int i = 1; i < strlist.Length; i++)
-                {
-                    outStr += (char)int.Parse(strlist[i], System.Globalization.NumberStyles.HexNumber);
-                }
-            }
-            catch (FormatException ex)
-            {
-                outStr = ex.Message;
-            }
-            return outStr;
-        }
-
-        /// <summary>
-        /// 字符串转Unicode码
-        /// </summary>
-        /// <returns>The to unicode.</returns>
-        /// <param name="value">Value.</param>
-        private string StringToUnicode(string value)
-        {
-            byte[] bytes = Encoding.Unicode.GetBytes(value);
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < bytes.Length; i += 2)
-            {
-                // 取两个字符，每个字符都是右对齐。
-                stringBuilder.AppendFormat("u{0}{1}", bytes[i + 1].ToString("x").PadLeft(2, '0'), bytes[i].ToString("x").PadLeft(2, '0'));
-            }
-            return stringBuilder.ToString();
-        }
-
-        /// <summary>
-        /// Unicode转字符串
-        /// </summary>
-        /// <returns>The to string.</returns>
-        /// <param name="unicode">Unicode.</param>
-        private string UnicodeToString(string unicode)
-        {
-            string resultStr = "";
-            string[] strList = unicode.Split('u');
-            for (int i = 1; i < strList.Length; i++)
-            {
-                resultStr += (char)int.Parse(strList[i], System.Globalization.NumberStyles.HexNumber);
-            }
-            return resultStr;
-        }
     }
-
-    public class obj { }
 }
