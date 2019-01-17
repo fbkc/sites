@@ -30,32 +30,32 @@ namespace AutoSend
 
         }
 
-        protected void Application_Error(object sender, EventArgs e)
-        {
-            // 在出现未处理的错误时运行的代码
+        //protected void Application_Error(object sender, EventArgs e)
+        //{
+        //    // 在出现未处理的错误时运行的代码
 
-            Exception erroy = Server.GetLastError();
+        //    Exception erroy = Server.GetLastError();
 
-            string err = "出错页面是：" + Request.Url.ToString() + "</br>";
+        //    string err = "出错页面是：" + Request.Url.ToString() + "</br>";
 
-            err += "异常信息：" + erroy.Message + "</br>";
+        //    err += "异常信息：" + erroy.Message + "</br>";
 
-            err += "Source:" + erroy.Source + "</br>";
+        //    err += "Source:" + erroy.Source + "</br>";
 
-            err += "StackTrace:" + erroy.StackTrace + "</br>";
+        //    err += "StackTrace:" + erroy.StackTrace + "</br>";
 
-            //清除前一个异常
+        //    //清除前一个异常
 
-            Server.ClearError();
+        //    Server.ClearError();
 
-            //此处理用Session["ProError"]出错。所以用 Application["ProError"]
+        //    //此处理用Session["ProError"]出错。所以用 Application["ProError"]
 
-            Application["erroy"] = err;
+        //    Application["erroy"] = err;
 
-            //此处不是page中，不能用Response.Redirect("../frmSysError.aspx");
+        //    //此处不是page中，不能用Response.Redirect("../frmSysError.aspx");
 
-            HttpContext.Current.Response.Redirect(HttpContext.Current.Request.ApplicationPath + "/ApplicationErroy.ashx");
-        }
+        //    HttpContext.Current.Response.Redirect(HttpContext.Current.Request.ApplicationPath + "/ApplicationErroy.ashx");
+        //}
 
         protected void Session_End(object sender, EventArgs e)
         {

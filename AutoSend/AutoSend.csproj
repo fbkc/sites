@@ -100,6 +100,11 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="HtmlPage1.html" />
+    <Content Include="index.html" />
+    <Content Include="static\css\app.41456fd49c20fc538f4af9ce08f72465.css" />
+    <Content Include="static\img\login_bg.d5f4d52.jpg" />
+    <Content Include="static\js\app.cbb6a01dbabcb3c2ec41.js" />
+    <Content Include="static\js\manifest.eeb2c031c0c552bd70ec.js" />
     <Content Include="SwaggerUI\css\screen.css" />
     <Content Include="SwaggerUI\images\pet_store_api.png" />
     <Content Include="SwaggerUI\images\wordnik_api.png" />
@@ -124,6 +129,10 @@
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
+    <Content Include="static\css\app.41456fd49c20fc538f4af9ce08f72465.css.map" />
+    <Content Include="static\fonts\element-icons.6f0a763.ttf" />
+    <Content Include="static\js\app.cbb6a01dbabcb3c2ec41.js.map" />
+    <Content Include="static\js\manifest.eeb2c031c0c552bd70ec.js.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
