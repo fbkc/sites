@@ -40,8 +40,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="JWT">
-      <HintPath>C:\Users\73965\Desktop\JWT.dll</HintPath>
+    <Reference Include="JWT, Version=1.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\JWT.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -52,6 +53,10 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NVelocity, Version=1.1.1.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\NVelocity.dll</HintPath>
     </Reference>
     <Reference Include="Swagger.Net, Version=0.5.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Swagger.Net.0.5.5\lib\net40\Swagger.Net.dll</HintPath>
@@ -100,7 +105,12 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="HtmlPage1.html" />
+    <Content Include="JWT.dll" />
+    <Content Include="static\img\qq.gif" />
+    <Content Include="templates\DetailModel.html" />
+    <Content Include="templates\RightFloatPage.html" />
     <Content Include="index.html" />
+    <Content Include="NVelocity.dll" />
     <Content Include="static\css\app.41456fd49c20fc538f4af9ce08f72465.css" />
     <Content Include="static\img\login_bg.d5f4d52.jpg" />
     <Content Include="static\js\app.cbb6a01dbabcb3c2ec41.js" />
@@ -181,11 +191,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BLL\BLL.csproj">
-      <Project>{990a8b5a-a820-456b-939f-679c0b4c016a}</Project>
+      <Project>{990A8B5A-A820-456B-939F-679C0B4C016A}</Project>
       <Name>BLL</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Model.csproj">
-      <Project>{fba83a80-e922-4156-8dad-61e867cfed39}</Project>
+      <Project>{FBA83A80-E922-4156-8DAD-61E867CFED39}</Project>
       <Name>Model</Name>
     </ProjectReference>
   </ItemGroup>

@@ -139,6 +139,84 @@ namespace AutoSend
         }
 
         /// <summary>
+        /// 右侧浮动客户信息
+        /// </summary>
+        /// <param name="uname">用户名</param>
+        /// <param name="realmId">来自哪个站，返回相应模板格式</param>
+        /// <returns></returns>
+        [WebMethod(Description = "获取用户信息，右侧浮动显示", EnableSession = true)]
+        public string GetUserInfo(string uname, string realmId)
+        {
+            //公司/会员信息
+            CmUserBLL uBLL = new CmUserBLL();
+            cmUserInfo uInfo = uBLL.GetUser(string.Format("where username='{0}'", uname));
+            var data = new
+            {
+                userInfo = uInfo,
+                userTel = NetHelper.GetMD5(uInfo.telephone + "100dh888"),//电话号码+100dh888 的MD5值
+            };
+            string html = SqlHelper.WriteTemplate(data, "RightFloatPage.html");
+            return html;
+        }
+        /// <summary>
+        /// 将数字电话转换成图片电话
+        /// </summary>
+        /// <param name="uname"></param>
+        /// <param name="realmId"></param>
+        /// <returns></returns>
+        [WebMethod(Description = "获取用户信息，右侧浮动显示", EnableSession = true)]
+        public Image CreateImg(string txt,Font font,Color fontcolor,Color bgcolor)
+        {
+            string text = txt;
+            //得到Bitmap(传入Rectangle.Empty自动计算宽高)
+            Bitmap bmp = TextToBitmap(text, font, new Rectangle(0, 0, 30, 10), fontcolor, bgcolor);
+            return bmp;
+        }
+        /// <summary>
+        /// 把文字转换才Bitmap
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="font"></param>
+        /// <param name="rect">用于输出的矩形，文字在这个矩形内显示，为空时自动计算</param>
+        /// <param name="fontcolor">字体颜色</param>
+        /// <param name="backColor">背景颜色</param>
+        /// <returns></returns>
+        private Bitmap TextToBitmap(string text, Font font, Rectangle rect, Color fontcolor, Color backColor)
+        {
+            Graphics g;
+            Bitmap bmp;
+            StringFormat format = new StringFormat(StringFormatFlags.NoClip);
+            if (rect == Rectangle.Empty)
+            {
+                bmp = new Bitmap(1, 1);
+                g = Graphics.FromImage(bmp);
+                //计算绘制文字所需的区域大小（根据宽度计算长度），重新创建矩形区域绘图
+                SizeF sizef = g.MeasureString(text, font, PointF.Empty, format);
+
+                int width = (int)(sizef.Width + 1);
+                int height = (int)(sizef.Height + 1);
+                rect = new Rectangle(0, 0, width, height);
+                bmp.Dispose();
+
+                bmp = new Bitmap(width, height);
+            }
+            else
+            {
+                bmp = new Bitmap(rect.Width, rect.Height);
+            }
+
+            g = Graphics.FromImage(bmp);
+
+            //使用ClearType字体功能
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            g.FillRectangle(new SolidBrush(backColor), rect);
+            SolidBrush brush = new SolidBrush(fontcolor);
+            //Brush brush = new SolidColorBrush(fontcolor);
+            g.DrawString(text, font, brush, rect, format);
+            return bmp;
+        }
+
+        /// <summary>
         /// post接口
         /// </summary>
         /// <param name="strJson"></param>
@@ -168,7 +246,7 @@ namespace AutoSend
                 string showName = "show_" + cid + (GetMaxId() + 1).ToString() + ".html";
                 url = host + "/" + username + "/" + showName;
                 hInfo.titleURL = url;
-                hInfo.articlecontent = HttpUtility.UrlDecode(jo["content"].ToString(),Encoding.UTF8);//内容,UrlDecode解码
+                hInfo.articlecontent = HttpUtility.UrlDecode(jo["content"].ToString(), Encoding.UTF8);//内容,UrlDecode解码
                 hInfo.columnId = cid;//行业id，行业新闻id=23
                 hInfo.pinpai = jo["pinpai"].ToString();
                 hInfo.xinghao = jo["xinghao"].ToString();
@@ -251,6 +329,8 @@ namespace AutoSend
 
             str = str.Replace("titleImg_Str", hInfo.titleImg);
             str = str.Replace("content_Str", hInfo.articlecontent);
+            str = str.Replace("username_Str", username);
+            str = str.Replace("site_Str", hInfo.realmNameId);
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
@@ -343,5 +423,6 @@ namespace AutoSend
                new SqlParameter("@realmNameId", SqlHelper.ToDBNull(info.realmNameId)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(info.userId)));
         }
+       
     }
 }

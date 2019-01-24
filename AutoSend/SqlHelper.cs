@@ -5,6 +5,9 @@ using System.Text;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
+using NVelocity.App;
+using NVelocity.Runtime;
+using NVelocity;
 
 namespace HRMSys.DAL
 {
@@ -142,6 +145,29 @@ namespace HRMSys.DAL
             {
                 return values;
             }
+        }
+        /// <summary>
+        /// 渲染模板引擎
+        /// </summary>
+        /// <param name="dic">需要替换的参数</param>
+        /// <param name="temp">html文件名</param>
+        /// <returns></returns>
+        public static string WriteTemplate(object data, string temp)
+        {
+            //用的时候考代码即可，只需改三个地方：模板所在文件夹、添加数据、设定模板
+            VelocityEngine vltEngine = new VelocityEngine();
+            vltEngine.SetProperty(RuntimeConstants.RESOURCE_LOADER, "file");
+            vltEngine.SetProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, System.Web.Hosting.HostingEnvironment.MapPath("~/templates"));//模板文件所在的文件夹，例如我的模板为templates文件夹下的TestNV.html
+            vltEngine.Init();
+
+            VelocityContext vltContext = new VelocityContext();
+            vltContext.Put("data", data);//可添加多个数据，基本支持所有数据类型，包括字典、数据、datatable等  添加数据，在模板中可以通过$dataName来引用数据
+            Template vltTemplate = vltEngine.GetTemplate(temp);//设定模板
+            System.IO.StringWriter vltWriter = new System.IO.StringWriter();
+            vltTemplate.Merge(vltContext, vltWriter);
+
+            string html = vltWriter.GetStringBuilder().ToString();
+            return html;//返回渲染生成的标准html代码字符串
         }
     }
 }
