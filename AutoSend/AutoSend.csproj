@@ -136,6 +136,7 @@
     <Content Include="WebService.asmx" />
     <Fakes Include="Fakes\JWT.fakes" />
     <Content Include="CodeHandler.ashx" />
+    <Content Include="CreateHandler.ashx" />
     <None Include="packages.config" />
     <Content Include="SwaggerUI\lib\.DS_Store" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
@@ -161,6 +162,9 @@
       <DependentUpon>BaseHandle.ashx</DependentUpon>
     </Compile>
     <Compile Include="CommonToken.cs" />
+    <Compile Include="CreateHandler.ashx.cs">
+      <DependentUpon>CreateHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="gather.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
