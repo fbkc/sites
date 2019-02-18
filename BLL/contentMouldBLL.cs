@@ -19,43 +19,46 @@ namespace BLL
         public void AddContent(contentMouldInfo content)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[contentMouldInfo]
-           ([mouldId]
-           ,[mouldName]
+           (mouldName
            ,contentMould
+           ,type
            ,usedCount
            ,addTime
+           ,editTime
            ,userId
-           ,productId)
+           ,productId
+           ,productName)
      VALUES
-           (@mouldId
-           ,@mouldName
+           (@mouldName
            ,@contentMould
+           ,@type
            ,@usedCount
-           ,getdate()
+           ,@addTime
+           ,@editTime
            ,@userId
-           ,@productId)",
-               new SqlParameter("@mouldId", SqlHelper.ToDBNull(content.mouldId)),
+           ,@productId
+           ,@productName)",
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
+               new SqlParameter("@type", SqlHelper.ToDBNull(content.type)),
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)),
+               new SqlParameter("@addTime", SqlHelper.ToDBNull(content.addTime)),
+               new SqlParameter("@editTime", SqlHelper.ToDBNull(content.editTime)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(content.userId)),
-               new SqlParameter("@productId", SqlHelper.ToDBNull(content.productId)));
+               new SqlParameter("@productId", SqlHelper.ToDBNull(content.productId)),
+               new SqlParameter("@productName", SqlHelper.ToDBNull(content.productName)));
         }
         public void UpdateContent(contentMouldInfo content)
         {
-            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[paragraphInfo]
-   SET [mouldId] = @mouldId
-      ,[mouldName] = @mouldName
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[contentMouldInfo]
+   SET [mouldName] = @mouldName
       ,[contentMould] = @contentMould
       ,[usedCount] = @usedCount
-      ,[addTime] = getdate()
-      ,[userId] = @userId where Id=@Id",
+      ,[editTime] = getdate() where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(content.Id)),
-               new SqlParameter("@mouldId", SqlHelper.ToDBNull(content.mouldId)),
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
-               new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)),
-               new SqlParameter("@userId", SqlHelper.ToDBNull(content.userId)));
+               new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)));
         }
         public int DelContent(string Id)
         {

@@ -28,8 +28,8 @@ namespace BLL
            ,productId)
      VALUES
            (@title
-           ,getdata()
-           ,getdata()
+           ,getdate()
+           ,getdate()
            ,0
            ,@returnMsg
            ,@userId
@@ -43,7 +43,7 @@ namespace BLL
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[titleInfo]
    SET [title] = @title
-      ,[editTime] = getdata()
+      ,[editTime] = getdate()
       ,[isSucceedPub] = @isSucceedPub
       ,[returnMsg] = @returnMsg where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(title.Id)),

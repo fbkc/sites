@@ -7,7 +7,7 @@ namespace Model
 {
     public class titleInfo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string title { get; set; }
         public string addTime { get; set; }
         public string editTime { get; set; }

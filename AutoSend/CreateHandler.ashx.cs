@@ -16,7 +16,7 @@ namespace AutoSend
     public class CreateHandler : BaseHandle, IHttpHandler, IRequiresSessionState
     {
 
-        public void ProcessRequest(HttpContext context)
+        public override void OnLoad(HttpContext context)
         {
             context.Response.ContentType = "text/plain;charset=utf-8;";
             context.Response.AddHeader("Access-Control-Allow-Origin", "*");
@@ -42,20 +42,18 @@ namespace AutoSend
         }
         private string CreateTitle(HttpContext context)
         {
-            string rule = context.Request["rule"];//规则
-            string city = context.Request["city"];
-            string keyword = context.Request["keyword"];
-            string tailword = context.Request["tailword"];
+            string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
+            titleList tl = JsonConvert.DeserializeObject<titleList>(strjson, js);
+            string rule = tl.rule;//规则
             List<string> sctitle = new List<string>();
             List<string> sctitle1 = new List<string>();
 
-            List<string> cityList = JsonConvert.DeserializeObject<List<string>>(city, js);
+            List<string> cityList = tl.city;
             int intcity = cityList.Count;
-            List<string> bl1 = JsonConvert.DeserializeObject<List<string>>(keyword, js);
+            List<string> bl1 = tl.keyword;
             int intbl1 = bl1.Count;
-            List<string> bl2 = JsonConvert.DeserializeObject<List<string>>(tailword, js);
+            List<string> bl2 = tl.tailword;
             int intbl2 = bl2.Count;
             sctitle.Add(rule);
             bool ishvae = false;
@@ -71,8 +69,8 @@ namespace AutoSend
                         string t = "";
                         foreach (string s in cityList)
                         {
-                            t = r.Replace(st, s);
-                            sctitle1.Add(t + "{}" + s);
+                            t = r.Replace(st, s,1);
+                            sctitle1.Add(t);
                         }
                         ishvae = true;
                     }
@@ -139,6 +137,7 @@ namespace AutoSend
 
             } while (ishvae);
             string[] resultstr = null;
+            resultstr = sctitle.ToArray();
             if (sctitle.Count > 10000)
             {
                 string[] resultstr1 = new string[10000];
@@ -148,7 +147,7 @@ namespace AutoSend
             return json.WriteJson(1, "成功", new { resultstr });
         }
         /// <summary>
-        /// 将标题打乱返回前段
+        /// 将标题打乱返回前端
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>

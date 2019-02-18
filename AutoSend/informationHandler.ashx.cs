@@ -79,6 +79,7 @@ namespace AutoSend
                         case "gettitlelist": _strContent.Append(GetTitleList(context)); break;//获取此会员下所有标题
                         case "savetitle": _strContent.Append(SaveTitle(context)); break;
                         case "deltitle": _strContent.Append(DelTitle(context)); break;//删除标题
+                        case "deltitles": _strContent.Append(DelTitles(context)); break;//多行删除
                         #endregion
 
                         default: break;
@@ -282,7 +283,7 @@ namespace AutoSend
                 else
                     bll.UpdateProduct(product);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "成功", new { });
         }
@@ -901,13 +902,15 @@ namespace AutoSend
                     {
                         contentMouldInfo cInfo = new contentMouldInfo();
                         cInfo.Id = (int)row["Id"];
-                        cInfo.mouldId = (string)row["mouldId"];
                         cInfo.mouldName = (string)row["mouldName"];
                         cInfo.contentMould = (string)row["contentMould"];
+                        cInfo.type = (int)row["type"];
                         cInfo.usedCount = (int)row["usedCount"];
                         cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                        cInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         cInfo.userId = (int)row["userId"];
                         cInfo.productId = (int)row["productId"];
+                        cInfo.productName = (string)row["productName"];
                         cList.Add(cInfo);
                     }
                 }
@@ -1091,13 +1094,19 @@ namespace AutoSend
 
         #region 标题
         /// <summary>
-        /// 获取产品列表
+        /// 获取标题列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         private string GetTitleList(HttpContext context)
         {
             string pId = context.Request["productId"];
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
             titleBLL bll = new titleBLL();
             List<titleInfo> tList = new List<titleInfo>();
             try
@@ -1110,7 +1119,7 @@ namespace AutoSend
                     foreach (DataRow row in dt.Rows)
                     {
                         titleInfo tInfo = new titleInfo();
-                        tInfo.Id = (int)row["Id"];
+                        tInfo.Id = (long)row["Id"];
                         tInfo.title = (string)row["title"];
                         tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
@@ -1126,10 +1135,15 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { titleList = tList });
+            //查询分页数据
+            var pageData = tList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = tList.Count(), titleList = pageData });
         }
         /// <summary>
-        /// 增加或修改产品列表
+        /// 增加或修改标题列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -1139,16 +1153,24 @@ namespace AutoSend
             titleBLL bll = new titleBLL();
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            titleInfo title = JsonConvert.DeserializeObject<titleInfo>(strjson, js);
-            title.userId = model.Id;
-            if (title.Id == 0)
-                bll.AddTitle(title);
-            else
-                bll.UpdateTitle(title);
+            try
+            {
+                List<titleInfo> tList = JsonConvert.DeserializeObject<List<titleInfo>>(strjson, js);
+                foreach (titleInfo t in tList)
+                {
+                    t.userId = model.Id;
+                    if (t.Id == 0)
+                        bll.AddTitle(t);
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
-        /// 删除产品列表
+        /// 删除标题列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -1163,6 +1185,28 @@ namespace AutoSend
                 return json.WriteJson(1, "删除成功", new { });
             else
                 return json.WriteJson(0, "删除失败", new { });
+        }
+        /// <summary>
+        /// 多行删除
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelTitles(HttpContext context)
+        {
+            titleBLL bll = new titleBLL();
+            string id = context.Request["Ids"];
+            if (string.IsNullOrEmpty(id))
+                return json.WriteJson(0, "Id不能为空", new { });
+            try
+            {
+                string[] ids = id.Split(',');
+                int a = 0;
+                foreach (string d in ids)
+                    a = bll.DelTitle(d);
+                return json.WriteJson(1, "删除成功", new { });
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
         }
         #endregion
 
