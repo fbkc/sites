@@ -32,18 +32,15 @@ namespace BLL
            (@mouldName
            ,@contentMould
            ,@type
-           ,@usedCount
-           ,@addTime
-           ,@editTime
+           ,0
+           ,getdate()
+           ,getdate()
            ,@userId
            ,@productId
            ,@productName)",
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
                new SqlParameter("@type", SqlHelper.ToDBNull(content.type)),
-               new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)),
-               new SqlParameter("@addTime", SqlHelper.ToDBNull(content.addTime)),
-               new SqlParameter("@editTime", SqlHelper.ToDBNull(content.editTime)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(content.userId)),
                new SqlParameter("@productId", SqlHelper.ToDBNull(content.productId)),
                new SqlParameter("@productName", SqlHelper.ToDBNull(content.productName)));
@@ -53,11 +50,13 @@ namespace BLL
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[contentMouldInfo]
    SET [mouldName] = @mouldName
       ,[contentMould] = @contentMould
+      ,[type] = @type
       ,[usedCount] = @usedCount
       ,[editTime] = getdate() where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(content.Id)),
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
+               new SqlParameter("@type", SqlHelper.ToDBNull(content.type)),
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)));
         }
         public int DelContent(string Id)

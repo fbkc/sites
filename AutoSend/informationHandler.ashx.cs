@@ -904,7 +904,7 @@ namespace AutoSend
                         cInfo.Id = (int)row["Id"];
                         cInfo.mouldName = (string)row["mouldName"];
                         cInfo.contentMould = (string)row["contentMould"];
-                        cInfo.type = (int)row["type"];
+                        cInfo.type = (string)row["type"];
                         cInfo.usedCount = (int)row["usedCount"];
                         cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                         cInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
@@ -929,9 +929,11 @@ namespace AutoSend
         private string SaveContent(HttpContext context)
         {
             contentMouldBLL bll = new contentMouldBLL();
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             string strjson = context.Request["params"];
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             contentMouldInfo content = JsonConvert.DeserializeObject<contentMouldInfo>(strjson, js);
+            content.userId = model.Id;
             if (content.Id == 0)
                 bll.AddContent(content);
             else

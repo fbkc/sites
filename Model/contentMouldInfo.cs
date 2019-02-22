@@ -10,7 +10,7 @@ namespace Model
         public int Id { get; set; }
         public string mouldName { get; set; }
         public string contentMould { get; set; }
-        public int type { get; set; }
+        public string type { get; set; }
         public int usedCount { get; set; }
         public string addTime { get; set; }
         public string editTime { get; set; }
