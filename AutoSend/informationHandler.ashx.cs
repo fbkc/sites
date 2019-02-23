@@ -338,8 +338,6 @@ namespace AutoSend
                     {
                         Directory.CreateDirectory(fileDir);
                     }
-                    //string phyPath = context.Request.PhysicalApplicationPath;
-                    //string savePath = phyPath + virPath;
                     string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
                     fileUrl = "/upfiles/" + username + "/" + newfileName + "." + suffix;
                     _upfile.SaveAs(saveDir);//保存图片

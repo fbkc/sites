@@ -144,6 +144,7 @@
     <Content Include="static\fonts\element-icons.6f0a763.ttf" />
     <Content Include="static\js\app.cbb6a01dbabcb3c2ec41.js.map" />
     <Content Include="static\js\manifest.eeb2c031c0c552bd70ec.js.map" />
+    <Content Include="PublishHandler.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -182,6 +183,9 @@
     </Compile>
     <Compile Include="MyInfo.cs" />
     <Compile Include="NetHelper.cs" />
+    <Compile Include="PublishHandler.ashx.cs">
+      <DependentUpon>PublishHandler.ashx</DependentUpon>
+    </Compile>
     <Compile Include="SqlHelper.cs" />
     <Compile Include="titleList.cs" />
     <Compile Include="UserHandler.ashx.cs">
