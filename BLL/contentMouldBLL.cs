@@ -51,13 +51,11 @@ namespace BLL
    SET [mouldName] = @mouldName
       ,[contentMould] = @contentMould
       ,[type] = @type
-      ,[usedCount] = @usedCount
       ,[editTime] = getdate() where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(content.Id)),
                new SqlParameter("@mouldName", SqlHelper.ToDBNull(content.mouldName)),
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
-               new SqlParameter("@type", SqlHelper.ToDBNull(content.type)),
-               new SqlParameter("@usedCount", SqlHelper.ToDBNull(content.usedCount)));
+               new SqlParameter("@type", SqlHelper.ToDBNull(content.type)));
         }
         public int DelContent(string Id)
         {

@@ -52,6 +52,7 @@
     <Compile Include="productBLL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="realmBLL.cs" />
+    <Compile Include="settingBLL.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="tailwordBLL.cs" />
     <Compile Include="titleBLL.cs" />

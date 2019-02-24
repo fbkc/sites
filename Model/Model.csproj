@@ -45,6 +45,7 @@
     <Compile Include="imageInfo.cs" />
     <Compile Include="noticeInfo.cs" />
     <Compile Include="productInfo.cs" />
+    <Compile Include="settingInfo.cs" />
     <Compile Include="tailwordInfo.cs" />
     <Compile Include="cmUserInfo.cs" />
     <Compile Include="columnInfo.cs" />
