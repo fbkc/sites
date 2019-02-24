@@ -1236,7 +1236,7 @@ namespace AutoSend
                     if (bytes > 1024 * 1024 * 2)
                         throw new Exception("图片最大只能传2M");
                     string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
-                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
+                    string fileDir = HttpContext.Current.Server.MapPath("~/banner/" + MyInfo.user + "/");
                     if (!Directory.Exists(fileDir))
                     {
                         Directory.CreateDirectory(fileDir);
@@ -1260,6 +1260,11 @@ namespace AutoSend
             }
             return json.WriteJson(1, "上传成功", new { imgUrl = fileUrl });
         }
+        /// <summary>
+        /// 保存轮播图，从公共库选择
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private string SaveBanner(HttpContext context)
         {
             int num = int.Parse(context.Request["num"]);
@@ -1280,7 +1285,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.Message, new { });
             }
-            return json.WriteJson(1, "保存成功", new {  });
+            return json.WriteJson(1, "保存成功", new { });
         }
 
         /// <summary>
@@ -1292,10 +1297,18 @@ namespace AutoSend
         {
             bannerBLL bll = new bannerBLL();
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-            string strjson = context.Request["params"];
-            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-            bannerInfo bInfo = JsonConvert.DeserializeObject<bannerInfo>(strjson, js);
-            bll.UpUserBanner(bInfo);
+            bannerInfo bInfo = new bannerInfo();
+            try
+            {
+                string strjson = context.Request["params"];
+                var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+                bInfo = JsonConvert.DeserializeObject<bannerInfo>(strjson, js);
+                bll.UpUserBanner(bInfo);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
