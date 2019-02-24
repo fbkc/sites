@@ -11,10 +11,24 @@ namespace BLL
 {
     public class imageBLL
     {
-        public DataTable GetImgList(string sqlstr)
+        public List<imageInfo> GetImgList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from imageInfo " + sqlstr).Tables[0];
-            return ds;
+            List<imageInfo> iList = new List<imageInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from imageInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                imageInfo iInfo = new imageInfo();
+                iInfo.Id = (long)row["Id"];
+                iInfo.imageId = (string)SqlHelper.FromDBNull(row["imageId"]);
+                iInfo.imageURL = (string)SqlHelper.FromDBNull(row["imageURL"]);
+                iInfo.addTime = ((DateTime)SqlHelper.FromDBNull(row["addTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+                iInfo.userId = (int)SqlHelper.FromDBNull(row["userId"]);
+                iInfo.productId = (int)SqlHelper.FromDBNull(row["productId"]);
+                iList.Add(iInfo);
+            }
+            return iList;
         }
         public void AddImg(imageInfo img)
         {

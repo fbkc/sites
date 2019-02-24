@@ -11,10 +11,28 @@ namespace BLL
 {
     public class contentMouldBLL
     {
-        public DataTable GetContentList(string sqlstr)
+        public List<contentMouldInfo> GetContentList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from contentMouldInfo " + sqlstr).Tables[0];
-            return ds;
+            List<contentMouldInfo> cList = new List<contentMouldInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from contentMouldInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                contentMouldInfo cInfo = new contentMouldInfo();
+                cInfo.Id = (int)row["Id"];
+                cInfo.mouldName = (string)row["mouldName"];
+                cInfo.contentMould = (string)row["contentMould"];
+                cInfo.type = (string)row["type"];
+                cInfo.usedCount = (int)row["usedCount"];
+                cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                cInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                cInfo.userId = (int)row["userId"];
+                cInfo.productId = (int)row["productId"];
+                cInfo.productName = (string)row["productName"];
+                cList.Add(cInfo);
+            }
+            return cList;
         }
         public void AddContent(contentMouldInfo content)
         {

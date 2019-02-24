@@ -11,10 +11,25 @@ namespace BLL
 {
     public class paragraphBLL
     {
-        public DataTable GetParagraphList(string id, string pId)
+        public List<paragraphInfo> GetParagraphList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from paragraphInfo where userId=" + id + " and productId=" + pId).Tables[0];
-            return ds;
+            List<paragraphInfo> pList = new List<paragraphInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from paragraphInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                paragraphInfo pInfo = new paragraphInfo();
+                pInfo.Id = (long)row["Id"];
+                pInfo.paraId = (string)row["paraId"];
+                pInfo.paraCotent = (string)row["paraCotent"];
+                pInfo.usedCount = (int)row["usedCount"];
+                pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                pInfo.userId = (int)row["userId"];
+                pInfo.productId = (int)row["productId"];
+                pList.Add(pInfo);
+            }
+            return pList;
         }
         public int AddParagraph(paragraphInfo paragraph)
         {

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BLL;
+using Model;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Drawing;
@@ -7,6 +9,8 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
+
 namespace AutoSend
 {
     public static class NetHelper
@@ -254,6 +258,66 @@ namespace AutoSend
 
             }
             return pwd;
+        }
+
+        /// <summary>
+        /// 模板替换变量
+        /// </summary>
+        /// <param name="wz">模板</param>
+        /// <param name="title"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo,cmUserInfo user)
+        {
+            Regex r;
+            Random rnd = new Random();
+            string[] txt;
+            string mybl = "";
+            if (wz.Contains("{标题}"))
+            {
+                wz = wz.Replace("{标题}", tInfo.title);
+            }
+            imageBLL iBLL = new imageBLL();
+            //根据userId,productId获取图片
+            List<imageInfo> iList = iBLL.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
+            while (wz.Contains("{图片}"))
+            {
+                r = new Regex("{图片}");
+                if (iList.Count > 0)
+                {
+                    string t = iList[rnd.Next(iList.Count)].imageURL;
+                    wz = r.Replace(wz, "<img src=\"" + t + "\" />", 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            paragraphBLL pBLL = new paragraphBLL();
+            //根据userId,productId获取图片
+            List<paragraphInfo> pList = pBLL.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
+            while (wz.Contains("{段落}"))
+            {
+                Regex regex = new Regex("{段落}");
+                if (pList.Count <= 0)
+                {
+                    break;
+                }
+                try
+                {
+                    //更新写在这
+                    //DataGridViewRow dataGridViewRow = this.dgvpracontent.Rows[rnd.Next(this.dgvpracontent.RowCount)];
+                    //string str = dataGridViewRow.Cells[0].Value.ToString();
+                    //int num3 = this.achelp.ExcuteSql("update paragraph set UsedCount=UsedCount+1 where ID=" + str);
+                    string text2 = pList[rnd.Next(pList.Count)].paraCotent;
+                    wz = regex.Replace(wz, "<p>" + text2 + "</p>", 1);
+                }
+                catch (Exception ex)
+                {
+                }
+            }
+            wz = wz.Replace("&", "%26");
+            return wz;
         }
     }
 }

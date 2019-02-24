@@ -82,6 +82,20 @@ namespace AutoSend
                         case "deltitles": _strContent.Append(DelTitles(context)); break;//多行删除
                         #endregion
 
+                        #region 公司信息
+                        case "getorginfo": _strContent.Append(GetOrgInfo(context)); break;//获取此会员公司
+                        case "updateorginfo": _strContent.Append(UpdateOrgInfo(context)); break;
+                        #endregion
+
+                        #region 轮播图
+                        case "upbanner": _strContent.Append(UpBanner(context)); break;//上传轮播图
+                        case "savebanner": _strContent.Append(SaveBanner(context)); break;//保存轮播图，从公共图库选择
+                        //case "upuserbanner": _strContent.Append(UpUserBanner(context)); break;//上传轮播图
+                        case "getbanner": _strContent.Append(GetBanner(context)); break;//获取公共轮播图（userId=0）
+                        case "getuserbanner": _strContent.Append(GetUserBanner(context)); break;//获取私人轮播图
+                        case "delbanner": _strContent.Append(DelBanner(context)); break;//删除
+                        #endregion
+
                         default: break;
                     }
                 }
@@ -372,20 +386,9 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", userId, pId));
-                if (dt.Rows.Count < 1)
+                iList = bll.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", userId, pId));
+                if (iList == null || iList.Count < 1)
                     return json.WriteJson(1, "", new { });
-                foreach (DataRow row in dt.Rows)
-                {
-                    imageInfo iInfo = new imageInfo();
-                    iInfo.Id = (long)row["Id"];
-                    iInfo.imageId = (string)row["imageId"];
-                    iInfo.imageURL = (string)row["imageURL"];
-                    iInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                    iInfo.userId = (int)row["userId"];
-                    iInfo.productId = (int)row["productId"];
-                    iList.Add(iInfo);
-                }
             }
             catch (Exception ex)
             {
@@ -442,22 +445,7 @@ namespace AutoSend
             string userId = model.Id.ToString();
             try
             {
-                DataTable dt = bll.GetParagraphList(userId, pId);
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        paragraphInfo pInfo = new paragraphInfo();
-                        pInfo.Id = (long)row["Id"];
-                        pInfo.paraId = (string)row["paraId"];
-                        pInfo.paraCotent = (string)row["paraCotent"];
-                        pInfo.usedCount = (int)row["usedCount"];
-                        pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        pInfo.userId = (int)row["userId"];
-                        pInfo.productId = (int)row["productId"];
-                        pList.Add(pInfo);
-                    }
-                }
+                pList = bll.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", userId, pId));
             }
             catch (Exception ex)
             {
@@ -893,25 +881,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetContentList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        contentMouldInfo cInfo = new contentMouldInfo();
-                        cInfo.Id = (int)row["Id"];
-                        cInfo.mouldName = (string)row["mouldName"];
-                        cInfo.contentMould = (string)row["contentMould"];
-                        cInfo.type = (string)row["type"];
-                        cInfo.usedCount = (int)row["usedCount"];
-                        cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        cInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        cInfo.userId = (int)row["userId"];
-                        cInfo.productId = (int)row["productId"];
-                        cInfo.productName = (string)row["productName"];
-                        cList.Add(cInfo);
-                    }
-                }
+                cList = bll.GetContentList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
             }
             catch (Exception ex)
             {
@@ -1113,23 +1083,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                DataTable dt = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        titleInfo tInfo = new titleInfo();
-                        tInfo.Id = (long)row["Id"];
-                        tInfo.title = (string)row["title"];
-                        tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                        tInfo.isSucceedPub = (int)row["isSucceedPub"];
-                        tInfo.returnMsg = (string)row["returnMsg"];
-                        tInfo.productId = (int)row["productId"];
-                        tInfo.userId = (int)row["userId"];
-                        tList.Add(tInfo);
-                    }
-                }
+                tList = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
             }
             catch (Exception ex)
             {
@@ -1207,6 +1161,208 @@ namespace AutoSend
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
+        }
+        #endregion
+
+        #region 公司信息
+        /// <summary>
+        /// 获取公司信息
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetOrgInfo(HttpContext context)
+        {
+            CmUserBLL bll = new CmUserBLL();
+            cmUserInfo orgInfo = new cmUserInfo();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                orgInfo = bll.GetUser(string.Format(" where Id='{0}'", userId));
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { orgInfo });
+        }
+        /// <summary>
+        /// 修改公司信息
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpdateOrgInfo(HttpContext context)
+        {
+            CmUserBLL bll = new CmUserBLL();
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            try
+            {
+                cmUserInfo orjInfo = JsonConvert.DeserializeObject<cmUserInfo>(strjson, js);
+                bll.UpdateUser(orjInfo);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { });
+        }
+        #endregion
+
+        #region 轮播图
+        /// <summary>
+        /// 上传轮播图
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpBanner(HttpContext context)
+        {
+            int num = int.Parse(context.Request["num"]);
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string username = model.username.ToString();
+            string fileUrl = "";
+            try
+            {
+                HttpPostedFile _upfile = context.Request.Files["file"];
+                if (_upfile == null)
+                    throw new Exception("请先选择文件！");
+                else
+                {
+                    string fileName = _upfile.FileName;/*获取文件名： C:\Documents and Settings\Administrator\桌面\123.jpg*/
+                    string suffix = fileName.Substring(fileName.LastIndexOf(".") + 1).ToLower();/*获取后缀名并转为小写： jpg*/
+                    int bytes = _upfile.ContentLength;//获取文件的字节大小  
+                    if (!(suffix == "jpg" || suffix == "gif" || suffix == "png" || suffix == "jpeg"))
+                        throw new Exception("只能上传JPE，GIF,PNG文件");
+                    if (bytes > 1024 * 1024 * 2)
+                        throw new Exception("图片最大只能传2M");
+                    string newfileName = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    string fileDir = HttpContext.Current.Server.MapPath("~/upfiles/" + MyInfo.user + "/");
+                    if (!Directory.Exists(fileDir))
+                    {
+                        Directory.CreateDirectory(fileDir);
+                    }
+                    string saveDir = fileDir + newfileName + "." + suffix;//文件服务器存放路径
+                    fileUrl = "/banner/" + username + "/" + newfileName + "." + suffix;
+                    _upfile.SaveAs(saveDir);//保存图片
+                    #region 存到sql图片库
+                    bannerBLL bll = new bannerBLL();
+                    bannerInfo bInfo = new bannerInfo();
+                    bInfo.banner = fileUrl;
+                    bInfo.num = num;
+                    bInfo.userId = model.Id;
+                    bll.AddBanner(bInfo);
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "上传成功", new { imgUrl = fileUrl });
+        }
+        private string SaveBanner(HttpContext context)
+        {
+            int num = int.Parse(context.Request["num"]);
+            string fileUrl = context.Request["fileUrl"];
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                #region 存到sql图片库
+                bannerBLL bll = new bannerBLL();
+                bannerInfo bInfo = new bannerInfo();
+                bInfo.banner = fileUrl;
+                bInfo.num = num;
+                bInfo.userId = model.Id;
+                bll.AddBanner(bInfo);
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "保存成功", new {  });
+        }
+
+        /// <summary>
+        /// 更新私人轮播图
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpUserBanner(HttpContext context)
+        {
+            bannerBLL bll = new bannerBLL();
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            string strjson = context.Request["params"];
+            var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+            bannerInfo bInfo = JsonConvert.DeserializeObject<bannerInfo>(strjson, js);
+            bll.UpUserBanner(bInfo);
+            return json.WriteJson(1, "成功", new { });
+        }
+        /// <summary>
+        /// 获取公共轮播图
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetBanner(HttpContext context)
+        {
+            bannerBLL bll = new bannerBLL();
+            List<bannerInfo> bInfo = new List<bannerInfo>();
+            try
+            {
+                //cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                bInfo = bll.GetBanner(" where userId=0");
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { bInfo });
+        }
+        /// <summary>
+        /// 获取私人轮播图
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetUserBanner(HttpContext context)
+        {
+            bannerBLL bll = new bannerBLL();
+            List<bannerInfo> bInfo = new List<bannerInfo>();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                bInfo = bll.GetBanner(string.Format(" where userId={0}", model.Id));
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { bInfo });
+        }
+        /// <summary>
+        /// 删除图片
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelBanner(HttpContext context)
+        {
+            int a = 0;
+            try
+            {
+                string id = context.Request["Id"];
+                string imgfath = context.Request["imageURL"];
+                bannerBLL bll = new bannerBLL();
+                if (imgfath != "")
+                    File.Delete(HttpContext.Current.Server.MapPath("~" + imgfath));
+                a = bll.DelBanner(id);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            if (a == 1)
+                return json.WriteJson(1, "删除成功", new { });
+            else
+                return json.WriteJson(0, "删除失败", new { });
         }
         #endregion
 

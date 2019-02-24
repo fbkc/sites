@@ -11,10 +11,26 @@ namespace BLL
 {
     public class titleBLL
     {
-        public DataTable GetTitleList(string sqlstr)
+        public List<titleInfo> GetTitleList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from titleInfo " + sqlstr).Tables[0];
-            return ds;
+            List<titleInfo> tList = new List<titleInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from titleInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                titleInfo tInfo = new titleInfo();
+                tInfo.Id = (long)row["Id"];
+                tInfo.title = (string)row["title"];
+                tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                tInfo.isSucceedPub = (int)row["isSucceedPub"];
+                tInfo.returnMsg = (string)row["returnMsg"];
+                tInfo.productId = (int)row["productId"];
+                tInfo.userId = (int)row["userId"];
+                tList.Add(tInfo);
+            }
+            return tList;
         }
         public void AddTitle(titleInfo title)
         {

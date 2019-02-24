@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="badwordBLL.cs" />
+    <Compile Include="bannerBLL.cs" />
     <Compile Include="cmUserBLL.cs" />
     <Compile Include="columnBLL.cs" />
     <Compile Include="contentMouldBLL.cs" />

@@ -159,8 +159,7 @@ person,telephone,modile,ten_qq,address,com_web,companyRemark,yewu,beforePubTime)
       ,[address] = @address
       ,[com_web] = @com_web
       ,[companyRemark] = @companyRemark
-      ,[yewu] = @yewu
-      ,[beforePubTime] = getdate() where Id=@Id",
+      ,[yewu] = @yewu where Id=@Id",
       new SqlParameter("@Id", SqlHelper.ToDBNull(cmUser.Id)),
       new SqlParameter("@username", SqlHelper.ToDBNull(cmUser.username)),
       new SqlParameter("@password", SqlHelper.ToDBNull(cmUser.password)),
