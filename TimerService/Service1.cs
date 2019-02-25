@@ -37,7 +37,7 @@ namespace TimerService
         protected void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=roundsetting", "", Encoding.UTF8);
-            WriteLog("服务执行中");
+            WriteLog("服务执行了一次");
         }
         protected void WriteLog(string str)
         {
