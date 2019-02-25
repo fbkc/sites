@@ -17,9 +17,9 @@ namespace AutoSend
     /// <summary>
     /// PublishHandler 的摘要说明
     /// </summary>
-    public class PublishHandler : BaseHandle, IHttpHandler, IRequiresSessionState
+    public class PublishHandler : IHttpHandler, IRequiresSessionState
     {
-        public override void OnLoad(HttpContext context)
+        public void ProcessRequest(HttpContext context)
         {
             context.Response.ContentType = "text/plain;charset=utf-8;";
             context.Response.AddHeader("Access-Control-Allow-Origin", "*");
@@ -45,7 +45,7 @@ namespace AutoSend
                         #endregion
 
                         #region 发布
-                        case "publish": _strContent.Append(Publish(context)); break;//读取配置
+                        //case "publish": _strContent.Append(Publish(context)); break;//读取配置
                         #endregion
 
                         default: break;
@@ -109,32 +109,41 @@ namespace AutoSend
         {
             try
             {
-                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                settingBLL bll = new settingBLL();
-                string strjson = context.Request["params"];
-                var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-                settingInfo setInfo = JsonConvert.DeserializeObject<settingInfo>(strjson, js);
-                setInfo.userId = model.Id;
-                if (setInfo.Id == 0)
-                    bll.AddSetting(setInfo);
-                else
-                    bll.UpdateSetting(setInfo);
+                RoundSetting();
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "成功", new { });
         }
+        public bool isstoppub = true;
         private void RoundSetting()
         {
-               
+            settingBLL bll = new settingBLL();
+            //查找设置定时发布并且非在发配置
+            List<settingInfo> sList = bll.RoundSetting(string.Format(" where isAutoPub=1  and isPubing=0"));
+            DateTime dt = DateTime.Now;
+            foreach (settingInfo sInfo in sList)
+            {
+                if (!sInfo.isAutoPub || sInfo.isPubing)
+                    continue;
+                int nowMin =dt.Minute/ 10;//当前分钟十位数
+                int tMin = sInfo.pubMin / 10;//用户所定时间十位数
+                if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
+                {
+                    isstoppub = true;
+                    Publish();//创建发布线程
+                    sInfo.isPubing = true;
+                    bll.UpIsPubing(sInfo);//isPubing置true
+                }
+            }
         }
         #endregion
 
         #region 发布
-        public bool isstoppub = true;
+        
         Thread t = null;
         
-        private string Publish(HttpContext context)
+        private string Publish()
         {
             try
             {
@@ -143,7 +152,7 @@ namespace AutoSend
                 if (start == null)
                 {
                     //cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                    start = pubtitle;
+                    start = PubTitle;
                 }
                 if (isstoppub)
                 {
@@ -159,7 +168,7 @@ namespace AutoSend
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "成功", new { });
         }
-        private void pubtitle()
+        private void PubTitle()
         {
             CmUserBLL cBLL = new CmUserBLL();
             cmUserInfo model = cBLL.GetUser(string.Format(" where Id='{0}'", 1));
@@ -293,12 +302,11 @@ namespace AutoSend
                         }
                         else if (code == "0")
                         {
-                            //if (msg.Contains("今日投稿已超过限制数"))
-                            //{
-                            //    txttishi.Text += "提示信息：本栏发布数量已完成！\r\n";
-                            //    isstoppub = true;
-                            //    return;
-                            //}
+                            if (msg.Contains("今日投稿已超过限制数"))
+                            {
+                                StopPub(model.Id);
+                                return;
+                            }
                             if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
                             {
                                 //txttishi.Text += "出错:信息发布过快，请隔60秒再提交！\r\n";
@@ -437,6 +445,19 @@ namespace AutoSend
             //                }
             //            }
         }
+
+        private void StopPub(int userId)
+        {
+            isstoppub = true;
+            if (t != null)
+                t.Abort();
+            settingBLL bll = new settingBLL();
+            settingInfo sInfo = new settingInfo();
+            sInfo.userId = userId;
+            sInfo.isPubing = false;
+            bll.UpIsPubing(sInfo);
+        }
+
         #endregion
 
         public bool IsReusable
