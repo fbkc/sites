@@ -39,8 +39,8 @@
             // 
             // serviceInstaller1
             // 
-            this.serviceInstaller1.Description = "maishu";
-            this.serviceInstaller1.DisplayName = "haha";
+            this.serviceInstaller1.Description = "轮循配置表";
+            this.serviceInstaller1.DisplayName = "TimerSetting";
             this.serviceInstaller1.ServiceName = "Service1";
             this.serviceInstaller1.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 

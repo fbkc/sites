@@ -8,11 +8,13 @@ using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
+using System.Timers;
 
 namespace TimerService
 {
     public partial class Service1 : ServiceBase
     {
+        Timer timer;
         public Service1()
         {
             InitializeComponent();
@@ -20,43 +22,37 @@ namespace TimerService
 
         protected override void OnStart(string[] args)
         {
-
-            timer1.Interval = 60 * 1000;  //设置计时器事件间隔执行时间
-
-            ////timer1.Elapsed += new System.Timers.ElapsedEventHandler(timer1_Elapsed);
-
-            timer1.Enabled = true;
-
-            //if (!EventLog.SourceExists("OnStart222"))
-            //{
-            //    EventLog.CreateEventSource("OnStart222", "jason");
-            //}
-
-            //EventLog.WriteEntry("OnStart222", "开始任务了");
-
-            string start = string.Format("{0}-{1}", DateTime.Now.ToString("yyyyMMddHHmmss"), "程序启动了。");
-            Log(start);
+            timer = new Timer(120*1000);
+            timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
+            timer.Start();
+            WriteLog("服务启动");
         }
-
         protected override void OnStop()
         {
-            this.timer1.Enabled = false;
-            //EventLog.WriteEntry("OnStart222", "任务结束");
-            string start = string.Format("{0}-{1}", DateTime.Now.ToString("yyyyMMddHHmmss"), "程序停止了。");
-            Log(start);
+            timer.Stop();
+            timer.Dispose();
+            WriteLog("服务停止");
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        protected void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            string html = NetHelper.HttpGet("http://vip.100dh.cn/PublishHandler.ashx?action=roundsetting", "", Encoding.UTF8);
+            string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=roundsetting", "", Encoding.UTF8);
+            WriteLog("服务执行中");
         }
-        void Log(string str)
+        protected void WriteLog(string str)
         {
-            string path = "C://6.txt";
-            using (StreamWriter sw = File.AppendText(path))
+            string filePath = AppDomain.CurrentDomain.BaseDirectory + "Log.txt";
+            StreamWriter sw = null;
+            if (!File.Exists(filePath))
             {
-                sw.WriteLine(str);
+                sw = File.CreateText(filePath);
             }
+            else
+            {
+                sw = File.AppendText(filePath);
+            }
+            sw.Write(str + DateTime.Now.ToString() + Environment.NewLine);
+            sw.Close();
         }
     }
 }
