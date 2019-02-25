@@ -24,7 +24,7 @@ namespace BLL
                 tInfo.title = (string)row["title"];
                 tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
                 tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                tInfo.isSucceedPub = (int)row["isSucceedPub"];
+                tInfo.isSucceedPub = (bool)row["isSucceedPub"];
                 tInfo.returnMsg = (string)row["returnMsg"];
                 tInfo.productId = (int)row["productId"];
                 tInfo.userId = (int)row["userId"];
@@ -67,6 +67,7 @@ namespace BLL
                new SqlParameter("@isSucceedPub", SqlHelper.ToDBNull(title.isSucceedPub)),
                new SqlParameter("@returnMsg", SqlHelper.ToDBNull(title.returnMsg)));
         }
+
         public int DelTitle(string Id)
         {
             return SqlHelper.ExecuteNonQuery("delete from titleInfo where Id=@Id",

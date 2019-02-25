@@ -48,6 +48,7 @@
     <Compile Include="gradeBLL.cs" />
     <Compile Include="htmlBLL.cs" />
     <Compile Include="imageBLL.cs" />
+    <Compile Include="logBLL.cs" />
     <Compile Include="noticeBLL.cs" />
     <Compile Include="paragraphBLL.cs" />
     <Compile Include="productBLL.cs" />

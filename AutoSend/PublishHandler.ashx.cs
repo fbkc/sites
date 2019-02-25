@@ -142,7 +142,6 @@ namespace AutoSend
         #region 发布
         
         Thread t = null;
-        
         private string Publish()
         {
             try
@@ -193,7 +192,6 @@ namespace AutoSend
             titleBLL tBLL = new titleBLL();
             //取出未发布标题
             List<titleInfo> tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
-
             foreach (titleInfo tInfo in tList)  //选中项遍历
             {
                 if (!isstoppub)//停止
@@ -206,9 +204,12 @@ namespace AutoSend
                         //取模板
                         contentMouldBLL cmBLL = new contentMouldBLL();
                         List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId='{0}' and productId='{1}'", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
-                        content = cList[rnd.Next(cList.Count)].contentMould;
+                        int index = rnd.Next(cList.Count);
+                        content = cList[index].contentMould;//随机调用模板
+                        cmBLL.UpUsedCount(cList[index].Id);//模板调用次数加1
+
                         content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
-                        content = NetHelper.ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
+                        content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
                         txtgydesc = content;
 
                         #region 敏感词过滤
@@ -273,31 +274,13 @@ namespace AutoSend
                         if (code == "1")//发布成功。
                         {
                             titleurl = joo["detail"]["url"].ToString();
-                            //txttishi.Text += "标题:" + title + "发布成功。\r\n";
-                            //lvi.SubItems[0].Text = title;
-                            //lvi.SubItems[1].Text = titleurl;
-                            //lsvdaifa.Items.Remove(lvi); // 按索引移除                                     
-                            //lsvchenggong.Items.Add(lvi.Clone() as ListViewItem); cgnum++;
-                            //UpdateTabNum();
-                            //txttishi.Text += "链接:" + titleurl + "\r\n";
-                            ////随机等待0秒
-                            ////ping baidu                                    
-                            //baidumsg = myhttp.postToPing(titleurl);
-                            //txttishi.Text += "链接ping给百度完毕\r\n";
-                            //等待秒数
-                            //if (havecont > 1)
-                            //{
-                            //    sleeptime = stime + rnd.Next(etime - stime);
-                            //    txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                            //    waitsecond = sleeptime;
-                            //    isstarttime = true;
+                            //更新待发标题表
+                            tInfo.isSucceedPub = true;
+                            tInfo.returnMsg = titleurl;
+                            tBLL.UpdateTitle(tInfo);
+                            //更新userInfo表发布相关信息
+                            cBLL.UpUserPubInformation(model.Id);
                             Thread.Sleep(60 * 1000);
-                            //}
-                            //else
-                            //{
-                            //    txttishi.Text += "最后一条数据发送完成！\r\n";
-                            //    havecont = 0;
-                            //}
                             continue;//再发送本栏目信息
                         }
                         else if (code == "0")
@@ -309,18 +292,6 @@ namespace AutoSend
                             }
                             if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
                             {
-                                //txttishi.Text += "出错:信息发布过快，请隔60秒再提交！\r\n";
-                                ////lvi.SubItems[1].Text = "信息发布过快，请隔60秒再提交！";
-                                //lvi.SubItems[1].Text = "等待发送";
-                                //lsvdaifa.Items.Remove(lvi); // 按索引移除 
-                                //lsvdaifa.Items.Add(lvi.Clone() as ListViewItem); //失败标题重新加入代发列表
-                                //                                                 //lsvshibai.Items.Add(lvi.Clone() as ListViewItem); 
-                                //sbnum++;
-                                //UpdateTabNum();
-                                //sleeptime = stime + rnd.Next(etime - stime);
-                                //txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                                //waitsecond = sleeptime;
-                                //isstarttime = true;
                                 Thread.Sleep(sleeptime * 1000);
                                 continue;
                             }
@@ -340,12 +311,6 @@ namespace AutoSend
                                 Thread.Sleep(sleeptime * 1000);
                                 continue;
                             }
-                        }
-                        else if (code == "2")//停
-                        {
-                            //txttishi.Text += msg + "\r\n";
-                            isstoppub = true;
-                            return;
                         }
                         else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
                         {
@@ -381,11 +346,6 @@ namespace AutoSend
                             Thread.Sleep(sleeptime * 1000);
                             continue;
                         }
-                        //}
-                        //catch (Exception ex)
-                        //{
-                        //    continue;
-                        //}
                         #endregion
                     }
                     catch (Exception ex)
@@ -456,6 +416,69 @@ namespace AutoSend
             sInfo.userId = userId;
             sInfo.isPubing = false;
             bll.UpIsPubing(sInfo);
+        }
+
+        /// <summary>
+        /// 模板替换变量
+        /// </summary>
+        /// <param name="wz">模板</param>
+        /// <param name="title"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo, cmUserInfo user)
+        {
+            Regex r;
+            Random rnd = new Random();
+            string[] txt;
+            string mybl = "";
+            if (wz.Contains("{标题}"))
+            {
+                wz = wz.Replace("{标题}", tInfo.title);
+            }
+            imageBLL iBLL = new imageBLL();
+            //根据userId,productId获取图片
+            List<imageInfo> iList = iBLL.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
+            while (wz.Contains("{图片}"))
+            {
+                r = new Regex("{图片}");
+                if (iList.Count > 0)
+                {
+                    string t = iList[rnd.Next(iList.Count)].imageURL;
+                    wz = r.Replace(wz, "<img src=\"" + t + "\" />", 1);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            paragraphBLL pBLL = new paragraphBLL();
+            //根据userId,productId获取图片
+            List<paragraphInfo> pList = pBLL.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
+            while (wz.Contains("{段落}"))
+            {
+                Regex regex = new Regex("{段落}");
+                if (pList.Count <= 0)
+                {
+                    break;
+                }
+                try
+                {
+                    //更新写在这
+                    //DataGridViewRow dataGridViewRow = this.dgvpracontent.Rows[rnd.Next(this.dgvpracontent.RowCount)];
+                    //string str = dataGridViewRow.Cells[0].Value.ToString();
+                    //int num3 = this.achelp.ExcuteSql("update paragraph set UsedCount=UsedCount+1 where ID=" + str);
+                    int index = rnd.Next(pList.Count);
+                    string text2 = pList[index].paraCotent;//调用段落
+                    pBLL.UpUsedCount(pList[index].Id);//段落调用次数加1
+
+                    wz = regex.Replace(wz, "<p>" + text2 + "</p>", 1);
+                }
+                catch (Exception ex)
+                {
+                }
+            }
+            wz = wz.Replace("&", "%26");
+            return wz;
         }
 
         #endregion

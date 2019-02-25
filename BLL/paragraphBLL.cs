@@ -62,6 +62,12 @@ namespace BLL
                new SqlParameter("@paraCotent", SqlHelper.ToDBNull(paragraph.paraCotent)),
                new SqlParameter("@usedCount", SqlHelper.ToDBNull(paragraph.usedCount)));
         }
+        public void UpUsedCount(long Id)
+        {
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[paragraphInfo]
+   SET [usedCount] = usedCount+1 where Id=@Id",
+               new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
+        }
         public int DelParagraph(string Id)
         {
             return SqlHelper.ExecuteNonQuery("delete from paragraphInfo where Id=@Id",

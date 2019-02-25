@@ -138,7 +138,7 @@ person,telephone,modile,ten_qq,address,com_web,companyRemark,yewu,beforePubTime)
         public void UpdateUser(cmUserInfo cmUser)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
-   SET[username] = @username
+   SET [username] = @username
       ,[password] = @password
       ,[userType] = @userType
       ,[isStop]=@isStop
@@ -183,6 +183,18 @@ person,telephone,modile,ten_qq,address,com_web,companyRemark,yewu,beforePubTime)
       new SqlParameter("@com_web", SqlHelper.ToDBNull(cmUser.com_web)),
       new SqlParameter("@companyRemark", SqlHelper.ToDBNull(cmUser.companyRemark)),
       new SqlParameter("@yewu", SqlHelper.ToDBNull(cmUser.yewu)));
+        }
+        /// <summary>
+        /// 更新会员 总的已发条数，今日已发条数，上一条发布时间
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        public void UpUserPubInformation(int Id)
+        {
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
+   SET [endPubCount] = endPubCount+1
+      ,[endTodayPubCount] = endTodayPubCount+1
+      ,[beforePubTime] = getdate() where Id=@Id",
+      new SqlParameter("@Id",SqlHelper.ToDBNull(Id)));
         }
         /// <summary>
         /// 删除用户

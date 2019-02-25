@@ -75,6 +75,12 @@ namespace BLL
                new SqlParameter("@contentMould", SqlHelper.ToDBNull(content.contentMould)),
                new SqlParameter("@type", SqlHelper.ToDBNull(content.type)));
         }
+        public void UpUsedCount(int Id)
+        {
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[contentMouldInfo]
+   SET [usedCount] = usedCount+1 where Id=@Id",
+               new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
+        }
         public int DelContent(string Id)
         {
             return SqlHelper.ExecuteNonQuery("delete from contentMouldInfo where Id=@Id",
