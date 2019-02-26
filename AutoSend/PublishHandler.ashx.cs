@@ -141,24 +141,24 @@ namespace AutoSend
                     txtgytitle = title.Trim();//信息标题
                     //取模板
                     contentMouldBLL cmBLL = new contentMouldBLL();
-                    List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId={0} and productId={1}", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
-                    if (cList == null || cList.Count < 1)
+                    List<contentMouldInfo> cmList = cmBLL.GetContentList(string.Format(" where userId={0} and productId={1}", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
+                    if (cmList == null || cmList.Count < 5)
                     {
-                        log.wlog("发布停止：模板数量不足，请及时配置模板", model.Id.ToString(), model.username);
+                        log.wlog("发布停止：模板数量不足五个，请及时配置模板", model.Id.ToString(), model.username);
                         StopPub(model.Id);
-                        return;
+                        break;
                     }
-                    int index = rnd.Next(cList.Count);
-                    content = cList[index].contentMould;//随机调用模板
-                    cmBLL.UpUsedCount(cList[index].Id);//模板调用次数加1
+                    int index = rnd.Next(cmList.Count);
+                    content = cmList[index].contentMould;//随机调用模板
+                    cmBLL.UpUsedCount(cmList[index].Id);//模板调用次数加1
 
                     content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
                     content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
                     if (content == "段落数量不足")
                     {
-                        log.wlog("发布停止：段落数量不足，请及时生成段落", model.Id.ToString(), model.username);
+                        log.wlog("发布停止：段落数量不足50个，请及时添加段落", model.Id.ToString(), model.username);
                         StopPub(model.Id);
-                        return;
+                        break;
                     }
                     txtgydesc = content;
 
@@ -238,7 +238,7 @@ namespace AutoSend
                             {
                                 log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
                                 StopPub(model.Id);
-                                return;
+                                break;
                             }
                         }
                         continue;//再发送本栏目信息
@@ -312,8 +312,6 @@ namespace AutoSend
         {
             Regex r;
             Random rnd = new Random();
-            string[] txt;
-            string mybl = "";
             if (wz.Contains("{标题}"))
             {
                 wz = wz.Replace("{标题}", tInfo.title);
@@ -335,9 +333,9 @@ namespace AutoSend
                 }
             }
             paragraphBLL pBLL = new paragraphBLL();
-            //根据userId,productId获取图片
+            //根据userId,productId获取段落
             List<paragraphInfo> pList = pBLL.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
-            if (pList == null || pList.Count < 1)
+            if (pList == null || pList.Count < 50)
             {
                 return "段落数量不足";
             }
