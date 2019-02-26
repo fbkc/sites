@@ -35,17 +35,13 @@ namespace AutoSend
                 {
                     switch (_strAction.Trim().ToLower())
                     {
-                        #region 发布设置
-                        case "getsetting": _strContent.Append(GetSetting(context)); break;//读取配置
-                        case "subsetting": _strContent.Append(SubSetting(context)); break;//提交配置
-                        #endregion
-
                         #region 轮循setting表
                         case "roundsetting": _strContent.Append(RoundSetting(context)); break;//读取配置
                         #endregion
 
                         #region 发布
-                        //case "publish": _strContent.Append(Publish(context)); break;//读取配置
+                        case "publish": _strContent.Append(Publish()); break;//读取配置
+                                                                             //Publish(); break;//读取配置
                         #endregion
 
                         default: break;
@@ -54,55 +50,6 @@ namespace AutoSend
             }
             context.Response.Write(_strContent.ToString());
         }
-
-        #region 发布设置
-        /// <summary>
-        /// 读取配置
-        /// </summary>
-        /// <param name = "context" ></ param >
-        /// < returns ></ returns >
-        private string GetSetting(HttpContext context)
-        {
-            settingBLL bll = new settingBLL();
-            settingInfo setInfo = new settingInfo();
-            try
-            {
-                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                string userId = model.Id.ToString();
-                setInfo = bll.GetSetting(string.Format(" where userId='{0}'", userId));
-            }
-            catch (Exception ex)
-            {
-                return json.WriteJson(0, ex.ToString(), new { });
-            }
-            return json.WriteJson(1, "成功", new { setInfo });
-        }
-
-        /// <summary>
-        /// 提交配置
-        /// </summary>
-        /// <param name = "context" ></ param >
-        /// < returns ></ returns >
-        private string SubSetting(HttpContext context)
-        {
-            try
-            {
-                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
-                settingBLL bll = new settingBLL();
-                string strjson = context.Request["params"];
-                var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-                settingInfo setInfo = JsonConvert.DeserializeObject<settingInfo>(strjson, js);
-                setInfo.userId = model.Id;
-                if (setInfo.Id == 0)
-                    bll.AddSetting(setInfo);
-                else
-                    bll.UpdateSetting(setInfo);
-            }
-            catch (Exception ex)
-            { return json.WriteJson(0, ex.ToString(), new { }); }
-            return json.WriteJson(1, "成功", new { });
-        }
-        #endregion
 
         #region 轮循setting表
         private string RoundSetting(HttpContext context)
@@ -115,6 +62,7 @@ namespace AutoSend
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "成功", new { });
         }
+        private int uId = 0;
         public bool isstoppub = true;
         private void RoundSetting()
         {
@@ -126,21 +74,23 @@ namespace AutoSend
             {
                 if (!sInfo.isAutoPub || sInfo.isPubing)
                     continue;
-                int nowMin =dt.Minute/ 10;//当前分钟十位数
+                int nowMin = dt.Minute / 10;//当前分钟十位数
                 int tMin = sInfo.pubMin / 10;//用户所定时间十位数
                 if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
                 {
                     isstoppub = true;
+                    uId = sInfo.userId;
                     Publish();//创建发布线程
                     sInfo.isPubing = true;
                     bll.UpIsPubing(sInfo);//isPubing置true
+                    uId = 0;
                 }
             }
         }
         #endregion
 
         #region 发布
-        
+
         Thread t = null;
         private string Publish()
         {
@@ -150,7 +100,6 @@ namespace AutoSend
 
                 if (start == null)
                 {
-                    //cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                     start = PubTitle;
                 }
                 if (isstoppub)
@@ -165,45 +114,50 @@ namespace AutoSend
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
-            return json.WriteJson(1, "成功", new { });
+            return json.WriteJson(1, "创建线程成功", new { });
         }
         private void PubTitle()
         {
             CmUserBLL cBLL = new CmUserBLL();
-            cmUserInfo model = cBLL.GetUser(string.Format(" where Id='{0}'", 1));
-            //mgcs = getmgc();
-            bool cfb1 = true, cfb2 = true, cfb3 = true, cfb4 = true;
-            int stime = 30, etime = 40, sleeptime = 30;
-            int nums = 0;
-            bool islimited = false;//条数
-            string title = "";
-            string content = "";
-            string baidumsg = "";
-            Random rnd = new Random();
-            List<string> htmllist = new List<string>();
-            //声明参数
-            string txtgytitle = "", txtgydesc = "", cbid = "";
-            string thumb1 = "", thumb2 = "", thumb = "";
-            string sKeyword1 = "", sKeyword2 = "", sKeyword3 = "";
-            string prehtml = "";
-            int havecont = 0;
-
-            //取待发标题
-            titleBLL tBLL = new titleBLL();
-            //取出未发布标题
-            List<titleInfo> tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
-            foreach (titleInfo tInfo in tList)  //选中项遍历
+            int sleeptime = 60;
+            cmUserInfo model = cBLL.GetUser(string.Format(" where Id={0}", uId));
+            try
             {
-                if (!isstoppub)//停止
+                //mgcs = getmgc();//敏感词
+                bool islimited = false;//条数
+                string title = "";
+                string content = "";
+                Random rnd = new Random();
+                List<string> htmllist = new List<string>();
+                //声明参数
+                string txtgytitle = "", txtgydesc = "";
+                string thumb = "";
+                string sKeyword1 = "";
+
+                //取待发标题
+                titleBLL tBLL = new titleBLL();
+                //取出未发布标题
+                List<titleInfo> tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
+                if(tList.Count<1)
                 {
-                    try
+                    log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                    StopPub(model.Id);
+                }
+                foreach (titleInfo tInfo in tList)  //选中项遍历
+                {
+                    if (!isstoppub)//停止
                     {
                         //公共信息
                         title = tInfo.title.Replace("&", "%26");
                         txtgytitle = title.Trim();//信息标题
                         //取模板
                         contentMouldBLL cmBLL = new contentMouldBLL();
-                        List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId='{0}' and productId='{1}'", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
+                        List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId={0} and productId={1}", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
+                        if (cList.Count < 1)
+                        {
+                            log.wlog("发布停止：模板数量不足，请及时配置模板", model.Id.ToString(), model.username);
+                            StopPub(model.Id);
+                        }
                         int index = rnd.Next(cList.Count);
                         content = cList[index].contentMould;//随机调用模板
                         cmBLL.UpUsedCount(cList[index].Id);//模板调用次数加1
@@ -228,8 +182,8 @@ namespace AutoSend
                         //sKeyword3 = changemgc(sKeyword3);
                         #endregion
                         productBLL pBLL = new productBLL();
-                        productInfo pInfo = pBLL.GetProduct1(string.Format(" where userId='{0}'  and productId='{1}'", model.Id, tInfo.productId))[0];
-                        string key = NetHelper.GetMD5(model.Id + "100dh888");
+                        productInfo pInfo = pBLL.GetProduct1(string.Format(" where userId={0}  and Id={1}", model.Id, tInfo.productId))[0];
+                        string key = NetHelper.GetMD5(model.username + "100dh888");
                         StringBuilder strpost = new StringBuilder();
                         strpost.AppendFormat("catid={0}&", model.columnInfoId);
                         strpost.AppendFormat("title={0}&", txtgytitle);
@@ -258,7 +212,6 @@ namespace AutoSend
                         strpost.AppendFormat("key={0}&", key);
                         strpost.AppendFormat("dosubmit={0}&", "提交");
                         strpost.AppendFormat("version={0}&", "1.0.0.0");
-
                         #region 组织发布内容
                         //for (int i = 0; i < Myinfo.rjlist.Count; i++)
                         //{
@@ -267,7 +220,7 @@ namespace AutoSend
                         //{
                         //地址根据不同网站变化，每个地址需要写一个接口
                         string titleurl = "";
-                        string html = NetHelper.HttpPost("http://xinxi.100dh.cn/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
+                        string html = NetHelper.HttpPost("http://hyzx.100dh.cn/xinxi/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
                         JObject joo = (JObject)JsonConvert.DeserializeObject(html);
                         string code = joo["code"].ToString();
                         string msg = joo["msg"].ToString();
@@ -279,7 +232,8 @@ namespace AutoSend
                             tInfo.returnMsg = titleurl;
                             tBLL.UpdateTitle(tInfo);
                             //更新userInfo表发布相关信息
-                            cBLL.UpUserPubInformation(model.Id);
+                            //cBLL.UpUserPubInformation(model.Id);
+                            log.wlog(titleurl, model.Id.ToString(), model.username);
                             Thread.Sleep(60 * 1000);
                             continue;//再发送本栏目信息
                         }
@@ -287,125 +241,49 @@ namespace AutoSend
                         {
                             if (msg.Contains("今日投稿已超过限制数"))
                             {
+                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                                 StopPub(model.Id);
                                 return;
                             }
                             if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
                             {
+                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                                 Thread.Sleep(sleeptime * 1000);
                                 continue;
                             }
                             else
                             {
-                                //txttishi.Text += "出错:" + msg + "\r\n";
-                                ////lvi.SubItems[1].Text = msg;
-                                //lvi.SubItems[1].Text = "等待发送";
-                                //lsvdaifa.Items.Remove(lvi); // 按索引移除 
-                                //lsvdaifa.Items.Add(lvi.Clone() as ListViewItem); //失败标题重新加入代发列表
-                                //                                                 //lsvshibai.Items.Add(lvi.Clone() as ListViewItem); sbnum++;
-                                //UpdateTabNum();
-                                //sleeptime = stime + rnd.Next(etime - stime);
-                                //txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                                //waitsecond = sleeptime;
-                                //isstarttime = true;
+                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                                 Thread.Sleep(sleeptime * 1000);
                                 continue;
                             }
                         }
                         else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
                         {
-                            //lvi.SubItems[1].Text = "网络无法连接！";
-                            //lvi.SubItems[1].Text = "等待发送";
-                            //lsvdaifa.Items.Remove(lvi); // 按索引移除 
-                            //lsvdaifa.Items.Add(lvi.Clone() as ListViewItem); //失败标题重新加入代发列表
-                            //                                                 //lsvshibai.Items.Add(lvi.Clone() as ListViewItem); 
-                            //sbnum++;
-                            //txttishi.Text += "网络无法连接！\r\n";
-                            //sleeptime = stime + rnd.Next(etime - stime);
-                            //txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                            //waitsecond = sleeptime;
-                            //isstarttime = true;
+                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                             Thread.Sleep(sleeptime * 1000);
                             continue;//再发送本栏目信息
                         }
                         else
                         {
-                            //txttishi.Text += "出错:情况未知，请查看日志！\r\n";
-                            //AShelp.SaveTXT(html, Application.StartupPath + "\\错误记录\\" + title + ".txt");
-                            ////lvi.SubItems[1].Text = Application.StartupPath + "\\错误记录\\" + title + ".txt";
-                            //lvi.SubItems[1].Text = "等待发送";
-                            //lsvdaifa.Items.Remove(lvi); // 按索引移除 
-                            //lsvdaifa.Items.Add(lvi.Clone() as ListViewItem); //失败标题重新加入代发列表
-                            //                                                 //lsvshibai.Items.Add(lvi.Clone() as ListViewItem); 
-                            //sbnum++;
-                            //UpdateTabNum();
-                            //sleeptime = stime + rnd.Next(etime - stime);
-                            //txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                            //waitsecond = sleeptime;
-                            //isstarttime = true;
+                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                             Thread.Sleep(sleeptime * 1000);
                             continue;
                         }
                         #endregion
                     }
-                    catch (Exception ex)
-                    {
-                        if (!(ex.Message.Contains("正在中止线程") || ex.Message.Contains("aborted")))
-                        {
-                            //errcount++;
-                            ////lvi.SubItems[1].Text = ex.Message;
-                            //lvi.SubItems[1].Text = "等待发送";
-                            //lsvdaifa.Items.Remove(lvi); // 按索引移除 
-                            //lsvdaifa.Items.Add(lvi.Clone() as ListViewItem); //失败标题重新加入代发列表
-                            //                                                 //lsvshibai.Items.Add(lvi.Clone() as ListViewItem); sbnum++;
-                            //txttishi.Text += ex.Message + "\r\n";
-                            //sleeptime = stime + rnd.Next(etime - stime);
-                            //txttishi.Text += "随机等待" + sleeptime + "秒。\r\n";
-                            //waitsecond = sleeptime;
-                            //isstarttime = true;
-                            Thread.Sleep(sleeptime * 1000);
-                        }
-                    }
                 }
-                else
-                {
-                    //if (ispausd)
-                    //{
-                    //    if (!txttishi.Text.EndsWith("文章发布暂停。\r\n"))
-                    //        txttishi.Text += "文章发布暂停。\r\n";
-                    //}
-                    //else
-                    //{
-                    //    if (!txttishi.Text.EndsWith("文章发布停止。\r\n"))
-                    //        txttishi.Text += "文章发布停止。\r\n";
-                    //}
-                    //t = null;
-                }
-                //havecont = 0;
-                //havecont = lsvdaifa.Items.Count;
-                //label45.Text = string.Format("共有{0}个信息待发", havecont);
             }
-            //            txttishi.Text += "文章发布完。\r\n";
-            //            havecont = 0;
-            //            isstoppub = true;
-            //            ispausd = false;
-            //            isstarttime = false;
-            //            if (radioButton26.Checked && havecont< 1 && configlistbox.Items.Count> 1)
-            //            {
-            //                configlistbox.Items.Remove(Myinfo.configname);
-            //                configlistbox.Refresh();
-            //                isPubOver = true;
-            //            }
-            //            if (ckbshut.Checked)
-            //            {
-            //                if (radioButton1.Checked)
-            //                {
-            //                    SaveConfig();
-            //DoExitWin(1);
-            //                }
-            //            }
+            catch (Exception ex)
+            {
+                log.wlog(ex.ToString(), model.Id.ToString(), model.username);
+                Thread.Sleep(sleeptime * 1000);
+            }
         }
-
+        /// <summary>
+        /// 停止发布，终止本线程，将此用户setting表isPubing置false
+        /// </summary>
+        /// <param name="userId"></param>
         private void StopPub(int userId)
         {
             isstoppub = true;

@@ -7,8 +7,10 @@ namespace Model
 {
     public class logInfo
     {
-        public int Id { get; set; }
-        public string MyProperty { get; set; }
-        public string sss { get; set; }
+        public long Id { get; set; }
+        public string addtime { get; set; }
+        public string ErroMsg { get; set; }
+        public string userId { get; set; }
+        public string username { get; set; }
     }
 }

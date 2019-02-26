@@ -178,6 +178,7 @@
     </Compile>
     <Compile Include="json.cs" />
     <Compile Include="jsonInfo.cs" />
+    <Compile Include="log.cs" />
     <Compile Include="Login.ashx.cs">
       <DependentUpon>Login.ashx</DependentUpon>
     </Compile>

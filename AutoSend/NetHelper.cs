@@ -82,10 +82,11 @@ namespace AutoSend
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(url));
             request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
+            request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
+            request.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
             request.CookieContainer = cookie;
             request.ContentLength = 0L;
-            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36";
             request.Referer = refer;
             if (!string.IsNullOrEmpty(postDataStr))
             {
@@ -97,7 +98,6 @@ namespace AutoSend
             }
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             cookie = request.CookieContainer;
-
             Stream responseStream = response.GetResponseStream();
             if (responseStream == null)
             {
