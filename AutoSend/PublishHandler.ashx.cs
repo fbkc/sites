@@ -5,12 +5,14 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using System.Web.SessionState;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AutoSend
 {
@@ -40,8 +42,8 @@ namespace AutoSend
                         #endregion
 
                         #region 发布
-                        case "publish": _strContent.Append(Publish()); break;//读取配置
-                                                                             //Publish(); break;//读取配置
+                        //case "publish": _strContent.Append(Publish()); break;//读取配置
+                        //Publish(); break;//读取配置
                         #endregion
 
                         default: break;
@@ -63,7 +65,6 @@ namespace AutoSend
             return json.WriteJson(1, "成功", new { });
         }
         private int uId = 0;
-        public bool isstoppub = true;
         private void RoundSetting()
         {
             settingBLL bll = new settingBLL();
@@ -78,12 +79,10 @@ namespace AutoSend
                 int tMin = sInfo.pubMin / 10;//用户所定时间十位数
                 if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
                 {
-                    isstoppub = true;
                     uId = sInfo.userId;
-                    Publish();//创建发布线程
+                    Publish(uId);//创建发布线程
                     sInfo.isPubing = true;
                     bll.UpIsPubing(sInfo);//isPubing置true
-                    uId = 0;
                 }
             }
         }
@@ -91,32 +90,21 @@ namespace AutoSend
 
         #region 发布
 
-        Thread t = null;
-        private string Publish()
+
+        private string Publish(int uId)
         {
             try
             {
-                ThreadStart start = null;
-
-                if (start == null)
-                {
-                    start = PubTitle;
-                }
-                if (isstoppub)
-                {
-                    if (t != null)
-                        t.Abort();
-                    t = new Thread(start);
-                    t.IsBackground = true;
-                    t.Start();
-                    isstoppub = false;
-                }
+                Thread t = null;
+                t = new Thread(new ParameterizedThreadStart(PubTitle));
+                t.IsBackground = true;
+                t.Start(uId);
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "创建线程成功", new { });
         }
-        private void PubTitle()
+        private void PubTitle(object uId)
         {
             CmUserBLL cBLL = new CmUserBLL();
             int sleeptime = 60;
@@ -138,131 +126,136 @@ namespace AutoSend
                 titleBLL tBLL = new titleBLL();
                 //取出未发布标题
                 List<titleInfo> tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
-                if(tList.Count<1)
+                if (tList == null || tList.Count < 1)
                 {
                     log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
                     StopPub(model.Id);
+                    return;
+                    //System.Threading.Thread.CurrentThread.Abort();
                 }
-                foreach (titleInfo tInfo in tList)  //选中项遍历
+                for (int i = 0; i < tList.Count; i++)  //选中项遍历
                 {
-                    if (!isstoppub)//停止
+                    titleInfo tInfo = tList[i];
+                    //公共信息
+                    title = tInfo.title.Replace("&", "%26");
+                    txtgytitle = title.Trim();//信息标题
+                    //取模板
+                    contentMouldBLL cmBLL = new contentMouldBLL();
+                    List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId={0} and productId={1}", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
+                    if (cList == null || cList.Count < 1)
                     {
-                        //公共信息
-                        title = tInfo.title.Replace("&", "%26");
-                        txtgytitle = title.Trim();//信息标题
-                        //取模板
-                        contentMouldBLL cmBLL = new contentMouldBLL();
-                        List<contentMouldInfo> cList = cmBLL.GetContentList(string.Format(" where userId={0} and productId={1}", model.Id, tInfo.productId));//根据此标题所属产品Id找模板
-                        if (cList.Count < 1)
-                        {
-                            log.wlog("发布停止：模板数量不足，请及时配置模板", model.Id.ToString(), model.username);
-                            StopPub(model.Id);
-                        }
-                        int index = rnd.Next(cList.Count);
-                        content = cList[index].contentMould;//随机调用模板
-                        cmBLL.UpUsedCount(cList[index].Id);//模板调用次数加1
+                        log.wlog("发布停止：模板数量不足，请及时配置模板", model.Id.ToString(), model.username);
+                        StopPub(model.Id);
+                        return;
+                    }
+                    int index = rnd.Next(cList.Count);
+                    content = cList[index].contentMould;//随机调用模板
+                    cmBLL.UpUsedCount(cList[index].Id);//模板调用次数加1
 
-                        content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
-                        content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
-                        txtgydesc = content;
+                    content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
+                    content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
+                    if (content == "段落数量不足")
+                    {
+                        log.wlog("发布停止：段落数量不足，请及时生成段落", model.Id.ToString(), model.username);
+                        StopPub(model.Id);
+                        return;
+                    }
+                    txtgydesc = content;
 
-                        #region 敏感词过滤
-                        //手机号码
-                        txtgytitle = Regex.Replace(txtgytitle, "0?(13|14|15|16|17|18)[0-9]{9}", " ");
-                        //电话号码
-                        txtgytitle = Regex.Replace(txtgytitle, "[0-9-()（）]{7,18}", " ");
-                        //过滤a标签
-                        txtgydesc = Regex.Replace(txtgydesc, @"(?is)<a[^>]*href=([""'])?(?<href>[^'""]+)\1[^>]*>", " ");
+                    #region 敏感词过滤
+                    //手机号码
+                    txtgytitle = Regex.Replace(txtgytitle, "0?(13|14|15|16|17|18)[0-9]{9}", " ");
+                    //电话号码
+                    txtgytitle = Regex.Replace(txtgytitle, "[0-9-()（）]{7,18}", " ");
+                    //过滤a标签
+                    txtgydesc = Regex.Replace(txtgydesc, @"(?is)<a[^>]*href=([""'])?(?<href>[^'""]+)\1[^>]*>", " ");
 
-                        //敏感词过滤
-                        //txtgytitle = changemgc(txtgytitle);
-                        //txtgydesc = changemgc(txtgydesc);
-                        //sKeyword1 = changemgc(sKeyword1);
-                        //sKeyword2 = changemgc(sKeyword2);
-                        //sKeyword3 = changemgc(sKeyword3);
-                        #endregion
-                        productBLL pBLL = new productBLL();
-                        productInfo pInfo = pBLL.GetProduct1(string.Format(" where userId={0}  and Id={1}", model.Id, tInfo.productId))[0];
-                        string key = NetHelper.GetMD5(model.username + "100dh888");
-                        StringBuilder strpost = new StringBuilder();
-                        strpost.AppendFormat("catid={0}&", model.columnInfoId);
-                        strpost.AppendFormat("title={0}&", txtgytitle);
-                        strpost.AppendFormat("pinpai={0}&", pInfo.pinpai);
-                        strpost.AppendFormat("xinghao={0}&", pInfo.xinghao);
-                        strpost.AppendFormat("city={0}&", pInfo.city);
-                        strpost.AppendFormat("gonghuo={0}&", pInfo.sumCount);
-                        strpost.AppendFormat("qiding={0}&", pInfo.smallCount);
-                        strpost.AppendFormat("price={0}&", pInfo.price);
-                        strpost.AppendFormat("unit={0}&", pInfo.unit);
-                        string desc = "<p>" + txtgydesc + "</p>";//内容,UrlEncode编码
-                        //strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321")); 
-                        strpost.AppendFormat("content={0}&", desc);
-                        strpost.AppendFormat("keywords={0}&", sKeyword1);
-                        strpost.AppendFormat("style_color={0}&", "");
-                        strpost.AppendFormat("style_font_weight={0}&", "");
-                        strpost.AppendFormat("page_title_value={0}&", "");
-                        strpost.AppendFormat("add_introduce={0}&", 1);
-                        strpost.AppendFormat("introcude_length={0}&", 200);
-                        strpost.AppendFormat("auto_thumb={0}&", 1);
-                        strpost.AppendFormat("auto_thumb_no={0}&", 1);
-                        strpost.AppendFormat("thumb={0}&", thumb);
-                        strpost.AppendFormat("forward={0}&", "");
-                        strpost.AppendFormat("id={0}&", "");
-                        strpost.AppendFormat("username={0}&", model.username);
-                        strpost.AppendFormat("key={0}&", key);
-                        strpost.AppendFormat("dosubmit={0}&", "提交");
-                        strpost.AppendFormat("version={0}&", "1.0.0.0");
-                        #region 组织发布内容
-                        //for (int i = 0; i < Myinfo.rjlist.Count; i++)
-                        //{
-                        //string host = Myinfo.rjlist[i].realmAddress;
-                        //if (q % w == i)
-                        //{
-                        //地址根据不同网站变化，每个地址需要写一个接口
-                        string titleurl = "";
-                        string html = NetHelper.HttpPost("http://hyzx.100dh.cn/xinxi/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
-                        JObject joo = (JObject)JsonConvert.DeserializeObject(html);
-                        string code = joo["code"].ToString();
-                        string msg = joo["msg"].ToString();
-                        if (code == "1")//发布成功。
+                    //敏感词过滤
+                    //txtgytitle = changemgc(txtgytitle);
+                    //txtgydesc = changemgc(txtgydesc);
+                    //sKeyword1 = changemgc(sKeyword1);
+                    //sKeyword2 = changemgc(sKeyword2);
+                    //sKeyword3 = changemgc(sKeyword3);
+                    #endregion
+                    productBLL pBLL = new productBLL();
+                    productInfo pInfo = pBLL.GetProductList(string.Format(" where userId={0}  and Id={1}", model.Id, tInfo.productId))[0];
+                    string key = NetHelper.GetMD5(model.username + "100dh888");
+                    StringBuilder strpost = new StringBuilder();
+                    strpost.AppendFormat("catid={0}&", model.columnInfoId);
+                    strpost.AppendFormat("title={0}&", txtgytitle);
+                    strpost.AppendFormat("pinpai={0}&", pInfo.pinpai);
+                    strpost.AppendFormat("xinghao={0}&", pInfo.xinghao);
+                    strpost.AppendFormat("city={0}&", pInfo.city);
+                    strpost.AppendFormat("gonghuo={0}&", pInfo.sumCount);
+                    strpost.AppendFormat("qiding={0}&", pInfo.smallCount);
+                    strpost.AppendFormat("price={0}&", pInfo.price);
+                    strpost.AppendFormat("unit={0}&", pInfo.unit);
+                    string desc = "<p>" + txtgydesc + "</p>";//内容,UrlEncode编码
+                    //strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321")); 
+                    strpost.AppendFormat("content={0}&", desc);
+                    strpost.AppendFormat("keywords={0}&", sKeyword1);
+                    strpost.AppendFormat("style_color={0}&", "");
+                    strpost.AppendFormat("style_font_weight={0}&", "");
+                    strpost.AppendFormat("page_title_value={0}&", "");
+                    strpost.AppendFormat("add_introduce={0}&", 1);
+                    strpost.AppendFormat("introcude_length={0}&", 200);
+                    strpost.AppendFormat("auto_thumb={0}&", 1);
+                    strpost.AppendFormat("auto_thumb_no={0}&", 1);
+                    strpost.AppendFormat("thumb={0}&", thumb);
+                    strpost.AppendFormat("forward={0}&", "");
+                    strpost.AppendFormat("id={0}&", "");
+                    strpost.AppendFormat("username={0}&", model.username);
+                    strpost.AppendFormat("key={0}&", key);
+                    strpost.AppendFormat("dosubmit={0}&", "提交");
+                    strpost.AppendFormat("version={0}&", "1.0.0.0");
+                    #region 组织发布内容
+                    //for (int i = 0; i < Myinfo.rjlist.Count; i++)
+                    //{
+                    //string host = Myinfo.rjlist[i].realmAddress;
+                    //if (q % w == i)
+                    //{
+                    //地址根据不同网站变化，每个地址需要写一个接口
+                    string titleurl = "";
+                    string html = NetHelper.HttpPost("http://hyzx.100dh.cn/xinxi/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
+                    JObject joo = (JObject)JsonConvert.DeserializeObject(html);
+                    string code = joo["code"].ToString();
+                    string msg = joo["msg"].ToString();
+                    if (code == "1")//发布成功。
+                    {
+                        titleurl = joo["detail"]["url"].ToString();
+                        //更新待发标题表
+                        tInfo.isSucceedPub = true;
+                        tInfo.returnMsg = titleurl;
+                        tBLL.UpdateTitle(tInfo);
+                        //更新userInfo表发布相关信息
+                        //cBLL.UpUserPubInformation(model.Id);
+                        log.wlog(titleurl, model.Id.ToString(), model.username);
+                        Thread.Sleep(60 * 1000);
+                        if (i == tList.Count - 1)
                         {
-                            titleurl = joo["detail"]["url"].ToString();
-                            //更新待发标题表
-                            tInfo.isSucceedPub = true;
-                            tInfo.returnMsg = titleurl;
-                            tBLL.UpdateTitle(tInfo);
-                            //更新userInfo表发布相关信息
-                            //cBLL.UpUserPubInformation(model.Id);
-                            log.wlog(titleurl, model.Id.ToString(), model.username);
-                            Thread.Sleep(60 * 1000);
-                            continue;//再发送本栏目信息
-                        }
-                        else if (code == "0")
-                        {
-                            if (msg.Contains("今日投稿已超过限制数"))
+                            tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
+                            if (tList == null || tList.Count < 1)
                             {
-                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                                log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
                                 StopPub(model.Id);
                                 return;
                             }
-                            if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
-                            {
-                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                                Thread.Sleep(sleeptime * 1000);
-                                continue;
-                            }
-                            else
-                            {
-                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                                Thread.Sleep(sleeptime * 1000);
-                                continue;
-                            }
                         }
-                        else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
+                        continue;//再发送本栏目信息
+                    }
+                    else if (code == "0")
+                    {
+                        if (msg.Contains("今日投稿已超过限制数"))
+                        {
+                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                            StopPub(model.Id);
+                            return;
+                        }
+                        if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
                         {
                             log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                             Thread.Sleep(sleeptime * 1000);
-                            continue;//再发送本栏目信息
+                            continue;
                         }
                         else
                         {
@@ -270,8 +263,20 @@ namespace AutoSend
                             Thread.Sleep(sleeptime * 1000);
                             continue;
                         }
-                        #endregion
                     }
+                    else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
+                    {
+                        log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                        Thread.Sleep(sleeptime * 1000);
+                        continue;//再发送本栏目信息
+                    }
+                    else
+                    {
+                        log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                        Thread.Sleep(sleeptime * 1000);
+                        continue;
+                    }
+                    #endregion
                 }
             }
             catch (Exception ex)
@@ -286,14 +291,14 @@ namespace AutoSend
         /// <param name="userId"></param>
         private void StopPub(int userId)
         {
-            isstoppub = true;
-            if (t != null)
-                t.Abort();
             settingBLL bll = new settingBLL();
             settingInfo sInfo = new settingInfo();
             sInfo.userId = userId;
             sInfo.isPubing = false;
             bll.UpIsPubing(sInfo);
+            //if (t != null)
+            //    t.Abort();
+
         }
 
         /// <summary>
@@ -303,7 +308,7 @@ namespace AutoSend
         /// <param name="title"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo, cmUserInfo user)
+        public string ReplaceHTMLWZ(string wz, titleInfo tInfo, cmUserInfo user)
         {
             Regex r;
             Random rnd = new Random();
@@ -332,6 +337,10 @@ namespace AutoSend
             paragraphBLL pBLL = new paragraphBLL();
             //根据userId,productId获取图片
             List<paragraphInfo> pList = pBLL.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
+            if (pList == null || pList.Count < 1)
+            {
+                return "段落数量不足";
+            }
             while (wz.Contains("{段落}"))
             {
                 Regex regex = new Regex("{段落}");

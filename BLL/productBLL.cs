@@ -11,12 +11,12 @@ namespace BLL
 {
     public class productBLL
     {
-        public DataTable GetProduct(string sqlstr)
-        {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from productInfo " + sqlstr).Tables[0];
-            return ds;
-        }
-        public List<productInfo> GetProduct1(string sqlstr)
+        /// <summary>
+        /// 获取产品列表
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public List<productInfo> GetProductList(string sqlstr)
         {
             List<productInfo> pList = new List<productInfo>();
             DataTable dt = SqlHelper.ExecuteDataSet("select * from productInfo " + sqlstr).Tables[0];
@@ -25,68 +25,49 @@ namespace BLL
             foreach (DataRow row in dt.Rows)
             {
                 productInfo pInfo = new productInfo();
-                pInfo.Id = (int)row["Id"];
-                pInfo.productName = (string)row["productName"];
-                pInfo.userId = (int)row["userId"];
-                if (row["pinpai"] == DBNull.Value)
-                    pInfo.pinpai = null;
-                else
-                    pInfo.pinpai = (string)row["pinpai"];
-                if (row["xinghao"] == DBNull.Value)
-                    pInfo.xinghao = null;
-                else
-                    pInfo.xinghao = (string)row["xinghao"];
-                if (row["price"] == DBNull.Value)
-                    pInfo.price = null;
-                else
-                    pInfo.price = (string)row["price"];
-                if (row["smallCount"] == DBNull.Value)
-                    pInfo.smallCount = null;
-                else
-                    pInfo.smallCount = (string)row["smallCount"];
-                if (row["sumCount"] == DBNull.Value)
-                    pInfo.sumCount = null;
-                else
-                    pInfo.sumCount = (string)row["sumCount"];
-                if (row["unit"] == DBNull.Value)
-                    pInfo.unit = null;
-                else
-                    pInfo.unit = (string)row["unit"];
-                if (row["city"] == DBNull.Value)
-                    pInfo.city = null;
-                else
-                    pInfo.city = (string)row["city"];
-                pInfo.createTime = ((DateTime)row["createTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                pInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                if (row["informationType"] == DBNull.Value)
-                    pInfo.informationType = null;
-                else
-                    pInfo.informationType = (string)row["informationType"];//产品/新闻
-                if (row["maxPubCount"] == DBNull.Value)
-                    pInfo.maxPubCount = null;
-                else
-                    pInfo.maxPubCount = (int)row["maxPubCount"];
-                if (row["endPubCount"] == DBNull.Value)
-                    pInfo.endPubCount = null;
-                else
-                    pInfo.endPubCount = (int)row["endPubCount"];
-                if (row["endTodayPubCount"] == DBNull.Value)
-                    pInfo.endTodayPubCount = null;
-                else
-                    pInfo.endTodayPubCount = (int)row["endTodayPubCount"];
-                if (row["pub_startTime"] == DBNull.Value)
-                    pInfo.pub_startTime = null;
-                else
-                    pInfo.pub_startTime = ((DateTime)row["pub_startTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                if (row["pubInterval"] == DBNull.Value)
-                    pInfo.pubInterval = null;
-                else
-                    pInfo.pubInterval = (int)row["pubInterval"];
-                pInfo.isPub = (bool)row["isPub"];
-                pInfo.isdel = (bool)row["isdel"];
+                pInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                pInfo.productName = (string)SqlHelper.FromDBNull(row["productName"]);
+                pInfo.userId = (int)SqlHelper.FromDBNull(row["userId"]);
+                pInfo.pinpai = (string)SqlHelper.FromDBNull(row["pinpai"]);
+                pInfo.xinghao = (string)SqlHelper.FromDBNull(row["xinghao"]);
+                pInfo.price = (string)SqlHelper.FromDBNull(row["price"]);
+                pInfo.smallCount = (string)SqlHelper.FromDBNull(row["smallCount"]);
+                pInfo.sumCount = (string)SqlHelper.FromDBNull(row["sumCount"]);
+                pInfo.unit = (string)SqlHelper.FromDBNull(row["unit"]);
+                pInfo.city = (string)SqlHelper.FromDBNull(row["city"]);
+                pInfo.createTime = ((DateTime)SqlHelper.FromDBNull(row["createTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+                pInfo.editTime = ((DateTime)SqlHelper.FromDBNull(row["editTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+                pInfo.informationType = (string)SqlHelper.FromDBNull(row["informationType"]);//产品/新闻
                 pList.Add(pInfo);
             }
             return pList;
+        }
+        /// <summary>
+        /// 获取单个产品信息
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public productInfo GetProductInfo(string sqlstr)
+        {
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from productInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            DataRow row = dt.Rows[0];
+            productInfo pInfo = new productInfo();
+            pInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+            pInfo.productName = (string)SqlHelper.FromDBNull(row["productName"]);
+            pInfo.userId = (int)SqlHelper.FromDBNull(row["userId"]);
+            pInfo.pinpai = (string)SqlHelper.FromDBNull(row["pinpai"]);
+            pInfo.xinghao = (string)SqlHelper.FromDBNull(row["xinghao"]);
+            pInfo.price = (string)SqlHelper.FromDBNull(row["price"]);
+            pInfo.smallCount = (string)SqlHelper.FromDBNull(row["smallCount"]);
+            pInfo.sumCount = (string)SqlHelper.FromDBNull(row["sumCount"]);
+            pInfo.unit = (string)SqlHelper.FromDBNull(row["unit"]);
+            pInfo.city = (string)SqlHelper.FromDBNull(row["city"]);
+            pInfo.createTime = ((DateTime)SqlHelper.FromDBNull(row["createTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+            pInfo.editTime = ((DateTime)SqlHelper.FromDBNull(row["editTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+            pInfo.informationType = (string)SqlHelper.FromDBNull(row["informationType"]);//产品/新闻
+            return pInfo;
         }
         /// <summary>
         /// 增加产品类型信息
@@ -162,7 +143,12 @@ namespace BLL
         /// <returns></returns>
         public int DelProduct(string Id)
         {
-            return SqlHelper.ExecuteNonQuery("delete from productInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from productInfo where Id=@Id "//删除该产品
+                + "delete from wordsInfo where productId=@Id"//删除长尾词和关键词
+                + "delete from titleInfo where isSucceedPub=0 and productId=@Id"//删除此产品下未发布标题
+                + "delete from paragraphInfo where productId=@Id"//删除段落
+                + "delete from imageInfo where productId=@Id"//删除图片，为删除图片文件
+                + "delete from contentMouldInfo where productId=@Id",//删除内容模板
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

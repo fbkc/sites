@@ -22,7 +22,7 @@ namespace BLL
            (words,editTime,wordType,userId,productId)
      VALUES
            (@words,getdate(),@wordType,@userId,@productId)",
-               new SqlParameter("@tailword", SqlHelper.ToDBNull(words.words)),
+               new SqlParameter("@words", SqlHelper.ToDBNull(words.words)),
                new SqlParameter("@wordType", SqlHelper.ToDBNull(words.wordType)),
                new SqlParameter("@userId", SqlHelper.ToDBNull(words.userId)),
                new SqlParameter("@productId", SqlHelper.ToDBNull(words.productId)));
