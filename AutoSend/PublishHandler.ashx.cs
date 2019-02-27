@@ -89,8 +89,6 @@ namespace AutoSend
         #endregion
 
         #region 发布
-
-
         private string Publish(int uId)
         {
             try
@@ -154,7 +152,7 @@ namespace AutoSend
 
                     content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
                     content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
-                    if (content == "段落数量不足")
+                    if (content == "段落数量不足50")
                     {
                         log.wlog("发布停止：段落数量不足50个，请及时添加段落", model.Id.ToString(), model.username);
                         StopPub(model.Id);
@@ -337,7 +335,7 @@ namespace AutoSend
             List<paragraphInfo> pList = pBLL.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
             if (pList == null || pList.Count < 50)
             {
-                return "段落数量不足";
+                return "段落数量不足50";
             }
             while (wz.Contains("{段落}"))
             {

@@ -76,7 +76,9 @@ namespace AutoSend
                         #endregion
 
                         #region 标题
-                        case "gettitlelist": _strContent.Append(GetTitleList(context)); break;//获取此会员下所有标题
+                        case "gettitlelist": _strContent.Append(GetTitleList(context)); break;//获取此会员下单个产品的标题
+                        case "getwaittingtitlelist": _strContent.Append(GetAllTitleList(context,0,"")); break;//获取此会员下所有待发标题，按时间正序排列
+                        case "getpubbedtitlelist": _strContent.Append(GetAllTitleList(context, 1, "desc")); break;//获取此会员下所有已发标题，按时间倒序排列
                         case "savetitle": _strContent.Append(SaveTitle(context)); break;
                         case "deltitle": _strContent.Append(DelTitle(context)); break;//删除标题
                         case "deltitles": _strContent.Append(DelTitles(context)); break;//多行删除
@@ -939,7 +941,39 @@ namespace AutoSend
 
         #region 标题
         /// <summary>
-        /// 获取标题列表
+        /// 获取所有标题列表,待发，已发
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetAllTitleList(HttpContext context,int isPub,string orderby)
+        {
+            string pageIndex = context.Request["page"];
+            string pageSize = context.Request["pageSize"];
+            if (string.IsNullOrEmpty(pageIndex))
+                pageIndex = "1";
+            if (string.IsNullOrEmpty(pageSize))
+                pageSize = "10";
+            titleBLL bll = new titleBLL();
+            List<titleInfo> tList = new List<titleInfo>();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                tList = bll.GetTitleList(string.Format(" where userId={0} and isSucceedPub={1} order by addTime "+orderby, userId, isPub));
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            //查询分页数据
+            var pageData = tList.Where(u => u.Id > 0)
+                .OrderByDescending(u => u.Id)
+                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
+                .Take(int.Parse(pageSize)).ToList();
+            return json.WriteJson(1, "成功", new { total = tList.Count(), titleList = pageData });
+        }
+        /// <summary>
+        /// 获取某个产品标题列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -958,7 +992,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                tList = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId));
+                tList = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}' order by isSucceedPub,addTime desc", userId, pId));
             }
             catch (Exception ex)
             {
