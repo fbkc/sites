@@ -22,7 +22,7 @@ namespace TimerService
 
         protected override void OnStart(string[] args)
         {
-            timer = new Timer(120*1000);
+            timer = new Timer(300 * 1000);
             timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
             timer.Start();
             WriteLog("服务启动");
@@ -37,7 +37,10 @@ namespace TimerService
         protected void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=roundsetting", "", Encoding.UTF8);
-            WriteLog("服务执行了一次");
+            if (html.Contains("成功"))
+                WriteLog("服务执行了一次");
+            else
+                WriteLog("服务执行失败");
         }
         protected void WriteLog(string str)
         {

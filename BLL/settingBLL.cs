@@ -74,14 +74,12 @@ namespace BLL
    SET [everydayCount] = @everydayCount
       ,[isAutoPub] = @isAutoPub 
       ,[pubHour] = @pubHour 
-      ,[pubMin] = @pubMin
-      ,[isPubing] = @isPubing  where Id=@Id",
+      ,[pubMin] = @pubMin where Id=@Id",
                new SqlParameter("@Id", SqlHelper.ToDBNull(set.Id)),
                new SqlParameter("@everydayCount", SqlHelper.ToDBNull(set.everydayCount)),
                new SqlParameter("@isAutoPub", SqlHelper.ToDBNull(set.isAutoPub)),
                new SqlParameter("@pubHour", SqlHelper.ToDBNull(set.pubHour)),
-               new SqlParameter("@pubMin", SqlHelper.ToDBNull(set.pubMin)),
-               new SqlParameter("@isPubing", SqlHelper.ToDBNull(set.isPubing)));
+               new SqlParameter("@pubMin", SqlHelper.ToDBNull(set.pubMin)));
         }
         public int DelSetting(string Id)
         {
@@ -119,12 +117,12 @@ namespace BLL
         /// isPubing 状态切换
         /// </summary>
         /// <param name="set"></param>
-        public void UpIsPubing(settingInfo set)
+        public void UpIsPubing(int isPubing,object userId)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[setting]
    SET [isPubing] = @isPubing  where userId=@userId",
-               new SqlParameter("@userId", SqlHelper.ToDBNull(set.userId)),
-               new SqlParameter("@isPubing", SqlHelper.ToDBNull(set.isPubing)));
+               new SqlParameter("@userId", SqlHelper.ToDBNull(userId)),
+               new SqlParameter("@isPubing", SqlHelper.ToDBNull(isPubing)));
         }
     }
 }

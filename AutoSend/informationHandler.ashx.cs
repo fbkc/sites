@@ -77,7 +77,7 @@ namespace AutoSend
 
                         #region 标题
                         case "gettitlelist": _strContent.Append(GetTitleList(context)); break;//获取此会员下单个产品的标题
-                        case "getwaittingtitlelist": _strContent.Append(GetAllTitleList(context,0,"")); break;//获取此会员下所有待发标题，按时间正序排列
+                        case "getwaittingtitlelist": _strContent.Append(GetAllTitleList(context, 0, "")); break;//获取此会员下所有待发标题，按时间正序排列
                         case "getpubbedtitlelist": _strContent.Append(GetAllTitleList(context, 1, "desc")); break;//获取此会员下所有已发标题，按时间倒序排列
                         case "savetitle": _strContent.Append(SaveTitle(context)); break;
                         case "deltitle": _strContent.Append(DelTitle(context)); break;//删除标题
@@ -101,6 +101,11 @@ namespace AutoSend
                         #region 发布设置
                         case "getsetting": _strContent.Append(GetSetting(context)); break;//读取配置
                         case "subsetting": _strContent.Append(SubSetting(context)); break;//提交配置
+                        #endregion
+
+                        #region 手动发布
+                        case "startpub": _strContent.Append(StartPub(context)); break;//开始发布
+                        case "stoppub": _strContent.Append(StopPub(context)); break;//停止发布
                         #endregion
 
                         default: break;
@@ -236,7 +241,7 @@ namespace AutoSend
                     imageBLL bll = new imageBLL();
                     imageInfo img = new imageInfo();
                     img.imageId = newfileName;
-                    img.imageURL = fileUrl;
+                    img.imageURL =  fileUrl;
                     img.userId = model.Id;
                     img.productId = int.Parse(pId);
                     bll.AddImg(img);
@@ -945,7 +950,7 @@ namespace AutoSend
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        private string GetAllTitleList(HttpContext context,int isPub,string orderby)
+        private string GetAllTitleList(HttpContext context, int isPub, string orderby)
         {
             string pageIndex = context.Request["page"];
             string pageSize = context.Request["pageSize"];
@@ -959,7 +964,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                tList = bll.GetTitleList(string.Format(" where userId={0} and isSucceedPub={1} order by addTime "+orderby, userId, isPub));
+                tList = bll.GetTitleList(string.Format(" where userId={0} and isSucceedPub={1} order by addTime " + orderby, userId, isPub));
             }
             catch (Exception ex)
             {
@@ -1333,6 +1338,46 @@ namespace AutoSend
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
+            return json.WriteJson(1, "成功", new { });
+        }
+        #endregion
+
+        #region
+        private settingBLL sBll = new settingBLL();
+        /// <summary>
+        /// 开始手动发布
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string StartPub(HttpContext context)
+        {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            try
+            {
+                Pub.Publish(model.Id);//创建发布线程
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "成功", new {  });
+        }
+        /// <summary>
+        /// 停止手动发布
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string StopPub(HttpContext context)
+        {
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            try
+            {
+                sBll.UpIsPubing(0,model.Id);//setting表isPubing置0
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
             return json.WriteJson(1, "成功", new { });
         }
         #endregion
