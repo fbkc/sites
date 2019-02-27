@@ -1342,7 +1342,7 @@ namespace AutoSend
         }
         #endregion
 
-        #region
+        #region 手动发布
         private settingBLL sBll = new settingBLL();
         /// <summary>
         /// 开始手动发布
