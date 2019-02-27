@@ -11,10 +11,23 @@ namespace BLL
 {
     public class noticeBLL
     {
-        public DataTable GetNoticeList(string sqlstr)
+        public List<noticeInfo> GetNoticeList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from noticeInfo " + sqlstr).Tables[0];
-            return ds;
+            List<noticeInfo> nList = new List<noticeInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from noticeInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                noticeInfo nInfo = new noticeInfo();
+                nInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                nInfo.notice = (string)SqlHelper.FromDBNull(row["notice"]);
+                nInfo.pubTime = (DateTime)SqlHelper.FromDBNull(row["pubTime"]);
+                nInfo.isImprotant = (bool)SqlHelper.FromDBNull(row["isImprotant"]);
+                nInfo.issue = (bool)SqlHelper.FromDBNull(row["issue"]);
+                nList.Add(nInfo);
+            }
+            return nList;
         }
         public void AddNotice(noticeInfo notice)
         {

@@ -11,10 +11,20 @@ namespace BLL
 {
     public class columnBLL
     {
-        public DataTable GetColumnList(string sqlstr)
+        public List<columnInfo> GetColumnList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from columnInfo " + sqlstr).Tables[0];
-            return ds;
+            List<columnInfo> cList = new List<columnInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from columnInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                columnInfo cInfo = new columnInfo();
+                cInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                cInfo.columnName = (string)SqlHelper.FromDBNull(row["columnName"]);
+                cList.Add(cInfo);
+            }
+            return cList;
         }
         public void AddColumn(columnInfo column)
         {

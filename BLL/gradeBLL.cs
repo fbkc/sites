@@ -16,10 +16,21 @@ namespace BLL
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>
-        public DataTable GetGradeList(string sqlstr)
+        public List<gradeInfo> GetGradeList(string sqlstr)
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from gradeInfo " + sqlstr).Tables[0];
-            return ds;
+            List<gradeInfo> gList = new List<gradeInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from gradeInfo " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                gradeInfo gInfo = new gradeInfo();
+                gInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                gInfo.gradeName = (string)SqlHelper.FromDBNull(row["gradeName"]);
+                gInfo.pubCount = (int)SqlHelper.FromDBNull(row["pubCount"]);
+                gList.Add(gInfo);
+            }
+            return gList;
         }
         /// <summary>
         /// 增加会员级别

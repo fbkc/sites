@@ -11,10 +11,20 @@ namespace BLL
 {
     public class badwordBLL
     {
-        public DataTable GetBadwordList()
+        public List<badwordInfo> GetBadwordList()
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from badwordInfo").Tables[0];
-            return ds;
+            List<badwordInfo> bList = new List<badwordInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from badwordInfo").Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                badwordInfo bInfo = new badwordInfo();
+                bInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                bInfo.badword = (string)SqlHelper.FromDBNull(row["badword"]);
+                bList.Add(bInfo);
+            }
+            return bList;
         }
         public void AddBadword(badwordInfo badword)
         {

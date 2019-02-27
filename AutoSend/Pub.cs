@@ -170,8 +170,7 @@ namespace AutoSend
                         tInfo.returnMsg = titleurl;
                         tBLL.UpdateTitle(tInfo);
                         //更新userInfo表发布相关信息
-                        //cBLL.UpUserPubInformation(model.Id);
-                        log.wlog(titleurl, model.Id.ToString(), model.username);
+                        //log.wlog(titleurl, model.Id.ToString(), model.username);
                         Thread.Sleep(60 * 1000);
                         //生最后一条标题时，重新查询一次标题库
                         if (i == tList.Count - 1)

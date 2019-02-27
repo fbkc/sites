@@ -11,10 +11,20 @@ namespace BLL
 {
     public class tailwordBLL
     {
-        public DataTable GetTailwordList()
+        public List<tailwordInfo> GetTailwordList()
         {
-            DataTable ds = SqlHelper.ExecuteDataSet("select * from tailwordInfo").Tables[0];
-            return ds;
+            List<tailwordInfo> tList = new List<tailwordInfo>();
+            DataTable dt = SqlHelper.ExecuteDataSet("select * from tailwordInfo").Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                tailwordInfo tInfo = new tailwordInfo();
+                tInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                tInfo.tailword = (string)SqlHelper.FromDBNull(row["tailword"]);
+                tList.Add(tInfo);
+            }
+            return tList;
         }
         public void AddTailword(tailwordInfo tailword)
         {

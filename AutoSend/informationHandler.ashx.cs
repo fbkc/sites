@@ -108,6 +108,10 @@ namespace AutoSend
                         case "stoppub": _strContent.Append(StopPub(context)); break;//停止发布
                         #endregion
 
+                        #region 日志读取
+                        case "readlog": _strContent.Append(ReadLog(context)); break;//日志读取前十条
+                        #endregion
+
                         default: break;
                     }
                 }
@@ -241,7 +245,7 @@ namespace AutoSend
                     imageBLL bll = new imageBLL();
                     imageInfo img = new imageInfo();
                     img.imageId = newfileName;
-                    img.imageURL =  fileUrl;
+                    img.imageURL = fileUrl;
                     img.userId = model.Id;
                     img.productId = int.Parse(pId);
                     bll.AddImg(img);
@@ -821,17 +825,7 @@ namespace AutoSend
             List<tailwordInfo> tList = new List<tailwordInfo>();
             try
             {
-                DataTable dt = bll.GetTailwordList();
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        tailwordInfo tInfo = new tailwordInfo();
-                        tInfo.Id = (int)row["Id"];
-                        tInfo.tailword = (string)row["tailword"];
-                        tList.Add(tInfo);
-                    }
-                }
+                tList = bll.GetTailwordList();
             }
             catch (Exception ex)
             {
@@ -1360,7 +1354,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.Message, new { });
             }
-            return json.WriteJson(1, "成功", new {  });
+            return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
         /// 停止手动发布
@@ -1372,13 +1366,36 @@ namespace AutoSend
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             try
             {
-                sBll.UpIsPubing(0,model.Id);//setting表isPubing置0
+                sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.Message, new { });
             }
             return json.WriteJson(1, "成功", new { });
+        }
+        #endregion
+
+        #region 日志读取
+        /// <summary>
+        /// 倒序读取前十条日志
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string ReadLog(HttpContext context)
+        {
+            logBLL lbll = new logBLL();
+            List<logInfo> logList = new List<logInfo>();
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            try
+            {
+                logList = lbll.GetLogs(string.Format(" where userId={0} order by addtime desc", model.Id));
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.Message, new { });
+            }
+            return json.WriteJson(1, "成功", new { logList });
         }
         #endregion
 

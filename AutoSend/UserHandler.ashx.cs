@@ -250,16 +250,14 @@ namespace AutoSend
         {
             gradeBLL bll = new gradeBLL();
             List<gradeInfo> gList = new List<gradeInfo>();
-            DataTable dt = bll.GetGradeList("");
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
+            try
             {
-                gradeInfo gInfo = new gradeInfo();
-                gInfo.Id = (int)row["Id"];
-                gInfo.gradeName = (string)row["gradeName"];
-                gInfo.pubCount = (int)row["pubCount"];
-                gList.Add(gInfo);
+
+                gList = bll.GetGradeList("");
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "成功", new { gradeList = gList });
         }
@@ -274,10 +272,17 @@ namespace AutoSend
             var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             gradeInfo grade = JsonConvert.DeserializeObject<gradeInfo>(strjson, js);
             gradeBLL bll = new gradeBLL();
-            if (grade.Id == 0)
-                bll.AddGrade(grade);
-            else
-                bll.UpdateGrade(grade);
+            try
+            {
+                if (grade.Id == 0)
+                    bll.AddGrade(grade);
+                else
+                    bll.UpdateGrade(grade);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
             return json.WriteJson(1, "成功", new { });
         }
         /// <summary>
@@ -307,15 +312,13 @@ namespace AutoSend
         {
             columnBLL bll = new columnBLL();
             List<columnInfo> cList = new List<columnInfo>();
-            DataTable dt = bll.GetColumnList("");
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
+            try
             {
-                columnInfo cInfo = new columnInfo();
-                cInfo.Id = (int)row["Id"];
-                cInfo.columnName = (string)row["columnName"];
-                cList.Add(cInfo);
+                cList = bll.GetColumnList("");
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "成功", new { columnList = cList });
         }
@@ -358,18 +361,13 @@ namespace AutoSend
         {
             noticeBLL bll = new noticeBLL();
             List<noticeInfo> nList = new List<noticeInfo>();
-            DataTable dt = bll.GetNoticeList(" where isuse=1 order by pubTime desc");
-            if (dt.Rows.Count < 1)
-                return "";
-            foreach (DataRow row in dt.Rows)
+            try
             {
-                noticeInfo nInfo = new noticeInfo();
-                nInfo.Id = (int)row["Id"];
-                nInfo.notice = (string)row["notice"];
-                nInfo.pubTime = (DateTime)row["pubTime"];
-                nInfo.isImprotant = (bool)row["isImprotant"];
-                nInfo.issue = (bool)row["issue"];
-                nList.Add(nInfo);
+                nList = bll.GetNoticeList(" where isuse=1 order by pubTime desc");
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
             }
             return json.WriteJson(1, "成功", new { noticeList = nList });
         }
@@ -420,17 +418,7 @@ namespace AutoSend
             List<tailwordInfo> tList = new List<tailwordInfo>();
             try
             {
-                DataTable dt = bll.GetTailwordList();
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        tailwordInfo tInfo = new tailwordInfo();
-                        tInfo.Id = (int)row["Id"];
-                        tInfo.tailword = (string)row["tailword"];
-                        tList.Add(tInfo);
-                    }
-                }
+                tList = bll.GetTailwordList();
             }
             catch (Exception ex)
             {
@@ -492,17 +480,7 @@ namespace AutoSend
             List<badwordInfo> bList = new List<badwordInfo>();
             try
             {
-                DataTable dt = bll.GetBadwordList();
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (DataRow row in dt.Rows)
-                    {
-                        badwordInfo bInfo = new badwordInfo();
-                        bInfo.Id = (int)row["Id"];
-                        bInfo.badword = (string)row["badword"];
-                        bList.Add(bInfo);
-                    }
-                }
+                bList = bll.GetBadwordList();
             }
             catch (Exception ex)
             {

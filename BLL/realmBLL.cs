@@ -24,10 +24,10 @@ namespace AutoSend
             foreach (DataRow row in dt.Rows)
             {
                 realmNameInfo rInfo = new realmNameInfo();
-                rInfo.Id = (int)row["Id"];
-                rInfo.realmName = (string)row["realmName"];
-                rInfo.realmAddress = (string)row["realmAddress"];
-                rInfo.isUseing = (bool)row["isUseing"];
+                rInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+                rInfo.realmName = (string)SqlHelper.FromDBNull(row["realmName"]);
+                rInfo.realmAddress = (string)SqlHelper.FromDBNull(row["realmAddress"]);
+                rInfo.isUseing = (bool)SqlHelper.FromDBNull(row["isUseing"]);
                 rList.Add(rInfo);
             }
             return rList;
@@ -44,10 +44,10 @@ namespace AutoSend
                 return null;
             DataRow row = dt.Rows[0];
             realmNameInfo rInfo = new realmNameInfo();
-            rInfo.Id = (int)row["Id"];
-            rInfo.realmName = (string)row["realmName"];
-            rInfo.realmAddress = (string)row["realmAddress"];
-            rInfo.isUseing = (bool)row["isUseing"];
+            rInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+            rInfo.realmName = (string)SqlHelper.FromDBNull(row["realmName"]);
+            rInfo.realmAddress = (string)SqlHelper.FromDBNull(row["realmAddress"]);
+            rInfo.isUseing = (bool)SqlHelper.FromDBNull(row["isUseing"]);
             return rInfo;
         }
         /// <summary>
