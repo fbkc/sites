@@ -40,7 +40,7 @@ namespace AutoSend
         {
             //线程创建成功在更新此用户发布状态
             settingBLL sBll = new settingBLL();
-            sBll.UpIsPubing(1,uId);//isPubing置true
+            sBll.UpIsPubing(1, uId);//isPubing置true
             CmUserBLL cBLL = new CmUserBLL();
             int sleeptime = 60;
             cmUserInfo model = cBLL.GetUser(string.Format(" where Id={0}", uId));
@@ -71,8 +71,8 @@ namespace AutoSend
                 for (int i = 0; i < tList.Count; i++)  //选中项遍历
                 {
                     //先查询此用户setting表isPubing是否为1
-                    settingInfo sInfo = sBll.GetSetting(string.Format(" where userId={0}",model.Id));
-                    if(!sInfo.isPubing)
+                    settingInfo sInfo = sBll.GetSetting(string.Format(" where userId={0}", model.Id));
+                    if (!sInfo.isPubing)
                     {
                         log.wlog("发布停止", model.Id.ToString(), model.username);
                         break;
@@ -188,17 +188,23 @@ namespace AutoSend
                     }
                     else if (code == "0")
                     {
-                        if (msg.Contains("今日投稿已超过限制数"))
+                        if (msg.Contains("今日投稿已超过限制数"))//停
                         {
-                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                            log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
                             sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
-                            return;
+                            break;
                         }
                         if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
                         {
                             log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                             Thread.Sleep(sleeptime * 1000);
                             continue;
+                        }
+                        if (msg.ToString().Contains("信息条数已发完！"))//所有条数发完了，停
+                        {
+                            log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
+                            sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                            break;
                         }
                         else
                         {
