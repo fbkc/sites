@@ -94,8 +94,19 @@ namespace AutoSend
                     content = cmList[index].contentMould;//随机调用模板
                     cmBLL.UpUsedCount(cmList[index].Id);//模板调用次数加1
 
+                    imageBLL iBLL = new imageBLL();
+                    //根据userId,productId获取图片
+                    List<imageInfo> iList = iBLL.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", model.Id, tInfo.productId));
+                    if (iList == null || iList.Count < 1)
+                    {
+                        log.wlog("发布停止：图片数量不足，请及时上传图片", model.Id.ToString(), model.username);
+                        sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                        break;
+                    }
+                    string titleImg = "http://vip.100dh.cn/lookImg" + iList[rnd.Next(iList.Count)].imageURL;//选一张标题图片
+
                     content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
-                    content = ReplaceHTMLWZ(content, tInfo, model);//替换模板中变量
+                    content = ReplaceHTMLWZ(content, tInfo, iList, model);//替换模板中变量
                     if (content == "段落数量不足50")
                     {
                         log.wlog("发布停止：段落数量不足50个，请及时添加段落", model.Id.ToString(), model.username);
@@ -133,7 +144,7 @@ namespace AutoSend
                     strpost.AppendFormat("price={0}&", pInfo.price);
                     strpost.AppendFormat("unit={0}&", pInfo.unit);
                     string desc = "<p>" + txtgydesc + "</p>";//内容,UrlEncode编码
-                    //strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321")); 
+                                                             //strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321")); 
                     strpost.AppendFormat("content={0}&", desc);
                     strpost.AppendFormat("keywords={0}&", sKeyword1);
                     strpost.AppendFormat("style_color={0}&", "");
@@ -143,7 +154,7 @@ namespace AutoSend
                     strpost.AppendFormat("introcude_length={0}&", 200);
                     strpost.AppendFormat("auto_thumb={0}&", 1);
                     strpost.AppendFormat("auto_thumb_no={0}&", 1);
-                    strpost.AppendFormat("thumb={0}&", thumb);
+                    strpost.AppendFormat("thumb={0}&", titleImg);
                     strpost.AppendFormat("forward={0}&", "");
                     strpost.AppendFormat("id={0}&", "");
                     strpost.AppendFormat("username={0}&", model.username);
@@ -256,7 +267,7 @@ namespace AutoSend
         /// <param name="title"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo, cmUserInfo user)
+        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo,List<imageInfo> iList, cmUserInfo user)
         {
             Regex r;
             Random rnd = new Random();
@@ -264,9 +275,6 @@ namespace AutoSend
             {
                 wz = wz.Replace("{标题}", tInfo.title);
             }
-            imageBLL iBLL = new imageBLL();
-            //根据userId,productId获取图片
-            List<imageInfo> iList = iBLL.GetImgList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", user.Id, tInfo.productId));
             while (wz.Contains("{图片}"))
             {
                 r = new Regex("{图片}");
