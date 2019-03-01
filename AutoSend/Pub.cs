@@ -169,7 +169,7 @@ namespace AutoSend
                     //{
                     //地址根据不同网站变化，每个地址需要写一个接口
                     string titleurl = "";
-                    string html = NetHelper.HttpPost("http://hyzx.100dh.cn/xinxi/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
+                    string html = NetHelper.HttpPost("http://hyzx.100dh.cn/hyzx/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
                     JObject joo = (JObject)JsonConvert.DeserializeObject(html);
                     string code = joo["code"].ToString();
                     string msg = joo["msg"].ToString();
