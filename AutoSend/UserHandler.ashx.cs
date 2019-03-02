@@ -94,13 +94,14 @@ namespace AutoSend
         public string GetUserInfo(HttpContext context)
         {
             CmUserBLL bll = new CmUserBLL();
+            string searchValue = context.Request["searchValue"];
             string pageIndex = context.Request["page"];
             string pageSize = context.Request["pageSize"];
             if (string.IsNullOrEmpty(pageIndex))
                 pageIndex = "1";
             if (string.IsNullOrEmpty(pageSize))
                 pageSize = "10";
-            List<cmUserInfo> uList = bll.GetUserList("");
+            List<cmUserInfo> uList = bll.GetUserList(string.Format(" where username like '%{0}%'",searchValue));
             if (uList.Count < 1)
                 return json.WriteJson(0, "未获取到会员信息", new { });
             //获取会员信息
