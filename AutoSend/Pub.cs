@@ -122,13 +122,10 @@ namespace AutoSend
                     txtgytitle = Regex.Replace(txtgytitle, "[0-9-()（）]{7,18}", " ");
                     //过滤a标签
                     txtgydesc = Regex.Replace(txtgydesc, @"(?is)<a[^>]*href=([""'])?(?<href>[^'""]+)\1[^>]*>", " ");
-
                     //敏感词过滤
-                    //txtgytitle = changemgc(txtgytitle);
-                    //txtgydesc = changemgc(txtgydesc);
+                    txtgytitle = changemgc(txtgytitle);
+                    txtgydesc = changemgc(txtgydesc);
                     //sKeyword1 = changemgc(sKeyword1);
-                    //sKeyword2 = changemgc(sKeyword2);
-                    //sKeyword3 = changemgc(sKeyword3);
                     #endregion
                     productBLL pBLL = new productBLL();
                     productInfo pInfo = pBLL.GetProductList(string.Format(" where userId={0}  and Id={1}", model.Id, tInfo.productId))[0];
@@ -143,9 +140,7 @@ namespace AutoSend
                     strpost.AppendFormat("qiding={0}&", pInfo.smallCount);
                     strpost.AppendFormat("price={0}&", pInfo.price);
                     strpost.AppendFormat("unit={0}&", pInfo.unit);
-                    string desc = "<p>" + txtgydesc + "</p>";//内容,UrlEncode编码
-                                                             //strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321")); 
-                    strpost.AppendFormat("content={0}&", desc);
+                    strpost.AppendFormat("content={0}&", txtgydesc);//内容,UrlEncode编码 strpost.AppendFormat("content={0}&", Tools.Encode(desc,"12345678","87654321"));
                     strpost.AppendFormat("keywords={0}&", sKeyword1);
                     strpost.AppendFormat("style_color={0}&", "");
                     strpost.AppendFormat("style_font_weight={0}&", "");
@@ -161,60 +156,73 @@ namespace AutoSend
                     strpost.AppendFormat("key={0}&", key);
                     strpost.AppendFormat("dosubmit={0}&", "提交");
                     strpost.AppendFormat("version={0}&", "1.0.0.0");
+
                     #region 组织发布内容
-                    //for (int i = 0; i < Myinfo.rjlist.Count; i++)
-                    //{
-                    //string host = Myinfo.rjlist[i].realmAddress;
-                    //if (q % w == i)
-                    //{
-                    //地址根据不同网站变化，每个地址需要写一个接口
-                    string titleurl = "";
-                    string html = NetHelper.HttpPost("http://hyzx.100dh.cn/hyzx/handler/ModelHandler.ashx?action=moduleHtml", strpost.ToString());
-                    JObject joo = (JObject)JsonConvert.DeserializeObject(html);
-                    string code = joo["code"].ToString();
-                    string msg = joo["msg"].ToString();
-                    if (code == "1")//发布成功。
+                    List<string> slist = new List<string>();
+                    slist.Add("http://bid.10huan.com/hyzx/handler/ModelHandler.ashx?action=moduleHtml");
+                    slist.Add("http://www.16fafa.cn/hyfl/handler/ModelHandler.ashx?action=moduleHtml");
+                    for (int j = 0; j < slist.Count; j++)
                     {
-                        titleurl = joo["detail"]["url"].ToString();
-                        //更新待发标题表
-                        tInfo.isSucceedPub = true;
-                        tInfo.returnMsg = titleurl;
-                        tBLL.UpdateTitle(tInfo);
-                        //更新userInfo表发布相关信息
-                        //log.wlog(titleurl, model.Id.ToString(), model.username);
-                        Thread.Sleep(60 * 1000);
-                        //生最后一条标题时，重新查询一次标题库
-                        if (i == tList.Count - 1)
+                        string html = NetHelper.HttpPost(slist[j], strpost.ToString());
+                        string titleurl = "";
+                        JObject joo = (JObject)JsonConvert.DeserializeObject(html);
+                        string code = joo["code"].ToString();
+                        string msg = joo["msg"].ToString();
+                        if (code == "1")//发布成功。
                         {
-                            tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
-                            if (tList == null || tList.Count < 1)
+                            titleurl = joo["detail"]["url"].ToString();
+                            //更新待发标题表
+                            tInfo.isSucceedPub = true;
+                            tInfo.returnMsg = titleurl;
+                            tBLL.UpdateTitle(tInfo);
+                            //更新userInfo表发布相关信息
+                            //log.wlog(titleurl, model.Id.ToString(), model.username);
+                            Thread.Sleep(60 * 1000);
+                            //生最后一条标题时，重新查询一次标题库
+                            if (i == tList.Count - 1)
                             {
-                                log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                                tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
+                                if (tList == null || tList.Count < 1)
+                                {
+                                    log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                                    sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                                    break;
+                                }
+                            }
+                            continue;//再发送本栏目信息
+                        }
+                        else if (code == "0")
+                        {
+                            if (msg.Contains("今日投稿已超过限制数"))//停
+                            {
+                                log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
                                 sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
                                 break;
                             }
+                            if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
+                            {
+                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                                Thread.Sleep(sleeptime * 1000);
+                                continue;
+                            }
+                            if (msg.ToString().Contains("信息条数已发完！"))//所有条数发完了，停
+                            {
+                                log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
+                                sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                                break;
+                            }
+                            else
+                            {
+                                log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                                Thread.Sleep(sleeptime * 1000);
+                                continue;
+                            }
                         }
-                        continue;//再发送本栏目信息
-                    }
-                    else if (code == "0")
-                    {
-                        if (msg.Contains("今日投稿已超过限制数"))//停
-                        {
-                            log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
-                            sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
-                            break;
-                        }
-                        if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
+                        else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
                         {
                             log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                             Thread.Sleep(sleeptime * 1000);
-                            continue;
-                        }
-                        if (msg.ToString().Contains("信息条数已发完！"))//所有条数发完了，停
-                        {
-                            log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
-                            sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
-                            break;
+                            continue;//再发送本栏目信息
                         }
                         else
                         {
@@ -222,20 +230,8 @@ namespace AutoSend
                             Thread.Sleep(sleeptime * 1000);
                             continue;
                         }
+                        #endregion
                     }
-                    else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
-                    {
-                        log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                        Thread.Sleep(sleeptime * 1000);
-                        continue;//再发送本栏目信息
-                    }
-                    else
-                    {
-                        log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                        Thread.Sleep(sleeptime * 1000);
-                        continue;
-                    }
-                    #endregion
                 }
             }
             catch (Exception ex)
@@ -245,21 +241,20 @@ namespace AutoSend
             }
         }
         /// <summary>
-        /// 停止发布，终止本线程，将此用户setting表isPubing置false
+        /// 敏感词替换
         /// </summary>
-        /// <param name="userId"></param>
-        public static void StopPub(int userId)
+        /// <param name="ss"></param>
+        /// <returns></returns>
+        private static string changemgc(string ss)
         {
-            //settingBLL bll = new settingBLL();
-            //settingInfo sInfo = new settingInfo();
-            //sInfo.userId = userId;
-            //sInfo.isPubing = false;
-            //bll.UpIsPubing(sInfo);
-            //if (t != null)
-            //    t.Abort();
-
+            badwordBLL bBll = new badwordBLL();
+            List<badwordInfo> bList = bBll.GetBadwordList();
+            foreach (badwordInfo b in bList)
+            {
+               ss = ss.Replace(b.badword, "");
+            }
+            return ss;
         }
-
         /// <summary>
         /// 模板替换变量
         /// </summary>
@@ -267,26 +262,26 @@ namespace AutoSend
         /// <param name="title"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo,List<imageInfo> iList, cmUserInfo user)
+        public static string ReplaceHTMLWZ(string wz, titleInfo tInfo, List<imageInfo> iList, cmUserInfo user)
         {
             Regex r;
             Random rnd = new Random();
-            if (wz.Contains("{标题}"))
-            {
-                wz = wz.Replace("{标题}", tInfo.title);
-            }
             while (wz.Contains("{图片}"))
             {
                 r = new Regex("{图片}");
                 if (iList.Count > 0)
                 {
                     string t = "http://vip.100dh.cn/lookImg" + iList[rnd.Next(iList.Count)].imageURL;
-                    wz = r.Replace(wz, "<img src=\"" + t + "\" />", 1);
+                    wz = r.Replace(wz, "<p><img src='" + t + "' alt='【标题】' width='600' height='400' /></p>", 1);
                 }
                 else
                 {
                     break;
                 }
+            }
+            if (wz.Contains("{标题}"))
+            {
+                wz = wz.Replace("{标题}", tInfo.title);
             }
             paragraphBLL pBLL = new paragraphBLL();
             //根据userId,productId获取段落
@@ -304,15 +299,10 @@ namespace AutoSend
                 }
                 try
                 {
-                    //更新写在这
-                    //DataGridViewRow dataGridViewRow = this.dgvpracontent.Rows[rnd.Next(this.dgvpracontent.RowCount)];
-                    //string str = dataGridViewRow.Cells[0].Value.ToString();
-                    //int num3 = this.achelp.ExcuteSql("update paragraph set UsedCount=UsedCount+1 where ID=" + str);
                     int index = rnd.Next(pList.Count);
                     string text2 = pList[index].paraCotent;//调用段落
                     pBLL.UpUsedCount(pList[index].Id);//段落调用次数加1
-
-                    wz = regex.Replace(wz, "<p>" + text2 + "</p>", 1);
+                    wz = regex.Replace(wz, "<p>" + text2.Replace("\u3000\u3000", "") + "</p>", 1);
                 }
                 catch (Exception ex)
                 {
