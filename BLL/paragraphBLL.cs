@@ -11,6 +11,43 @@ namespace BLL
 {
     public class paragraphBLL
     {
+        /// <summary>
+        /// 获取段落，带分页
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public List<paragraphInfo> GetParagraphList(string sqlstr, string orderby, int pageIndex, int pageSize)
+        {
+            List<paragraphInfo> pList = new List<paragraphInfo>();
+            DataTable dt = SqlHelper.ExecuteDataTable(@"select * from 
+                (select *, ROW_NUMBER() OVER(order by addTime " + orderby + ") AS RowId from paragraphInfo " + sqlstr + ") as b where b.RowId between @startNum and @endNum",
+                new SqlParameter("@startNum", (pageIndex - 1) * pageSize + 1),
+                new SqlParameter("@endNum", pageIndex * pageSize));
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                paragraphInfo pInfo = new paragraphInfo();
+                pInfo.Id = (long)row["Id"];
+                pInfo.paraId = (string)row["paraId"];
+                pInfo.paraCotent = (string)row["paraCotent"];
+                pInfo.usedCount = (int)row["usedCount"];
+                pInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                pInfo.userId = (int)row["userId"];
+                pInfo.productId = (int)row["productId"];
+                pList.Add(pInfo);
+            }
+            return pList;
+        }
+        public int GetPageTotal(string sqlstr)
+        {
+            return (int)SqlHelper.ExecuteScalar("select count(*)  from paragraphInfo " + sqlstr);
+        }
+        /// <summary>
+        /// 获取段落
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
         public List<paragraphInfo> GetParagraphList(string sqlstr)
         {
             List<paragraphInfo> pList = new List<paragraphInfo>();

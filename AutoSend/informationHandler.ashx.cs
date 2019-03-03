@@ -82,6 +82,7 @@ namespace AutoSend
                         case "savetitle": _strContent.Append(SaveTitle(context)); break;
                         case "deltitle": _strContent.Append(DelTitle(context)); break;//删除标题
                         case "deltitles": _strContent.Append(DelTitles(context)); break;//多行删除
+                        case "delpubbedtitles": _strContent.Append(DelPubbedTitles(context)); break;//一键清空此用户已发布信息
                         #endregion
 
                         #region 公司信息
@@ -329,20 +330,17 @@ namespace AutoSend
             List<paragraphInfo> pList = new List<paragraphInfo>();
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             string userId = model.Id.ToString();
+            int total = 0;
             try
             {
-                pList = bll.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}' order by addTime desc", userId, pId));
+                pList = bll.GetParagraphList(string.Format(" where userId='{0}' and productId='{1}'", userId, pId), "desc", int.Parse(pageIndex), int.Parse(pageSize));
+                total = bll.GetPageTotal(string.Format(" where userId='{0}' and productId='{1}' ", userId, pId));
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            //查询分页数据
-            var pageData = pList.Where(u => u.Id > 0)
-                .OrderByDescending(u => u.Id)
-                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
-                .Take(int.Parse(pageSize)).ToList();
-            return json.WriteJson(1, "成功", new { total = pList.Count(), paraList = pageData });
+            return json.WriteJson(1, "成功", new { total, paraList = pList });
         }
         /// <summary>
         /// 增加或修改段落
@@ -940,7 +938,7 @@ namespace AutoSend
 
         #region 标题
         /// <summary>
-        /// 获取所有标题列表,待发，已发
+        /// 发布详情用，获取所有标题列表,待发，已发
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -954,25 +952,22 @@ namespace AutoSend
                 pageSize = "10";
             titleBLL bll = new titleBLL();
             List<titleInfo> tList = new List<titleInfo>();
+            int total = 0;
             try
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                tList = bll.GetTitleList(string.Format(" where userId={0} and isSucceedPub={1} order by addTime " + orderby, userId, isPub));
+                tList = bll.GetTitleList(string.Format(" where userId={0} and isSucceedPub={1} ", userId, isPub), orderby, int.Parse(pageIndex), int.Parse(pageSize));
+                total = bll.GetPageTotal(string.Format(" where userId='{0}' and isSucceedPub='{1}' ", userId, isPub));
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            //查询分页数据
-            var pageData = tList.Where(u => u.Id > 0)
-                .OrderByDescending(u => u.Id)
-                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
-                .Take(int.Parse(pageSize)).ToList();
-            return json.WriteJson(1, "成功", new { total = tList.Count(), titleList = pageData });
+            return json.WriteJson(1, "成功", new { total, titleList = tList });
         }
         /// <summary>
-        /// 获取某个产品标题列表
+        /// 产品内，获取标题列表
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -987,22 +982,20 @@ namespace AutoSend
                 pageSize = "10";
             titleBLL bll = new titleBLL();
             List<titleInfo> tList = new List<titleInfo>();
+            int total = 0;
             try
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                tList = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}' order by isSucceedPub,addTime desc", userId, pId));
+                tList = bll.GetTitleList(string.Format(" where userId='{0}' and productId='{1}' ", userId, pId), "desc", int.Parse(pageIndex),
+                    int.Parse(pageSize));
+                total = bll.GetPageTotal(string.Format(" where userId='{0}' and productId='{1}' ", userId, pId));
             }
             catch (Exception ex)
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            //查询分页数据
-            var pageData = tList.Where(u => u.Id > 0)
-                .OrderByDescending(u => u.Id)
-                .Skip((int.Parse(pageIndex) - 1) * int.Parse(pageSize))
-                .Take(int.Parse(pageSize)).ToList();
-            return json.WriteJson(1, "成功", new { total = tList.Count(), titleList = pageData });
+            return json.WriteJson(1, "成功", new { total, titleList = tList });
         }
         /// <summary>
         /// 增加或修改标题列表
@@ -1065,6 +1058,24 @@ namespace AutoSend
                 int a = 0;
                 foreach (string d in ids)
                     a = bll.DelTitle(d);
+                return json.WriteJson(1, "删除成功", new { });
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
+        }
+        /// <summary>
+        /// 一键清空已发布标题
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public string DelPubbedTitles(HttpContext context)
+        {
+            titleBLL bll = new titleBLL();
+            cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+            try
+            {
+                int a = 0;
+                a = bll.DelPubbedTitle(model.Id.ToString());
                 return json.WriteJson(1, "删除成功", new { });
             }
             catch (Exception ex)
