@@ -138,10 +138,10 @@ namespace AutoSend
             } while (ishvae);
             string[] resultstr = null;
             resultstr = sctitle.ToArray();
-            if (sctitle.Count > 10000)
+            if (sctitle.Count > 2000)
             {
-                string[] resultstr1 = new string[10000];
-                Array.Copy(resultstr, 0, resultstr1, 0, 10000);
+                string[] resultstr1 = new string[2000];
+                Array.Copy(resultstr, 0, resultstr1, 0, 2000);
                 resultstr = resultstr1;
             }
             return json.WriteJson(1, "成功", new { resultstr });

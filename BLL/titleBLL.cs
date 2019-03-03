@@ -22,7 +22,7 @@ namespace BLL
         {
             List<titleInfo> tList = new List<titleInfo>();
             DataTable dt = SqlHelper.ExecuteDataTable(@"select * from 
-                (select *, ROW_NUMBER() OVER(order by isSucceedPub,addTime "+orderby+") AS RowId from titleInfo " + sqlstr+") as b where b.RowId between @startNum and @endNum",
+                (select *, ROW_NUMBER() OVER(order by isSucceedPub,editTime " + orderby+") AS RowId from titleInfo " + sqlstr+") as b where b.RowId between @startNum and @endNum",
                new SqlParameter("@startNum", (pageIndex - 1) * pageSize + 1),
                new SqlParameter("@endNum", pageIndex * pageSize));
             if (dt.Rows.Count < 1)

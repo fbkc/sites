@@ -964,7 +964,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { total, titleList = tList });
+            return json.WriteJson(1, "成功", new { total, titleList = tList, dtNow = DateTime.Now });
         }
         /// <summary>
         /// 产品内，获取标题列表

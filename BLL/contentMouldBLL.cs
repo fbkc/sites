@@ -20,16 +20,16 @@ namespace BLL
             foreach (DataRow row in dt.Rows)
             {
                 contentMouldInfo cInfo = new contentMouldInfo();
-                cInfo.Id = (int)row["Id"];
-                cInfo.mouldName = (string)row["mouldName"];
-                cInfo.contentMould = (string)row["contentMould"];
-                cInfo.type = (string)row["type"];
-                cInfo.usedCount = (int)row["usedCount"];
-                cInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                cInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
-                cInfo.userId = (int)row["userId"];
-                cInfo.productId = (int)row["productId"];
-                cInfo.productName = (string)row["productName"];
+                cInfo.Id = (int) SqlHelper.FromDBNull( row["Id"]);
+                cInfo.mouldName = (string)SqlHelper.FromDBNull(row["mouldName"]);
+                cInfo.contentMould = (string)SqlHelper.FromDBNull(row["contentMould"]);
+                cInfo.type = (string)SqlHelper.FromDBNull(row["type"]);
+                cInfo.usedCount = (int)SqlHelper.FromDBNull(row["usedCount"]);
+                cInfo.addTime = ((DateTime)SqlHelper.FromDBNull(row["addTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+                cInfo.editTime = ((DateTime)SqlHelper.FromDBNull(row["editTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+                cInfo.userId = (int)SqlHelper.FromDBNull(row["userId"]);
+                cInfo.productId = (int)SqlHelper.FromDBNull(row["productId"]);
+                cInfo.productName = (string)SqlHelper.FromDBNull(row["productName"]);
                 cList.Add(cInfo);
             }
             return cList;
