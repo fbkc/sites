@@ -187,8 +187,8 @@ namespace AutoSend
                                 tInfo.isSucceedPub = true;
                                 tInfo.returnMsg = titleurl;
                                 tBLL.UpdateTitle(tInfo);
-                                //更新userInfo表发布相关信息
-                                log.wlog(titleurl, model.Id.ToString(), model.username);
+                                //成功链接写入日志表
+                                //log.wlog(titleurl, model.Id.ToString(), model.username);
                                 Thread.Sleep(60 * 1000);
                                 //生最后一条标题时，重新查询一次标题库
                                 if (i == tList.Count - 1)

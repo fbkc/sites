@@ -1097,7 +1097,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                orgInfo = bll.GetUser(string.Format(" where Id='{0}'", userId));
+                orgInfo = bll.GetUserInfo(string.Format(" where Id='{0}'", userId));
             }
             catch (Exception ex)
             {

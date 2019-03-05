@@ -92,6 +92,45 @@ namespace BLL
             return userInfo;
         }
         /// <summary>
+        /// 获取单个用户，首页用
+        /// </summary>
+        /// <param name="sqlstr"></param>
+        /// <returns></returns>
+        public cmUserInfo GetUserInfo(string sqlstr)
+        {
+            DataTable dt = SqlHelper.ExecuteDataSet("select *,(select gradeName from gradeInfo where Id=u.userType) as gName from userInfo u  " + sqlstr).Tables[0];
+            if (dt.Rows.Count < 1)
+                return null;
+            DataRow row = dt.Rows[0];
+            cmUserInfo userInfo = new cmUserInfo();
+            userInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
+            userInfo.username = (string)SqlHelper.FromDBNull(row["username"]);
+            userInfo.password = (string)SqlHelper.FromDBNull(row["password"]);
+            userInfo.userType = (int)SqlHelper.FromDBNull(row["userType"]);
+            userInfo.isStop = (bool)SqlHelper.FromDBNull(row["isStop"]);
+            userInfo.gradeId = (int)SqlHelper.FromDBNull(row["gradeId"]);
+            userInfo.canPubCount = (int)SqlHelper.FromDBNull(row["canPubCount"]);
+            userInfo.realmNameInfo = (string)SqlHelper.FromDBNull(row["gName"]);//借用，存会员级别
+            userInfo.expirationTime = ((DateTime)SqlHelper.FromDBNull(row["expirationTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+            userInfo.endPubCount = (int)SqlHelper.FromDBNull(row["endPubCount"]);
+            userInfo.endTodayPubCount = (int)SqlHelper.FromDBNull(row["endTodayPubCount"]);
+            userInfo.registerTime = ((DateTime)SqlHelper.FromDBNull(row["registerTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+            userInfo.registerIP = (string)SqlHelper.FromDBNull(row["registerIP"]);
+            userInfo.companyName = (string)SqlHelper.FromDBNull(row["companyName"]);
+            userInfo.columnInfoId = (int)SqlHelper.FromDBNull(row["columnInfoId"]);
+            userInfo.person = (string)SqlHelper.FromDBNull(row["person"]);
+            userInfo.telephone = (string)SqlHelper.FromDBNull(row["telephone"]);
+            userInfo.modile = (string)SqlHelper.FromDBNull(row["modile"]);
+            userInfo.ten_qq = (string)SqlHelper.FromDBNull(row["ten_qq"]);
+            userInfo.address = (string)SqlHelper.FromDBNull(row["address"]);
+            userInfo.com_web = (string)SqlHelper.FromDBNull(row["com_web"]);
+            userInfo.companyRemark = (string)SqlHelper.FromDBNull(row["companyRemark"]);
+            userInfo.yewu = (string)SqlHelper.FromDBNull(row["yewu"]);
+            userInfo.beforePubTime = ((DateTime)SqlHelper.FromDBNull(row["beforePubTime"])).ToString("yyyy-MM-dd HH:mm:ss");
+            return userInfo;
+        }
+
+        /// <summary>
         /// 增加会员信息
         /// </summary>
         /// <param name="sqlstr"></param>
