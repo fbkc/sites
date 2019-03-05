@@ -56,7 +56,19 @@ namespace AutoSend
                 string txtgytitle = "", txtgydesc = "";
                 string thumb = "";
                 string sKeyword1 = "";
-
+                #region 待发接口
+                List<string> slist = new List<string>();
+                slist.Add("http://bid.10huan.com/hyzx/handler/ModelHandler.ashx?action=moduleHtml");
+                slist.Add("http://www.16fafa.cn/hyfl/handler/ModelHandler.ashx?action=moduleHtml");
+                int q = -1;
+                int w = slist.Count;
+                if (w < 1)
+                {
+                    log.wlog("发布停止：您没有发布权限", model.Id.ToString(), model.username);
+                    sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                    return;
+                }
+                #endregion
                 //取待发标题
                 titleBLL tBLL = new titleBLL();
                 //取出未发布标题
@@ -66,15 +78,15 @@ namespace AutoSend
                     log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
                     sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
                     return;
-                    //System.Threading.Thread.CurrentThread.Abort();
                 }
                 for (int i = 0; i < tList.Count; i++)  //选中项遍历
                 {
+                    q++;
                     //先查询此用户setting表isPubing是否为1
                     settingInfo sInfo = sBll.GetSetting(string.Format(" where userId={0}", model.Id));
                     if (!sInfo.isPubing)
                     {
-                        log.wlog("发布停止", model.Id.ToString(), model.username);
+                        log.wlog("发布停止：发布状态无效，请先手动停止发布，再点开始", model.Id.ToString(), model.username);
                         break;
                     }
                     titleInfo tInfo = tList[i];
@@ -158,58 +170,70 @@ namespace AutoSend
                     strpost.AppendFormat("version={0}&", "1.0.0.0");
 
                     #region 组织发布内容
-                    List<string> slist = new List<string>();
-                    slist.Add("http://bid.10huan.com/hyzx/handler/ModelHandler.ashx?action=moduleHtml");
-                    slist.Add("http://www.16fafa.cn/hyfl/handler/ModelHandler.ashx?action=moduleHtml");
                     for (int j = 0; j < slist.Count; j++)
                     {
-                        string html = NetHelper.HttpPost(slist[j], strpost.ToString());
-                        string titleurl = "";
-                        JObject joo = (JObject)JsonConvert.DeserializeObject(html);
-                        string code = joo["code"].ToString();
-                        string msg = joo["msg"].ToString();
-                        if (code == "1")//发布成功。
+                        if (q % w == j)
                         {
-                            titleurl = joo["detail"]["url"].ToString();
-                            //更新待发标题表
-                            tInfo.isSucceedPub = true;
-                            tInfo.returnMsg = titleurl;
-                            tBLL.UpdateTitle(tInfo);
-                            //更新userInfo表发布相关信息
-                            //log.wlog(titleurl, model.Id.ToString(), model.username);
-                            Thread.Sleep(60 * 1000);
-                            //生最后一条标题时，重新查询一次标题库
-                            if (i == tList.Count - 1)
+                            string html = NetHelper.HttpPost(slist[j], strpost.ToString());
+                            string titleurl = "";
+                            JObject joo = (JObject)JsonConvert.DeserializeObject(html);
+                            string code = joo["code"].ToString();
+                            string msg = joo["msg"].ToString();
+                            if (code == "1")//发布成功。
                             {
-                                tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
-                                if (tList == null || tList.Count < 1)
+                                titleurl = joo["detail"]["url"].ToString();
+                                //更新待发标题表
+                                tInfo.isSucceedPub = true;
+                                tInfo.returnMsg = titleurl;
+                                tBLL.UpdateTitle(tInfo);
+                                //更新userInfo表发布相关信息
+                                log.wlog(titleurl, model.Id.ToString(), model.username);
+                                Thread.Sleep(60 * 1000);
+                                //生最后一条标题时，重新查询一次标题库
+                                if (i == tList.Count - 1)
                                 {
-                                    log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                                    tList = tBLL.GetTitleList(string.Format(" where userId={0} and isSucceedPub=0 order by addTime", model.Id));
+                                    if (tList == null || tList.Count < 1)
+                                    {
+                                        log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                                        sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                                        break;
+                                    }
+                                }
+                                continue;//再发送本栏目信息
+                            }
+                            else if (code == "0")
+                            {
+                                if (msg.Contains("今日投稿已超过限制数"))//停
+                                {
+                                    log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
                                     sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
                                     break;
                                 }
+                                if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
+                                {
+                                    log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                                    Thread.Sleep(sleeptime * 1000);
+                                    continue;
+                                }
+                                if (msg.ToString().Contains("信息条数已发完！"))//所有条数发完了，停
+                                {
+                                    log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
+                                    sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
+                                    break;
+                                }
+                                else
+                                {
+                                    log.wlog(msg.ToString(), model.Id.ToString(), model.username);
+                                    Thread.Sleep(sleeptime * 1000);
+                                    continue;
+                                }
                             }
-                            continue;//再发送本栏目信息
-                        }
-                        else if (code == "0")
-                        {
-                            if (msg.Contains("今日投稿已超过限制数"))//停
-                            {
-                                log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
-                                sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
-                                break;
-                            }
-                            if (msg.ToString().Contains("信息发布过快，请隔60秒再提交！"))
+                            else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
                             {
                                 log.wlog(msg.ToString(), model.Id.ToString(), model.username);
                                 Thread.Sleep(sleeptime * 1000);
-                                continue;
-                            }
-                            if (msg.ToString().Contains("信息条数已发完！"))//所有条数发完了，停
-                            {
-                                log.wlog("发布停止：" + msg.ToString(), model.Id.ToString(), model.username);
-                                sBll.UpIsPubing(0, model.Id);//setting表isPubing置0
-                                break;
+                                continue;//再发送本栏目信息
                             }
                             else
                             {
@@ -217,20 +241,8 @@ namespace AutoSend
                                 Thread.Sleep(sleeptime * 1000);
                                 continue;
                             }
+                            #endregion
                         }
-                        else if (html.Contains("无法解析此远程名称") || html.Contains("无法连接到远程服务器") || html.Contains("remote name could not be resolved"))
-                        {
-                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                            Thread.Sleep(sleeptime * 1000);
-                            continue;//再发送本栏目信息
-                        }
-                        else
-                        {
-                            log.wlog(msg.ToString(), model.Id.ToString(), model.username);
-                            Thread.Sleep(sleeptime * 1000);
-                            continue;
-                        }
-                        #endregion
                     }
                 }
             }
@@ -251,7 +263,7 @@ namespace AutoSend
             List<badwordInfo> bList = bBll.GetBadwordList();
             foreach (badwordInfo b in bList)
             {
-               ss = ss.Replace(b.badword, "");
+                ss = ss.Replace(b.badword, "");
             }
             return ss;
         }
