@@ -278,13 +278,17 @@ namespace AutoSend
         {
             Regex r;
             Random rnd = new Random();
+            if (wz.Contains("{标题}"))
+            {
+                wz = wz.Replace("{标题}", "<p>" + tInfo.title + "</p>");
+            }
             while (wz.Contains("{图片}"))
             {
                 r = new Regex("{图片}");
                 if (iList.Count > 0)
                 {
                     string t = "http://vip.100dh.cn/lookImg" + iList[rnd.Next(iList.Count)].imageURL;
-                    wz = r.Replace(wz, "<p><img src='" + t + "' alt='【标题】' width='600' height='400' /></p>", 1);
+                    wz = r.Replace(wz, "<p><img src='" + t + "' alt='{标题}' width='600' height='400' /></p>", 1);
                 }
                 else
                 {
