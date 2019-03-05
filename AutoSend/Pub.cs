@@ -117,7 +117,8 @@ namespace AutoSend
                     }
                     string titleImg = "http://vip.100dh.cn/lookImg" + iList[rnd.Next(iList.Count)].imageURL;//选一张标题图片
 
-                    content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片                                                
+                    content = Regex.Replace(content, "(?i)<IMG.*>", "");//过滤用户插入的本地图片     
+                    content = Regex.Replace(content, " style=\"(.*?)\"", "");//过滤用户插入的本地图片  
                     content = ReplaceHTMLWZ(content, tInfo, iList, model);//替换模板中变量
                     if (content == "段落数量不足50")
                     {
@@ -278,17 +279,13 @@ namespace AutoSend
         {
             Regex r;
             Random rnd = new Random();
-            if (wz.Contains("{标题}"))
-            {
-                wz = wz.Replace("{标题}", "<p>" + tInfo.title + "</p>");
-            }
             while (wz.Contains("{图片}"))
             {
                 r = new Regex("{图片}");
                 if (iList.Count > 0)
                 {
                     string t = "http://vip.100dh.cn/lookImg" + iList[rnd.Next(iList.Count)].imageURL;
-                    wz = r.Replace(wz, "<p><img src='" + t + "' alt='{标题}' width='600' height='400' /></p>", 1);
+                    wz = r.Replace(wz, "<img src='" + t + "' alt='{标题}' width='600' height='400' />", 1);
                 }
                 else
                 {
@@ -318,7 +315,7 @@ namespace AutoSend
                     int index = rnd.Next(pList.Count);
                     string text2 = pList[index].paraCotent;//调用段落
                     pBLL.UpUsedCount(pList[index].Id);//段落调用次数加1
-                    wz = regex.Replace(wz, "<p>" + text2.Replace("\u3000\u3000", "") + "</p>", 1);
+                    wz = regex.Replace(wz, text2.Replace("\u3000\u3000", ""), 1);
                 }
                 catch (Exception ex)
                 {
