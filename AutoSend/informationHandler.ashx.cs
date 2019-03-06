@@ -1302,8 +1302,8 @@ namespace AutoSend
         /// <summary>
         /// 读取配置
         /// </summary>
-        /// <param name = "context" ></ param >
-        /// < returns ></ returns >
+        /// <param name = "context" ></param >
+        /// <returns></returns>
         private string GetSetting(HttpContext context)
         {
             settingBLL bll = new settingBLL();
@@ -1324,8 +1324,8 @@ namespace AutoSend
         /// <summary>
         /// 提交配置
         /// </summary>
-        /// <param name = "context" ></ param >
-        /// < returns ></ returns >
+        /// <param name = "context" ></param>
+        /// <returns ></returns>
         private string SubSetting(HttpContext context)
         {
             try
@@ -1336,6 +1336,7 @@ namespace AutoSend
                 var js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
                 settingInfo setInfo = JsonConvert.DeserializeObject<settingInfo>(strjson, js);
                 setInfo.userId = model.Id;
+                setInfo.username = model.username;
                 if (setInfo.Id == 0)
                     bll.AddSetting(setInfo);
                 else
