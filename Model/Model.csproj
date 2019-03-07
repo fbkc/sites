@@ -47,6 +47,7 @@
     <Compile Include="logInfo.cs" />
     <Compile Include="noticeInfo.cs" />
     <Compile Include="productInfo.cs" />
+    <Compile Include="pubDetail.cs" />
     <Compile Include="settingInfo.cs" />
     <Compile Include="tailwordInfo.cs" />
     <Compile Include="cmUserInfo.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="realmNameInfo.cs" />
     <Compile Include="titleInfo.cs" />
+    <Compile Include="userPubCount.cs" />
     <Compile Include="wordsInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

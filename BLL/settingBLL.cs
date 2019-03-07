@@ -101,7 +101,7 @@ namespace BLL
             foreach (DataRow row in dt.Rows)
             {
                 settingInfo setInfo = new settingInfo();
-                setInfo.Id = (int)row["Id"];
+                setInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
                 setInfo.everydayCount = (int)SqlHelper.FromDBNull(row["everydayCount"]);
                 setInfo.isAutoPub = (bool)SqlHelper.FromDBNull(row["isAutoPub"]);
                 setInfo.pubHour = (int)SqlHelper.FromDBNull(row["pubHour"]);
@@ -117,12 +117,32 @@ namespace BLL
         /// isPubing 状态切换
         /// </summary>
         /// <param name="set"></param>
-        public void UpIsPubing(int isPubing,object userId)
+        public void UpIsPubing(int isPubing, object userId)
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[setting]
    SET [isPubing] = @isPubing  where userId=@userId",
                new SqlParameter("@userId", SqlHelper.ToDBNull(userId)),
                new SqlParameter("@isPubing", SqlHelper.ToDBNull(isPubing)));
+        }
+        /// <summary>
+        /// 获取发布详情
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public pubDetail GetPubDeitail(string userId)
+        {
+            pubDetail pDei = new pubDetail();
+            DataTable dt = SqlHelper.ExecuteDataTable(@"select s.everydayCount,(select count(*) from titleInfo where userId=@userId and isSucceedPub=0) titleCount,"
+                   + "(select count(*) from paragraphInfo where userId = @userId and usedCount > 300) paraCount"
+                   + "from setting s where userId = @userId ",
+                   new SqlParameter("@userId", SqlHelper.ToDBNull(userId)));
+            if (dt.Rows.Count != 1)
+                return null;
+            DataRow row = dt.Rows[0];
+            pDei.todayCanPub= (int)SqlHelper.FromDBNull(row["everydayCount"]);
+            pDei.titleCount= (int)SqlHelper.FromDBNull(row["titleCount"]);
+            pDei.paraCount = (int)SqlHelper.FromDBNull(row["paraCount"]);
+            return pDei;
         }
     }
 }

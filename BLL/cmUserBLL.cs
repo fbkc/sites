@@ -92,25 +92,22 @@ namespace BLL
             return userInfo;
         }
         /// <summary>
-        /// 获取单个用户，首页用
+        /// 获取此用户发布条数情况，首页用
         /// </summary>
         /// <param name="sqlstr"></param>
         /// <returns></returns>
-        public cmUserInfo GetUserInfo(string sqlstr)
+        public userPubCount GetUserPubCount(string sqlstr)
         {
             DataTable dt = SqlHelper.ExecuteDataSet("select *,(select gradeName from gradeInfo where Id=u.userType) as gName from userInfo u  " + sqlstr).Tables[0];
             if (dt.Rows.Count < 1)
                 return null;
             DataRow row = dt.Rows[0];
-            cmUserInfo userInfo = new cmUserInfo();
+            userPubCount userInfo = new userPubCount();
             userInfo.Id = (int)SqlHelper.FromDBNull(row["Id"]);
             userInfo.username = (string)SqlHelper.FromDBNull(row["username"]);
-            userInfo.password = (string)SqlHelper.FromDBNull(row["password"]);
-            userInfo.userType = (int)SqlHelper.FromDBNull(row["userType"]);
-            userInfo.isStop = (bool)SqlHelper.FromDBNull(row["isStop"]);
             userInfo.gradeId = (int)SqlHelper.FromDBNull(row["gradeId"]);
             userInfo.canPubCount = (int)SqlHelper.FromDBNull(row["canPubCount"]);
-            userInfo.realmNameInfo = (string)SqlHelper.FromDBNull(row["gName"]);//借用，存会员级别
+            userInfo.gradeName = (string)SqlHelper.FromDBNull(row["gName"]);//借用，存会员级别
             userInfo.expirationTime = ((DateTime)SqlHelper.FromDBNull(row["expirationTime"])).ToString("yyyy-MM-dd HH:mm:ss");
             userInfo.endPubCount = (int)SqlHelper.FromDBNull(row["endPubCount"]);
             userInfo.endTodayPubCount = (int)SqlHelper.FromDBNull(row["endTodayPubCount"]);
@@ -239,10 +236,11 @@ person,telephone,modile,ten_qq,address,com_web,companyRemark,yewu,beforePubTime)
         /// 删除用户
         /// </summary>
         /// <param name="sqlstr"></param>
-        /// <returns></returns>
+        /// <returns>只删除了用户信息和发布配置信息，其他未删</returns>
         public int DelUser(string Id)
         {
-            return SqlHelper.ExecuteNonQuery("delete from userInfo where Id=@Id",
+            return SqlHelper.ExecuteNonQuery("delete from userInfo where Id=@Id" +
+                "delete from settingInfo where userId=@userId",
                 new SqlParameter("@Id", SqlHelper.ToDBNull(Id)));
         }
     }

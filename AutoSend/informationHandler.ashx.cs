@@ -113,6 +113,14 @@ namespace AutoSend
                         case "readlog": _strContent.Append(ReadLog(context)); break;//日志读取前十条
                         #endregion
 
+                        #region 首页条数及信息显示
+                        case "getuserpubcount": _strContent.Append(GetUserPubCount(context)); break;
+                        #endregion
+
+                        #region 首页发布详情
+                        case "getpubdetail": _strContent.Append(GetPubDetail(context)); break;
+                        #endregion
+
                         default: break;
                     }
                 }
@@ -1097,7 +1105,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                orgInfo = bll.GetUserInfo(string.Format(" where Id='{0}'", userId));
+                orgInfo = bll.GetUser(string.Format(" where Id='{0}'", userId));
             }
             catch (Exception ex)
             {
@@ -1408,6 +1416,54 @@ namespace AutoSend
                 return json.WriteJson(0, ex.Message, new { });
             }
             return json.WriteJson(1, "成功", new { logList });
+        }
+        #endregion
+
+        #region 首页条数及信息显示
+        /// <summary>
+        /// 首页条数及信息显示
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string GetUserPubCount(HttpContext context)
+        {
+            CmUserBLL bll = new CmUserBLL();
+            userPubCount uPub = new userPubCount();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                uPub = bll.GetUserPubCount(string.Format(" where Id='{0}'", userId));
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { UserPubCount= uPub });
+        }
+        #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        #region 首页发布详情
+        private string GetPubDetail(HttpContext context)
+        {
+            settingBLL bll = new settingBLL();
+            pubDetail pDetail = new pubDetail();
+            try
+            {
+                cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
+                string userId = model.Id.ToString();
+                pDetail = bll.GetPubDeitail( userId);
+            }
+            catch (Exception ex)
+            {
+                return json.WriteJson(0, ex.ToString(), new { });
+            }
+            return json.WriteJson(1, "成功", new { pDetail });
         }
         #endregion
 
