@@ -145,8 +145,12 @@ namespace AutoSend
                         productBLL pBLL = new productBLL();
                         productInfo pInfo = pBLL.GetProductList(string.Format(" where userId={0}  and Id={1}", model.Id, tInfo.productId))[0];
                         string key = NetHelper.GetMD5(model.username + "100dh888");
+                        columnBLL clBLL = new columnBLL();
+                        List<columnInfo> cList = clBLL.GetColumnList("");
+                        Random r = new Random();
+                        int cId = r.Next(cList.Count+1);
                         StringBuilder strpost = new StringBuilder();
-                        strpost.AppendFormat("catid={0}&", model.columnInfoId);
+                        strpost.AppendFormat("catid={0}&", cId);
                         strpost.AppendFormat("title={0}&", txtgytitle);
                         strpost.AppendFormat("pinpai={0}&", pInfo.pinpai);
                         strpost.AppendFormat("xinghao={0}&", pInfo.xinghao);
