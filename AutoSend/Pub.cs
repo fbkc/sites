@@ -148,7 +148,7 @@ namespace AutoSend
                         columnBLL clBLL = new columnBLL();
                         List<columnInfo> cList = clBLL.GetColumnList("");
                         Random r = new Random();
-                        int cId = r.Next(cList.Count+1);
+                        int cId = r.Next(1,cList.Count+1);
                         StringBuilder strpost = new StringBuilder();
                         strpost.AppendFormat("catid={0}&", cId);
                         strpost.AppendFormat("title={0}&", txtgytitle);
