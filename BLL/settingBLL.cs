@@ -133,8 +133,8 @@ namespace BLL
         {
             pubDetail pDei = new pubDetail();
             DataTable dt = SqlHelper.ExecuteDataTable(@"select s.everydayCount,(select count(*) from titleInfo where userId=@userId and isSucceedPub=0) titleCount,"
-                   + "(select count(*) from paragraphInfo where userId = @userId and usedCount > 300) paraCount"
-                   + "from setting s where userId = @userId ",
+                   + "(select count(*) from paragraphInfo where userId = @userId and usedCount > 300) paraCount,s.isPubing "
+                   + " from setting s where userId = @userId ",
                    new SqlParameter("@userId", SqlHelper.ToDBNull(userId)));
             if (dt.Rows.Count != 1)
                 return null;
@@ -142,6 +142,7 @@ namespace BLL
             pDei.todayCanPub= (int)SqlHelper.FromDBNull(row["everydayCount"]);
             pDei.titleCount= (int)SqlHelper.FromDBNull(row["titleCount"]);
             pDei.paraCount = (int)SqlHelper.FromDBNull(row["paraCount"]);
+            pDei.isPubing = (bool)SqlHelper.FromDBNull(row["isPubing"]);
             return pDei;
         }
     }

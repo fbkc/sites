@@ -17,5 +17,6 @@ namespace Model
         /// 获取段落极差的数量
         /// </summary>
         public int paraCount { get; set; }
+        public bool isPubing { get; set; }
     }
 }

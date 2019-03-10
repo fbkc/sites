@@ -335,7 +335,7 @@ namespace AutoSend
             List<noticeInfo> nList = new List<noticeInfo>();
             try
             {
-                nList = bll.GetNoticeList(" where isuse=1 order by pubTime desc");
+                nList = bll.GetNoticeList(" where order by pubTime desc");
             }
             catch (Exception ex)
             {

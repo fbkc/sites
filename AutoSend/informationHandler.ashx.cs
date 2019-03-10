@@ -1443,12 +1443,12 @@ namespace AutoSend
         }
         #endregion
 
+        #region 首页发布详情
         /// <summary>
         /// 
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        #region 首页发布详情
         private string GetPubDetail(HttpContext context)
         {
             settingBLL bll = new settingBLL();
