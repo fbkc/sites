@@ -145,5 +145,14 @@ namespace BLL
             pDei.isPubing = (bool)SqlHelper.FromDBNull(row["isPubing"]);
             return pDei;
         }
+        /// <summary>
+        /// 凌晨，今日已发条数置零
+        /// </summary>
+        /// <param name="set"></param>
+        public void UpEveryDayCount()
+        {
+            int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
+   SET [endTodayPubCount] = 0  where isStop=0 ");
+        }
     }
 }

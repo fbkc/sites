@@ -921,7 +921,13 @@ namespace AutoSend
             List<string> wList = new List<string>();
             try
             {
-                string main1 = NetHelper.HttpGet("https://www.5118.com/seo/search/word/", AShelp.UrlEncode(word, Encoding.UTF8), Encoding.UTF8);
+                string uname = "huachengtl";
+                string key = NetHelper.GetMD5(uname + "fangyuan888");
+                var f = new StringBuilder();
+                f.AppendFormat("username={0}&", uname);
+                f.AppendFormat("key={0}&", key);
+                f.AppendFormat("word={0}&", word.Trim());
+                string main1 = NetHelper.HttpPost("http://vip.hsoow.com/index.php?m=member&c=index&a=caiji", f.ToString(), "");
                 if (main1 == "")
                 { return json.WriteJson(0, "暂未搜到相关数据", new { }); }
                 JObject jo = (JObject)JsonConvert.DeserializeObject(main1);

@@ -40,6 +40,11 @@ namespace AutoSend
                         #region 轮循setting表
                         case "roundsetting": _strContent.Append(RoundSetting(context)); break;//读取配置
                         #endregion
+
+                        #region 凌晨置零
+                        case "uptodaycount": _strContent.Append(UpTodayCount(context)); break;//凌晨置零
+                        #endregion
+
                         default: break;
                     }
                 }
@@ -81,6 +86,25 @@ namespace AutoSend
                 if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
                     Pub.Publish(sInfo.userId);//创建发布线程
             }
+        }
+        #endregion
+
+        #region 凌晨置零
+        /// <summary>
+        /// 服务访问接口
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string UpTodayCount(HttpContext context)
+        {
+            try
+            {
+                settingBLL bll = new settingBLL();
+                bll.UpEveryDayCount();
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
+            return json.WriteJson(1, "成功", new { });
         }
         #endregion
 

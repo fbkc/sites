@@ -15,6 +15,7 @@ namespace TimerService
     public partial class Service1 : ServiceBase
     {
         Timer timer;
+        Timer timer1;
         public Service1()
         {
             InitializeComponent();
@@ -25,12 +26,19 @@ namespace TimerService
             timer = new Timer(300 * 1000);
             timer.Elapsed += new ElapsedEventHandler(Timer_Elapsed);
             timer.Start();
-            WriteLog("服务启动");
+            WriteLog("timer服务启动");
+
+            timer1 = new Timer(60 * 1000);
+            timer1.Elapsed += new ElapsedEventHandler(Timer1_Elapsed);
+            timer1.Start();
+            WriteLog("timer1服务启动");
         }
         protected override void OnStop()
         {
             timer.Stop();
             timer.Dispose();
+            timer1.Stop();
+            timer1.Dispose();
             WriteLog("服务停止");
         }
 
@@ -38,9 +46,21 @@ namespace TimerService
         {
             string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=roundsetting", "", Encoding.UTF8);
             if (html.Contains("成功"))
-                WriteLog("服务执行了一次");
+                WriteLog("timer服务执行了一次");
             else
-                WriteLog("服务执行失败");
+                WriteLog("timer服务执行失败");
+        }
+        protected void Timer1_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            WriteLog("timer1服务执行了一次");
+            if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 34)
+            {
+                string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=uptodaycount", "", Encoding.UTF8);
+                if (html.Contains("成功"))
+                    WriteLog("timer1服务执行了一次");
+                else
+                    WriteLog("timer1服务执行失败");
+            }
         }
         protected void WriteLog(string str)
         {
