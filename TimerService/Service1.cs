@@ -52,8 +52,7 @@ namespace TimerService
         }
         protected void Timer1_Elapsed(object sender, ElapsedEventArgs e)
         {
-            WriteLog("timer1服务执行了一次");
-            if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 34)
+            if (DateTime.Now.Hour == 23 && DateTime.Now.Minute == 59)
             {
                 string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=uptodaycount", "", Encoding.UTF8);
                 if (html.Contains("成功"))

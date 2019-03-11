@@ -54,7 +54,7 @@ namespace AutoSend
 
         #region 轮循setting表
         /// <summary>
-        /// 服务访问接口
+        /// 服务访问接口,轮循setting表，开启线程发布任务
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -62,30 +62,26 @@ namespace AutoSend
         {
             try
             {
-                RoundSetting();
+                settingBLL bll = new settingBLL();
+                //查找设置定时发布并且非在发配置
+                List<settingInfo> sList = bll.RoundSetting(string.Format(" where isAutoPub=1  and isPubing=0"));
+                if (sList != null && sList.Count > 0)
+                {
+                    DateTime dt = DateTime.Now;
+                    foreach (settingInfo sInfo in sList)
+                    {
+                        if (!sInfo.isAutoPub || sInfo.isPubing)
+                            continue;
+                        int nowMin = dt.Minute / 10;//当前分钟十位数
+                        int tMin = sInfo.pubMin / 10;//用户所定时间十位数
+                        if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
+                            Pub.Publish(sInfo.userId);//创建发布线程
+                    }
+                }
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }
             return json.WriteJson(1, "成功", new { });
-        }
-        /// <summary>
-        /// 轮循setting表，开启线程发布任务
-        /// </summary>
-        private void RoundSetting()
-        {
-            settingBLL bll = new settingBLL();
-            //查找设置定时发布并且非在发配置
-            List<settingInfo> sList = bll.RoundSetting(string.Format(" where isAutoPub=1  and isPubing=0"));
-            DateTime dt = DateTime.Now;
-            foreach (settingInfo sInfo in sList)
-            {
-                if (!sInfo.isAutoPub || sInfo.isPubing)
-                    continue;
-                int nowMin = dt.Minute / 10;//当前分钟十位数
-                int tMin = sInfo.pubMin / 10;//用户所定时间十位数
-                if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
-                    Pub.Publish(sInfo.userId);//创建发布线程
-            }
         }
         #endregion
 
