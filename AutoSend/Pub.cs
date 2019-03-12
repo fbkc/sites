@@ -264,6 +264,7 @@ namespace AutoSend
             {
                 log.wlog("用户名:"+ model.username+"用户Id:"+ model.Id.ToString()+ex.ToString(), "0", "system");
                 Thread.Sleep(sleeptime * 1000);
+                Publish(model.Id);//重开线程
             }
         }
         /// <summary>
