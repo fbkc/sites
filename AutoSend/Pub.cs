@@ -57,9 +57,8 @@ namespace AutoSend
                 string thumb = "";
                 string sKeyword1 = "";
                 #region 待发接口
-                List<string> slist = new List<string>();
-                slist.Add("http://bid.10huan.com/hyzx/handler/ModelHandler.ashx?action=moduleHtml");
-                slist.Add("http://www.16fafa.cn/hyfl/handler/ModelHandler.ashx?action=moduleHtml");
+                realmBLL rbll = new realmBLL();
+                List<realmNameInfo> slist = rbll.GetRealmList(" where isUseing=1");
                 int q = -1;
                 int w = slist.Count;
                 if (w < 1)
@@ -181,7 +180,7 @@ namespace AutoSend
                         {
                             if (q % w == j)
                             {
-                                string html = NetHelper.HttpPost(slist[j], strpost.ToString());
+                                string html = NetHelper.HttpPost(slist[j].realmAddress, strpost.ToString());
                                 string titleurl = "";
                                 JObject joo = (JObject)JsonConvert.DeserializeObject(html);
                                 string code = joo["code"].ToString();
