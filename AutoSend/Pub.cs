@@ -180,7 +180,8 @@ namespace AutoSend
                         {
                             if (q % w == j)
                             {
-                                string html = NetHelper.HttpPost(slist[j].realmAddress, strpost.ToString());
+                                //log.wlog(slist[j].realmAddress.Trim(), model.Id.ToString(), model.username);
+                                string html = NetHelper.HttpPost(slist[j].realmAddress.Trim(), strpost.ToString());
                                 string titleurl = "";
                                 JObject joo = (JObject)JsonConvert.DeserializeObject(html);
                                 string code = joo["code"].ToString();
