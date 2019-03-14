@@ -184,6 +184,7 @@
     </Compile>
     <Compile Include="MyInfo.cs" />
     <Compile Include="NetHelper.cs" />
+    <Compile Include="Pub1.cs" />
     <Compile Include="Pub.cs" />
     <Compile Include="PublishHandler.ashx.cs">
       <DependentUpon>PublishHandler.ashx</DependentUpon>

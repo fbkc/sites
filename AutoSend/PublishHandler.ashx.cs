@@ -45,6 +45,10 @@ namespace AutoSend
                         case "uptodaycount": _strContent.Append(UpTodayCount(context)); break;//凌晨置零
                         #endregion
 
+                        #region 查标题
+                        case "obtaintitle": _strContent.Append(ObtainTitle(context)); break;//凌晨置零
+                        #endregion
+
                         default: break;
                     }
                 }
@@ -75,7 +79,12 @@ namespace AutoSend
                         int nowMin = dt.Minute / 10;//当前分钟十位数
                         int tMin = sInfo.pubMin / 10;//用户所定时间十位数
                         if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
-                            Pub.Publish(sInfo.userId);//创建发布线程
+                        {
+                            //Pub.Publish(sInfo.userId);//创建发布线程
+                            //更新此用户发布状态
+                            settingBLL sBll = new settingBLL();
+                            sBll.UpIsPubing(1, sInfo.userId);//isPubing置true
+                        }
                     }
                 }
             }
@@ -97,6 +106,30 @@ namespace AutoSend
             {
                 settingBLL bll = new settingBLL();
                 bll.UpEveryDayCount();
+            }
+            catch (Exception ex)
+            { return json.WriteJson(0, ex.ToString(), new { }); }
+            return json.WriteJson(1, "成功", new { });
+        }
+        #endregion
+
+        #region 读待发标题
+        /// <summary>
+        /// 服务访问接口
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private string ObtainTitle(HttpContext context)
+        {
+            List<titleInfo> tList = new List<titleInfo>();
+            try
+            {
+                settingBLL bll = new settingBLL();
+                tList = bll.ObtainTitleList();
+                foreach(titleInfo t in tList)
+                {
+                    MyInfo.qtitle.Enqueue(t);//插入队列
+                }
             }
             catch (Exception ex)
             { return json.WriteJson(0, ex.ToString(), new { }); }

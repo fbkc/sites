@@ -12,5 +12,6 @@ namespace AutoSend
         public static int Id = 0;
         public static string user = "";
         public static cmUserInfo cmUser = null;
+        public static Queue<titleInfo> qtitle = null;
     }
 }

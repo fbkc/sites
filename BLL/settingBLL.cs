@@ -139,8 +139,8 @@ namespace BLL
             if (dt.Rows.Count != 1)
                 return null;
             DataRow row = dt.Rows[0];
-            pDei.todayCanPub= (int)SqlHelper.FromDBNull(row["everydayCount"]);
-            pDei.titleCount= (int)SqlHelper.FromDBNull(row["titleCount"]);
+            pDei.todayCanPub = (int)SqlHelper.FromDBNull(row["everydayCount"]);
+            pDei.titleCount = (int)SqlHelper.FromDBNull(row["titleCount"]);
             pDei.paraCount = (int)SqlHelper.FromDBNull(row["paraCount"]);
             pDei.isPubing = (bool)SqlHelper.FromDBNull(row["isPubing"]);
             return pDei;
@@ -153,6 +153,32 @@ namespace BLL
         {
             int a = SqlHelper.ExecuteNonQuery(@"UPDATE [AutouSend].[dbo].[userInfo]
    SET [endTodayPubCount] = 0  where isStop=0 ");
+        }
+
+        public List<titleInfo> ObtainTitleList()
+        {
+            List<titleInfo> tList = new List<titleInfo>();
+            DataTable dt = SqlHelper.ExecuteDataTable(@"select a.* from (
+select t.*, row_number() over(partition by t.userId order by editTime) as n
+from titleInfo t LEFT JOIN setting s
+ON t.userId=s.userId where isSucceedPub=0 and s.isPubing=1
+)a where a.n<=1;");
+            if (dt.Rows.Count < 1)
+                return null;
+            foreach (DataRow row in dt.Rows)
+            {
+                titleInfo tInfo = new titleInfo();
+                tInfo.Id = (long)row["Id"];
+                tInfo.title = (string)row["title"];
+                tInfo.addTime = ((DateTime)row["addTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                tInfo.editTime = ((DateTime)row["editTime"]).ToString("yyyy-MM-dd HH:mm:ss");
+                tInfo.isSucceedPub = (bool)row["isSucceedPub"];
+                tInfo.returnMsg = (string)row["returnMsg"];
+                tInfo.productId = (int)row["productId"];
+                tInfo.userId = (int)row["userId"];
+                tList.Add(tInfo);
+            }
+            return tList;
         }
     }
 }
