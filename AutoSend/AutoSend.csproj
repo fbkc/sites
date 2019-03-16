@@ -191,6 +191,7 @@
     </Compile>
     <Compile Include="SqlHelper.cs" />
     <Compile Include="titleList.cs" />
+    <Compile Include="titleReam.cs" />
     <Compile Include="UserHandler.ashx.cs">
       <DependentUpon>UserHandler.ashx</DependentUpon>
     </Compile>

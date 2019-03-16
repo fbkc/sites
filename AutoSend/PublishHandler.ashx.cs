@@ -46,7 +46,7 @@ namespace AutoSend
                         #endregion
 
                         #region 查标题
-                        case "obtaintitle": _strContent.Append(ObtainTitle(context)); break;//凌晨置零
+                        case "obtaintitle": _strContent.Append(ObtainTitle(context)); break;//查标题
                         #endregion
 
                         default: break;
@@ -55,6 +55,8 @@ namespace AutoSend
             }
             context.Response.Write(_strContent.ToString());
         }
+
+        public static List<realmNameInfo> slist = new List<realmNameInfo>();
 
         #region 轮循setting表
         /// <summary>
@@ -81,9 +83,19 @@ namespace AutoSend
                         if (dt.Hour == sInfo.pubHour && nowMin == tMin)//若时间符合，调用发布接口
                         {
                             //Pub.Publish(sInfo.userId);//创建发布线程
-                            //更新此用户发布状态
-                            settingBLL sBll = new settingBLL();
-                            sBll.UpIsPubing(1, sInfo.userId);//isPubing置true
+
+                            //待发标题是否足够
+                            titleBLL tBLL = new titleBLL();
+                            bool isExit =tBLL.IsExitNoPubTitle(string.Format(" where userId={0} and isSucceedPub=0", sInfo.Id));
+                            if (!isExit)
+                            {
+                                log.wlog("发布停止：待发标题数量不足，请及时生成标题", sInfo.Id.ToString(), sInfo.username);
+                            }
+                            else
+                            {
+                                settingBLL sBll = new settingBLL();//更新此用户发布状态
+                                sBll.UpIsPubing(1, sInfo.userId);//isPubing置true
+                            }
                         }
                     }
                 }
@@ -114,6 +126,8 @@ namespace AutoSend
         #endregion
 
         #region 读待发标题
+        private bool isStart = false;
+        public static Queue<titleInfo> tQueue = new Queue<titleInfo>();
         /// <summary>
         /// 服务访问接口
         /// </summary>
@@ -125,10 +139,26 @@ namespace AutoSend
             try
             {
                 settingBLL bll = new settingBLL();
+                realmBLL rbll = new realmBLL();
+                slist = rbll.GetRealmList(" where isUseing=1");
                 tList = bll.ObtainTitleList();
-                foreach(titleInfo t in tList)
+                if (tList != null && tList.Count > 0)
                 {
-                    MyInfo.qtitle.Enqueue(t);//插入队列
+                    foreach (titleInfo t in tList)
+                    {
+                        tQueue.Enqueue(t);//插入队列
+                    }
+                    if (tQueue.Count > 0)
+                    {
+                        ThreadPool.SetMaxThreads(5, 5);
+                        for (int i = 0; i < tQueue.Count; i++)
+                        {
+                            titleReam tr = new titleReam();
+                            tr.tinfo = tQueue.Dequeue();
+                            tr.realm =slist[new Random().Next(0,slist.Count)].realmAddress;
+                            ThreadPool.QueueUserWorkItem(new WaitCallback(Pub1.PubTitle), tr);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

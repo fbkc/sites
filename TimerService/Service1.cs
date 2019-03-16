@@ -1,5 +1,4 @@
 ﻿using AutoSend;
-using Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -72,9 +71,9 @@ namespace TimerService
         {
             string html = NetHelper.HttpGet("http://39.105.196.3:1874/PublishHandler.ashx?action=obtaintitle", "", Encoding.UTF8);
             if (html.Contains("成功"))
-                WriteLog("timer1服务执行了一次");
+                WriteLog("timer2服务执行了一次");
             else
-                WriteLog("timer1服务执行失败");
+                WriteLog("timer2服务执行失败");
         }
         protected void WriteLog(string str)
         {

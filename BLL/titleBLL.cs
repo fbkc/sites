@@ -18,11 +18,11 @@ namespace BLL
         /// <param name="pageIndex">页码</param>
         /// <param name="pageSize">每页条数</param>
         /// <returns></returns>
-        public List<titleInfo> GetTitleList(string sqlstr,string orderby, int pageIndex, int pageSize)
+        public List<titleInfo> GetTitleList(string sqlstr, string orderby, int pageIndex, int pageSize)
         {
             List<titleInfo> tList = new List<titleInfo>();
             DataTable dt = SqlHelper.ExecuteDataTable(@"select * from 
-                (select *, ROW_NUMBER() OVER(order by isSucceedPub,editTime " + orderby+") AS RowId from titleInfo " + sqlstr+") as b where b.RowId between @startNum and @endNum",
+                (select *, ROW_NUMBER() OVER(order by isSucceedPub,editTime " + orderby + ") AS RowId from titleInfo " + sqlstr + ") as b where b.RowId between @startNum and @endNum",
                new SqlParameter("@startNum", (pageIndex - 1) * pageSize + 1),
                new SqlParameter("@endNum", pageIndex * pageSize));
             if (dt.Rows.Count < 1)
@@ -44,7 +44,7 @@ namespace BLL
         }
         public int GetPageTotal(string sqlstr)
         {
-            return (int)SqlHelper.ExecuteScalar("select count(*)  from titleInfo "+sqlstr);
+            return (int)SqlHelper.ExecuteScalar("select count(*)  from titleInfo " + sqlstr);
         }
         /// <summary>
         /// 获取标题，无分页,pub调用
@@ -56,7 +56,7 @@ namespace BLL
         public List<titleInfo> GetTitleList(string sqlstr)
         {
             List<titleInfo> tList = new List<titleInfo>();
-            DataTable dt = SqlHelper.ExecuteDataTable(@"select * from titleInfo "+sqlstr);
+            DataTable dt = SqlHelper.ExecuteDataTable(@"select * from titleInfo " + sqlstr);
             if (dt.Rows.Count < 1)
                 return null;
             foreach (DataRow row in dt.Rows)
@@ -74,6 +74,16 @@ namespace BLL
             }
             return tList;
         }
+
+        public bool IsExitNoPubTitle(string sqlstr)
+        {
+            object obj= SqlHelper.ExecuteScalar("select isnull((select top(1) 1 from titleInfo " + sqlstr + "), 0) ");
+            if (Convert.ToInt32(obj) == 1)
+                return true;
+            else
+                return false;
+        }
+
         public void AddTitle(titleInfo title)
         {
             int a = SqlHelper.ExecuteNonQuery(@"INSERT INTO [AutouSend].[dbo].[titleInfo]

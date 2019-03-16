@@ -1374,7 +1374,21 @@ namespace AutoSend
             cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
             try
             {
-                Pub.Publish(model.Id);//创建发布线程
+                //取待发标题
+                 titleBLL tBLL = new titleBLL();
+                //取出未发布标题
+                bool isExit = tBLL.IsExitNoPubTitle(string.Format(" where userId={0} and isSucceedPub=0", model.Id));
+                if (!isExit)
+                {
+                    log.wlog("发布停止：待发标题数量不足，请及时生成标题", model.Id.ToString(), model.username);
+                }
+                else
+                {
+                    //Pub.Publish(model.Id);//创建发布线程
+                    //更新此用户发布状态
+                    settingBLL sBll = new settingBLL();
+                    sBll.UpIsPubing(1, model.Id);//isPubing置true
+                }
             }
             catch (Exception ex)
             {
@@ -1445,7 +1459,7 @@ namespace AutoSend
             {
                 return json.WriteJson(0, ex.ToString(), new { });
             }
-            return json.WriteJson(1, "成功", new { UserPubCount= uPub });
+            return json.WriteJson(1, "成功", new { UserPubCount = uPub });
         }
         #endregion
 
@@ -1463,7 +1477,7 @@ namespace AutoSend
             {
                 cmUserInfo model = (cmUserInfo)context.Session["UserModel"];
                 string userId = model.Id.ToString();
-                pDetail = bll.GetPubDeitail( userId);
+                pDetail = bll.GetPubDeitail(userId);
             }
             catch (Exception ex)
             {
