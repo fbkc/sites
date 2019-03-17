@@ -86,15 +86,14 @@ namespace AutoSend
 
                             //待发标题是否足够
                             titleBLL tBLL = new titleBLL();
-                            bool isExit =tBLL.IsExitNoPubTitle(string.Format(" where userId={0} and isSucceedPub=0", sInfo.Id));
+                            bool isExit =tBLL.IsExitNoPubTitle(string.Format(" where userId={0} and isSucceedPub=0", sInfo.userId));
                             if (!isExit)
                             {
-                                log.wlog("发布停止：待发标题数量不足，请及时生成标题", sInfo.Id.ToString(), sInfo.username);
+                                log.wlog("发布停止：待发标题数量不足，请及时生成标题", sInfo.userId.ToString(), sInfo.username);
                             }
                             else
                             {
-                                settingBLL sBll = new settingBLL();//更新此用户发布状态
-                                sBll.UpIsPubing(1, sInfo.userId);//isPubing置true
+                                bll.UpIsPubing(1, sInfo.userId);//isPubing置true
                             }
                         }
                     }
